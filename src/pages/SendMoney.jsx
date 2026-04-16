@@ -12,6 +12,13 @@ export default function SendMoney({ onPaymentSuccess }) {
 
   async function handlePay(e) {
     e.preventDefault();
+
+    // 🔒 Validation
+    if (!amount || Number(amount) <= 0) {
+      setMessage({ type: "danger", text: "Enter a valid amount" });
+      return;
+    }
+
     setLoading(true);
     setMessage(null);
     setFraud(null);
@@ -23,20 +30,25 @@ export default function SendMoney({ onPaymentSuccess }) {
       });
 
       setFraud(res.data.fraud || null);
+
       setMessage({
         type: "success",
-        text: `Payment completed via ${res.data.provider}`,
+        text: `✅ Payment completed via ${res.data.provider}`,
       });
 
       setAmount("");
+
+      // 🔥 Refresh dashboard instantly
       onPaymentSuccess?.();
+
     } catch (err) {
       const data = err?.response?.data;
+
       setFraud(data?.fraud || data?.details || null);
 
       setMessage({
         type: "danger",
-        text: data?.message || data?.error || "Payment failed",
+        text: data?.message || data?.error || "❌ Payment failed",
       });
     } finally {
       setLoading(false);
@@ -47,8 +59,12 @@ export default function SendMoney({ onPaymentSuccess }) {
     <div style={card}>
       <h3 style={{ marginTop: 0 }}>Send Payment</h3>
 
-      {message && <AlertBanner message={message.text} type={message.type} />}
+      {/* 🔔 Message */}
+      {message && (
+        <AlertBanner message={message.text} type={message.type} />
+      )}
 
+      {/* 🛡️ Fraud Decision */}
       {fraud?.decision && (
         <div style={{ marginBottom: 12 }}>
           <RiskBadge decision={fraud.decision} />
@@ -56,14 +72,17 @@ export default function SendMoney({ onPaymentSuccess }) {
       )}
 
       <form onSubmit={handlePay}>
+        {/* 💰 Amount */}
         <input
           style={input}
           type="number"
+          min="1"
           placeholder="Amount"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
         />
 
+        {/* 💱 Currency */}
         <select
           style={input}
           value={currency}
@@ -73,6 +92,7 @@ export default function SendMoney({ onPaymentSuccess }) {
           <option value="eur">EUR</option>
         </select>
 
+        {/* 🚀 Submit */}
         <button style={button} disabled={loading} type="submit">
           {loading ? "Processing..." : "Pay"}
         </button>
@@ -81,6 +101,7 @@ export default function SendMoney({ onPaymentSuccess }) {
   );
 }
 
+// 🎨 Styles
 const card = {
   border: "1px solid #ddd",
   borderRadius: 12,
