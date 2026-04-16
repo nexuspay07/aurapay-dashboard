@@ -17,6 +17,10 @@ export default function RiskBadge({ decision }) {
     label = "Blocked";
   }
 
+  label = "Approved (Safe)";
+label = "Flagged (Review)";
+label = "Blocked (High Risk)";
+
   return (
     <span
       style={{

@@ -33,7 +33,7 @@ export default function SendMoney({ onPaymentSuccess }) {
 
       setMessage({
         type: "success",
-        text: `✅ Payment completed via ${res.data.provider}`,
+        text: `✅ Payment successful via ${res.data.provider}. Your balance has been updated. You can send another payment or view your transactions below.`,
       });
 
       setAmount("");
@@ -48,7 +48,9 @@ export default function SendMoney({ onPaymentSuccess }) {
 
       setMessage({
         type: "danger",
-        text: data?.message || data?.error || "❌ Payment failed",
+        text:
+          data?.message ||
+          "❌ Payment failed. Please try again or check your balance.",
       });
     } finally {
       setLoading(false);
@@ -94,7 +96,7 @@ export default function SendMoney({ onPaymentSuccess }) {
 
         {/* 🚀 Submit */}
         <button style={button} disabled={loading} type="submit">
-          {loading ? "Processing..." : "Pay"}
+          {loading ? "Processing payment..." : "Pay"}
         </button>
       </form>
     </div>
