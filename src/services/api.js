@@ -1,15 +1,11 @@
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL;
-
-console.log("🔥 API URL =", API_URL);
-
 const API = axios.create({
-  baseURL: API_URL,
+  baseURL: "https://aurapay-backend-qfg0.onrender.com",
 });
 
 API.interceptors.request.use((config) => {
-  console.log("➡️ REQUEST:", API_URL + config.url);
+  console.log("➡️ REQUEST:", config.baseURL + config.url);
 
   const token = localStorage.getItem("token");
   if (token) {
