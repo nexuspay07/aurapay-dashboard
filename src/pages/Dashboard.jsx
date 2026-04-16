@@ -40,8 +40,8 @@ export default function Dashboard() {
         <div>
           <h1 style={{ margin: 0 }}>Aurapay</h1>
           <p style={{ margin: "6px 0 0", color: "#666" }}>
-            Welcome {user?.email}
-          </p>
+  Signed in as {user?.email}
+</p>
         </div>
 
         <button style={logoutBtn} onClick={handleLogout}>

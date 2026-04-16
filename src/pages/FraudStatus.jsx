@@ -7,13 +7,17 @@ export default function FraudStatus() {
   const [fraudLogs, setFraudLogs] = useState([]);
 
   async function loadRiskStatus() {
-    const [riskRes, logsRes] = await Promise.all([
-      API.get("/user/risk-status"),
-      API.get("/wallet/fraud-logs"),
-    ]);
+    try {
+      const [riskRes, logsRes] = await Promise.all([
+        API.get("/user/risk-status"),
+        API.get("/wallet/fraud-logs"),
+      ]);
 
-    setRiskStatus(riskRes.data);
-    setFraudLogs(logsRes.data);
+      setRiskStatus(riskRes.data);
+      setFraudLogs(logsRes.data || []);
+    } catch (err) {
+      console.log("Failed to load fraud status:", err.message);
+    }
   }
 
   useEffect(() => {
@@ -25,12 +29,17 @@ export default function FraudStatus() {
       <div style={card}>
         <h3 style={{ marginTop: 0 }}>Risk Status</h3>
 
-        {riskStatus?.frozen && (
+        {riskStatus?.frozen ? (
           <AlertBanner
             message={`Account frozen until ${new Date(
               riskStatus.freezeUntil
             ).toLocaleString()}`}
             type="danger"
+          />
+        ) : (
+          <AlertBanner
+            message="Your account is active and able to make payments."
+            type="success"
           />
         )}
 
@@ -40,16 +49,25 @@ export default function FraudStatus() {
 
       <div style={card}>
         <h3 style={{ marginTop: 0 }}>Recent Fraud Logs</h3>
-        {fraudLogs.slice(0, 5).map((log) => (
-          <div key={log._id} style={logBox}>
-            <div><strong>{log.currency.toUpperCase()} {log.amount}</strong></div>
-            <div>Decision: {log.decision}</div>
-            <div>Risk Score: {log.riskScore}</div>
-            <div style={{ fontSize: 12, color: "#666" }}>
-              {new Date(log.createdAt).toLocaleString()}
+
+        {fraudLogs.length === 0 ? (
+          <p style={{ color: "#666", margin: 0 }}>No fraud activity recorded.</p>
+        ) : (
+          fraudLogs.slice(0, 5).map((log) => (
+            <div key={log._id} style={logBox}>
+              <div>
+                <strong>
+                  {String(log.currency || "").toUpperCase()} {log.amount}
+                </strong>
+              </div>
+              <div>Decision: {log.decision}</div>
+              <div>Risk Score: {log.riskScore}</div>
+              <div style={{ fontSize: 12, color: "#666" }}>
+                {new Date(log.createdAt).toLocaleString()}
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
