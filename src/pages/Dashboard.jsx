@@ -5,6 +5,7 @@ import API from "../services/api";
 
 import BalanceCard from "../components/BalanceCard";
 import SendMoney from "./SendMoney";
+import TopUp from "./TopUp";
 import Transactions from "./Transactions";
 import FraudStatus from "./FraudStatus";
 
@@ -54,6 +55,13 @@ export default function Dashboard() {
     setReloadKey((prev) => prev + 1);
   }
 
+  function handleTopUpSuccess(newBalance) {
+    if (newBalance) {
+      setBalance(newBalance);
+    }
+    refreshAll();
+  }
+
   useEffect(() => {
     loadBalance();
     loadLatestTransaction();
@@ -62,7 +70,7 @@ export default function Dashboard() {
 
   function handleLogout() {
     logout();
-    navigate("/");
+    navigate("/login");
   }
 
   return (
@@ -80,8 +88,9 @@ export default function Dashboard() {
         </button>
       </header>
 
-      <div style={grid}>
+      <div style={gridThree}>
         <BalanceCard balance={balance} />
+        <TopUp onTopUpSuccess={handleTopUpSuccess} />
         <SendMoney onPaymentSuccess={refreshAll} />
       </div>
 
@@ -95,12 +104,35 @@ export default function Dashboard() {
             </p>
           ) : (
             <>
-              <p><strong>Status:</strong> {latestTransaction.status || (latestTransaction.success ? "SUCCESS" : "FAILED")}</p>
-              <p><strong>Provider:</strong> {latestTransaction.provider || "-"}</p>
-              <p><strong>Latency:</strong> {typeof latestTransaction.latency === "number" ? `${latestTransaction.latency} ms` : "-"}</p>
-              <p><strong>Transaction ID:</strong> {latestTransaction.transactionId || "-"}</p>
-              <p><strong>Amount:</strong> {latestTransaction.amount} {String(latestTransaction.currency || "").toUpperCase()}</p>
-              <p><strong>Date:</strong> {latestTransaction.createdAt ? new Date(latestTransaction.createdAt).toLocaleString() : "-"}</p>
+              <p>
+                <strong>Status:</strong>{" "}
+                {latestTransaction.status ||
+                  (latestTransaction.success ? "SUCCESS" : "FAILED")}
+              </p>
+              <p>
+                <strong>Provider:</strong>{" "}
+                {latestTransaction.provider || "-"}
+              </p>
+              <p>
+                <strong>Latency:</strong>{" "}
+                {typeof latestTransaction.latency === "number"
+                  ? `${latestTransaction.latency} ms`
+                  : "-"}
+              </p>
+              <p>
+                <strong>Transaction ID:</strong>{" "}
+                {latestTransaction.transactionId || "-"}
+              </p>
+              <p>
+                <strong>Amount:</strong> {latestTransaction.amount}{" "}
+                {String(latestTransaction.currency || "").toUpperCase()}
+              </p>
+              <p>
+                <strong>Date:</strong>{" "}
+                {latestTransaction.createdAt
+                  ? new Date(latestTransaction.createdAt).toLocaleString()
+                  : "-"}
+              </p>
             </>
           )}
         </div>
@@ -117,9 +149,21 @@ export default function Dashboard() {
           ) : (
             intelligence.map((item, index) => (
               <div key={index} style={intelligenceRow}>
-                <p><strong>Provider:</strong> {item.provider || "-"}</p>
-                <p><strong>Success Rate:</strong> {typeof item.successRate === "number" ? `${(item.successRate * 100).toFixed(1)}%` : "-"}</p>
-                <p><strong>Avg Latency:</strong> {typeof item.avgLatency === "number" ? `${item.avgLatency.toFixed(0)} ms` : "-"}</p>
+                <p>
+                  <strong>Provider:</strong> {item.provider || "-"}
+                </p>
+                <p>
+                  <strong>Success Rate:</strong>{" "}
+                  {typeof item.successRate === "number"
+                    ? `${(item.successRate * 100).toFixed(1)}%`
+                    : "-"}
+                </p>
+                <p>
+                  <strong>Avg Latency:</strong>{" "}
+                  {typeof item.avgLatency === "number"
+                    ? `${item.avgLatency.toFixed(0)} ms`
+                    : "-"}
+                </p>
               </div>
             ))
           )}
@@ -150,9 +194,9 @@ const header = {
   marginBottom: 20,
 };
 
-const grid = {
+const gridThree = {
   display: "grid",
-  gridTemplateColumns: "1fr 1fr",
+  gridTemplateColumns: "repeat(3, 1fr)",
   gap: 20,
 };
 
