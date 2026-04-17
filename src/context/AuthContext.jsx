@@ -11,9 +11,10 @@ export function AuthProvider({ children }) {
   async function loadUser() {
     try {
       if (!localStorage.getItem("token")) {
-        setUser(null);
-        return;
-      }
+  setUser(null);
+  setLoading(false);
+  return;
+}
       const res = await API.get("/user/me");
       setUser(res.data);
     } catch (err) {
