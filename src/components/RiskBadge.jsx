@@ -10,16 +10,12 @@ export default function RiskBadge({ decision }) {
   } else if (decision === "FLAG") {
     bg = "#fef3c7";
     color = "#92400e";
-    label = "Flagged";
+    label = "Flagged for Review";
   } else if (decision === "BLOCK") {
     bg = "#fee2e2";
     color = "#991b1b";
-    label = "Blocked";
+    label = "Blocked for Risk";
   }
-
-  label = "Approved (Safe)";
-label = "Flagged (Review)";
-label = "Blocked (High Risk)";
 
   return (
     <span

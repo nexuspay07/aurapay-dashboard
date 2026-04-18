@@ -47,15 +47,16 @@ export default function Dashboard() {
     }
   }
 
-  async function refreshAll() {
-    await Promise.all([
-      loadBalance(),
-      refreshUser(),
-      loadLatestTransaction(),
-      loadIntelligence(),
-    ]);
-    setReloadKey((prev) => prev + 1);
-  }
+ async function refreshAll() {
+  await Promise.all([
+    loadBalance(),
+    refreshUser(),
+    loadLatestTransaction(),
+    loadIntelligence(),
+    loadMetrics(),
+  ]);
+  setReloadKey((prev) => prev + 1);
+}
 
   function handleTopUpSuccess(newBalance) {
     if (newBalance) {
@@ -65,10 +66,11 @@ export default function Dashboard() {
   }
 
   useEffect(() => {
-    loadBalance();
-    loadLatestTransaction();
-    loadIntelligence();
-  }, []);
+  loadBalance();
+  loadLatestTransaction();
+  loadIntelligence();
+  loadMetrics();
+}, []);
 
   useEffect(() => {
     function handleResize() {
@@ -83,6 +85,37 @@ export default function Dashboard() {
     logout();
     navigate("/login");
   }
+
+  async function loadMetrics() {
+  try {
+    const res = await API.get("/wallet/transactions");
+    const txs = res.data || [];
+
+    const totalTransfers = txs.length;
+
+    const successfulTransfers = txs.filter((tx) => tx.success === true).length;
+
+    const successRate =
+      totalTransfers > 0 ? (successfulTransfers / totalTransfers) * 100 : 0;
+
+    const latencies = txs
+      .map((tx) => tx.latency)
+      .filter((latency) => typeof latency === "number");
+
+    const avgLatency =
+      latencies.length > 0
+        ? latencies.reduce((sum, latency) => sum + latency, 0) / latencies.length
+        : 0;
+
+    setMetrics({
+      totalTransfers,
+      successRate,
+      avgLatency,
+    });
+  } catch (err) {
+    console.log("Failed to load metrics:", err.message);
+  }
+}
 
   const isMobile = windowWidth < 768;
   const isTablet = windowWidth >= 768 && windowWidth < 1100;
@@ -171,7 +204,7 @@ export default function Dashboard() {
 
       <div style={{ marginTop: 20 }}>
         <div style={infoCard}>
-          <h3 style={{ marginTop: 0 }}>System Intelligence</h3>
+          <h3 style={{ marginTop: 0 }}>System Insights</h3>
 
           {intelligence.length === 0 ? (
             <p style={{ color: "#666", margin: 0 }}>
@@ -181,7 +214,7 @@ export default function Dashboard() {
             intelligence.map((item, index) => (
               <div key={index} style={intelligenceRow}>
                 <p>
-                  <strong>Provider:</strong> {item.provider || "-"}
+                  <strong>Payment Network:</strong> {item.provider || "-"}
                 </p>
                 <p>
                   <strong>Success Rate:</strong>{" "}
@@ -190,7 +223,7 @@ export default function Dashboard() {
                     : "-"}
                 </p>
                 <p>
-                  <strong>Avg Latency:</strong>{" "}
+                  <strong>Avg Processing Time:</strong>{" "}
                   {typeof item.avgLatency === "number"
                     ? `${item.avgLatency.toFixed(0)} ms`
                     : "-"}
@@ -212,10 +245,31 @@ export default function Dashboard() {
   );
 }
 
+<div style={{ marginTop: 20 }}>
+  <div style={infoCard}>
+    <h3 style={{ marginTop: 0 }}>System Metrics</h3>
+    <p>
+      <strong>Total Transfers:</strong> {metrics.totalTransfers}
+    </p>
+    <p>
+      <strong>Success Rate:</strong> {metrics.successRate.toFixed(1)}%
+    </p>
+    <p>
+      <strong>Avg Processing Time:</strong> {metrics.avgLatency.toFixed(0)} ms
+    </p>
+  </div>
+</div>
+
 const page = {
   minHeight: "100vh",
   background: "#f5f7fb",
 };
+
+const [metrics, setMetrics] = useState({
+  totalTransfers: 0,
+  successRate: 0,
+  avgLatency: 0,
+});
 
 const header = {
   display: "flex",
