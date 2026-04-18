@@ -2,6 +2,7 @@ import { useState } from "react";
 import API from "../services/api";
 import AlertBanner from "../components/AlertBanner";
 import RiskBadge from "../components/RiskBadge";
+import TransferConfirmationCard from "../components/TransferConfirmationCard";
 
 export default function SendMoney({ onPaymentSuccess }) {
   const [amount, setAmount] = useState("");
@@ -9,6 +10,7 @@ export default function SendMoney({ onPaymentSuccess }) {
   const [message, setMessage] = useState(null);
   const [fraud, setFraud] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [lastTransfer, setLastTransfer] = useState(null);
 
   async function handlePay(e) {
     e.preventDefault();
@@ -33,6 +35,16 @@ export default function SendMoney({ onPaymentSuccess }) {
       setMessage({
         type: "success",
         text: `✅ Transfer successful via ${res.data.provider}. Your balance has been updated. You can send another transfer or view your transactions below.`,
+      });
+
+      setLastTransfer({
+        status: res.data.status || "completed",
+        amount: res.data.amount ?? Number(amount),
+        currency: res.data.currency ?? currency,
+        provider: res.data.provider,
+        latency: res.data.latency,
+        transactionId: res.data.transactionId || "-",
+        timestamp: new Date().toISOString(),
       });
 
       setAmount("");
@@ -91,6 +103,8 @@ export default function SendMoney({ onPaymentSuccess }) {
           {loading ? "Processing transfer..." : "Send Transfer"}
         </button>
       </form>
+
+      <TransferConfirmationCard transfer={lastTransfer} />
     </div>
   );
 }
