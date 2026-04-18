@@ -8,6 +8,7 @@ import SendMoney from "./SendMoney";
 import TopUp from "./TopUp";
 import Transactions from "./Transactions";
 import FraudStatus from "./FraudStatus";
+import DemoBanner from "../components/DemoBanner";
 
 export default function Dashboard() {
   const { user, logout, refreshUser } = useAuth();
@@ -87,6 +88,8 @@ export default function Dashboard() {
           Logout
         </button>
       </header>
+
+      <DemoBanner />
 
       <div style={gridThree}>
         <BalanceCard balance={balance} />
