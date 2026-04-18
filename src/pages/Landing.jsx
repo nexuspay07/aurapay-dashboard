@@ -6,7 +6,7 @@ export default function Landing() {
       <header style={header}>
         <div>
           <h1 style={logo}>AuraPay</h1>
-          <p style={tagline}>Smart transfers powered by intelligence</p>
+          <p style={tagline}>Smart transfer infrastructure powered by real-time intelligence</p>
         </div>
 
         <div style={navActions}>
@@ -28,8 +28,7 @@ export default function Landing() {
           </h2>
 
           <p style={subtext}>
-            AuraPay combines smart provider selection, real-time wallet balances,
-            fraud monitoring, and transparent transaction tracking into one clean experience.
+            AuraPay combines intelligent routing, fraud protection, and real-time wallet systems into one unified transfer platform.
           </p>
 
           <div style={heroButtons}>
@@ -66,34 +65,34 @@ export default function Landing() {
       </section>
 
       <section style={featuresSection}>
-        <h3 style={sectionTitle}>Why AuraPay</h3>
+  <h3 style={sectionTitle}>Why AuraPay</h3>
 
-        <div style={featuresGrid}>
-          <div style={featureCard}>
-            <h4 style={featureTitle}>AI Routing</h4>
-            <p style={featureText}>
-              AuraPay intelligently chooses the best provider path based on performance,
-              speed, and success history.
-            </p>
-          </div>
+  <div style={featuresGrid}>
+    <div style={featureCard}>
+      <h4 style={featureTitle}>Intelligent Routing</h4>
+      <p style={featureText}>
+        AuraPay selects the best transfer path in real time using live provider
+        performance data.
+      </p>
+    </div>
 
-          <div style={featureCard}>
-            <h4 style={featureTitle}>Fraud Protection</h4>
-            <p style={featureText}>
-              Built-in fraud checks and account defense help detect risky transfers
-              before they become problems.
-            </p>
-          </div>
+    <div style={featureCard}>
+      <h4 style={featureTitle}>Fraud Protection</h4>
+      <p style={featureText}>
+        Built-in security checks help detect suspicious transfers before they
+        are completed.
+      </p>
+    </div>
 
-          <div style={featureCard}>
-            <h4 style={featureTitle}>Real-Time Wallet</h4>
-            <p style={featureText}>
-              Users can view balances, recent transfers, and system intelligence
-              instantly from one dashboard.
-            </p>
-          </div>
-        </div>
-      </section>
+    <div style={featureCard}>
+      <h4 style={featureTitle}>Wallet Infrastructure</h4>
+      <p style={featureText}>
+        Users can manage balances, top up wallets, and track transfer activity
+        through one clean interface.
+      </p>
+    </div>
+  </div>
+</section>
 
       <footer style={footer}>
         <p style={footerText}>AuraPay Beta • Intelligent transfer infrastructure</p>
