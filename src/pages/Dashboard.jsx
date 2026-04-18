@@ -20,9 +20,19 @@ export default function Dashboard() {
   const [intelligence, setIntelligence] = useState([]);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
+  const [metrics, setMetrics] = useState({
+    totalTransfers: 0,
+    successRate: 0,
+    avgLatency: 0,
+  });
+
   async function loadBalance() {
-    const res = await API.get("/user/balance");
-    setBalance(res.data);
+    try {
+      const res = await API.get("/user/balance");
+      setBalance(res.data || { usd: 0, eur: 0 });
+    } catch (err) {
+      console.log("Failed to load balance:", err.message);
+    }
   }
 
   async function loadLatestTransaction() {
@@ -47,16 +57,51 @@ export default function Dashboard() {
     }
   }
 
- async function refreshAll() {
-  await Promise.all([
-    loadBalance(),
-    refreshUser(),
-    loadLatestTransaction(),
-    loadIntelligence(),
-    loadMetrics(),
-  ]);
-  setReloadKey((prev) => prev + 1);
-}
+  async function loadMetrics() {
+    try {
+      const res = await API.get("/wallet/transactions");
+      const txs = Array.isArray(res.data) ? res.data : [];
+
+      const totalTransfers = txs.length;
+      const successfulTransfers = txs.filter((tx) => tx.success === true).length;
+
+      const successRate =
+        totalTransfers > 0 ? (successfulTransfers / totalTransfers) * 100 : 0;
+
+      const latencies = txs
+        .map((tx) => tx.latency)
+        .filter((latency) => typeof latency === "number");
+
+      const avgLatency =
+        latencies.length > 0
+          ? latencies.reduce((sum, latency) => sum + latency, 0) / latencies.length
+          : 0;
+
+      setMetrics({
+        totalTransfers,
+        successRate,
+        avgLatency,
+      });
+    } catch (err) {
+      console.log("Failed to load metrics:", err.message);
+      setMetrics({
+        totalTransfers: 0,
+        successRate: 0,
+        avgLatency: 0,
+      });
+    }
+  }
+
+  async function refreshAll() {
+    await Promise.all([
+      loadBalance(),
+      refreshUser(),
+      loadLatestTransaction(),
+      loadIntelligence(),
+      loadMetrics(),
+    ]);
+    setReloadKey((prev) => prev + 1);
+  }
 
   function handleTopUpSuccess(newBalance) {
     if (newBalance) {
@@ -66,11 +111,11 @@ export default function Dashboard() {
   }
 
   useEffect(() => {
-  loadBalance();
-  loadLatestTransaction();
-  loadIntelligence();
-  loadMetrics();
-}, []);
+    loadBalance();
+    loadLatestTransaction();
+    loadIntelligence();
+    loadMetrics();
+  }, []);
 
   useEffect(() => {
     function handleResize() {
@@ -85,37 +130,6 @@ export default function Dashboard() {
     logout();
     navigate("/login");
   }
-
-  async function loadMetrics() {
-  try {
-    const res = await API.get("/wallet/transactions");
-    const txs = res.data || [];
-
-    const totalTransfers = txs.length;
-
-    const successfulTransfers = txs.filter((tx) => tx.success === true).length;
-
-    const successRate =
-      totalTransfers > 0 ? (successfulTransfers / totalTransfers) * 100 : 0;
-
-    const latencies = txs
-      .map((tx) => tx.latency)
-      .filter((latency) => typeof latency === "number");
-
-    const avgLatency =
-      latencies.length > 0
-        ? latencies.reduce((sum, latency) => sum + latency, 0) / latencies.length
-        : 0;
-
-    setMetrics({
-      totalTransfers,
-      successRate,
-      avgLatency,
-    });
-  } catch (err) {
-    console.log("Failed to load metrics:", err.message);
-  }
-}
 
   const isMobile = windowWidth < 768;
   const isTablet = windowWidth >= 768 && windowWidth < 1100;
@@ -175,10 +189,11 @@ export default function Dashboard() {
                   (latestTransaction.success ? "SUCCESS" : "FAILED")}
               </p>
               <p>
-                <strong>Provider:</strong> {latestTransaction.provider || "-"}
+                <strong>Payment Network:</strong>{" "}
+                {latestTransaction.provider || "-"}
               </p>
               <p>
-                <strong>Latency:</strong>{" "}
+                <strong>Processing Time:</strong>{" "}
                 {typeof latestTransaction.latency === "number"
                   ? `${latestTransaction.latency} ms`
                   : "-"}
@@ -235,6 +250,21 @@ export default function Dashboard() {
       </div>
 
       <div style={{ marginTop: 20 }}>
+        <div style={infoCard}>
+          <h3 style={{ marginTop: 0 }}>System Metrics</h3>
+          <p>
+            <strong>Total Transfers:</strong> {metrics.totalTransfers}
+          </p>
+          <p>
+            <strong>Success Rate:</strong> {metrics.successRate.toFixed(1)}%
+          </p>
+          <p>
+            <strong>Avg Processing Time:</strong> {metrics.avgLatency.toFixed(0)} ms
+          </p>
+        </div>
+      </div>
+
+      <div style={{ marginTop: 20 }}>
         <FraudStatus />
       </div>
 
@@ -245,31 +275,10 @@ export default function Dashboard() {
   );
 }
 
-<div style={{ marginTop: 20 }}>
-  <div style={infoCard}>
-    <h3 style={{ marginTop: 0 }}>System Metrics</h3>
-    <p>
-      <strong>Total Transfers:</strong> {metrics.totalTransfers}
-    </p>
-    <p>
-      <strong>Success Rate:</strong> {metrics.successRate.toFixed(1)}%
-    </p>
-    <p>
-      <strong>Avg Processing Time:</strong> {metrics.avgLatency.toFixed(0)} ms
-    </p>
-  </div>
-</div>
-
 const page = {
   minHeight: "100vh",
   background: "#f5f7fb",
 };
-
-const [metrics, setMetrics] = useState({
-  totalTransfers: 0,
-  successRate: 0,
-  avgLatency: 0,
-});
 
 const header = {
   display: "flex",
