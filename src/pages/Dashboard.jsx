@@ -1,222 +1,133 @@
-import { useEffect, useState } from "react";
-import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import API from "../services/api";
+import AlertBanner from "../components/AlertBanner";
+import RiskBadge from "../components/RiskBadge";
+import TransferConfirmationCard from "../components/TransferConfirmationCard";
 
-import BalanceCard from "../components/BalanceCard";
-import SendMoney from "./SendMoney";
-import TopUp from "./TopUp";
-import Transactions from "./Transactions";
-import FraudStatus from "./FraudStatus";
-import DemoBanner from "../components/DemoBanner";
+export default function SendMoney({ onPaymentSuccess }) {
+  const [amount, setAmount] = useState("");
+  const [currency, setCurrency] = useState("usd");
+  const [message, setMessage] = useState(null);
+  const [fraud, setFraud] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [lastTransfer, setLastTransfer] = useState(null);
 
-export default function Dashboard() {
-  const { user, logout, refreshUser } = useAuth();
-  const navigate = useNavigate();
+  async function handlePay(e) {
+    e.preventDefault();
 
-  const [balance, setBalance] = useState({ usd: 0, eur: 0 });
-  const [reloadKey, setReloadKey] = useState(0);
-  const [latestTransaction, setLatestTransaction] = useState(null);
-  const [intelligence, setIntelligence] = useState([]);
+    if (!amount || Number(amount) <= 0) {
+      setMessage({ type: "danger", text: "Enter a valid amount" });
+      return;
+    }
 
-  async function loadBalance() {
-    const res = await API.get("/user/balance");
-    setBalance(res.data);
-  }
+    setLoading(true);
+    setMessage(null);
+    setFraud(null);
 
-  async function loadLatestTransaction() {
     try {
-      const res = await API.get("/wallet/transactions");
-      if (res.data && res.data.length > 0) {
-        setLatestTransaction(res.data[0]);
-      } else {
-        setLatestTransaction(null);
-      }
+      const res = await API.post("/wallet/pay", {
+        amount: Number(amount),
+        currency,
+      });
+
+      setFraud(res.data.fraud || null);
+
+      setMessage({
+        type: "success",
+        text: `✅ Transfer successful via ${res.data.provider}. Your balance has been updated. You can send another transfer or view your transactions below.`,
+      });
+
+      setLastTransfer({
+        status: res.data.status,
+        amount: res.data.amount ?? Number(amount),
+        currency: res.data.currency ?? currency,
+        provider: res.data.provider,
+        latency: res.data.latency,
+        transactionId: res.data.transactionId,
+        timestamp: new Date().toISOString(),
+      });
+
+      setAmount("");
+      onPaymentSuccess?.();
     } catch (err) {
-      console.log("Failed to load latest transaction:", err.message);
+      const data = err?.response?.data;
+
+      setFraud(data?.fraud || data?.details || null);
+
+      setMessage({
+        type: "danger",
+        text:
+          data?.message ||
+          data?.error ||
+          "❌ Transfer failed. Please try again or check your balance.",
+      });
+    } finally {
+      setLoading(false);
     }
-  }
-
-  async function loadIntelligence() {
-    try {
-      const res = await API.get("/wallet/intelligence");
-      setIntelligence(res.data || []);
-    } catch (err) {
-      console.log("Failed to load intelligence:", err.message);
-    }
-  }
-
-  async function refreshAll() {
-    await Promise.all([
-      loadBalance(),
-      refreshUser(),
-      loadLatestTransaction(),
-      loadIntelligence(),
-    ]);
-    setReloadKey((prev) => prev + 1);
-  }
-
-  function handleTopUpSuccess(newBalance) {
-    if (newBalance) {
-      setBalance(newBalance);
-    }
-    refreshAll();
-  }
-
-  useEffect(() => {
-    loadBalance();
-    loadLatestTransaction();
-    loadIntelligence();
-  }, []);
-
-  function handleLogout() {
-    logout();
-    navigate("/login");
   }
 
   return (
-    <div style={page}>
-      <header style={header}>
-        <div>
-          <h1 style={{ margin: 0 }}>AuraPay</h1>
-          <p style={{ margin: "6px 0 0", color: "#666" }}>
-            Signed in as {user?.email}
-          </p>
-        </div>
+    <div style={card}>
+      <h3 style={{ marginTop: 0 }}>Send Transfer</h3>
 
-        <button style={logoutBtn} onClick={handleLogout}>
-          Logout
+      {message && (
+        <AlertBanner message={message.text} type={message.type} />
+      )}
+
+      {fraud?.decision && (
+        <div style={{ marginBottom: 12 }}>
+          <RiskBadge decision={fraud.decision} />
+        </div>
+      )}
+
+      <form onSubmit={handlePay}>
+        <input
+          style={input}
+          type="number"
+          min="1"
+          placeholder="Amount"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+        />
+
+        <select
+          style={input}
+          value={currency}
+          onChange={(e) => setCurrency(e.target.value)}
+        >
+          <option value="usd">USD</option>
+          <option value="eur">EUR</option>
+        </select>
+
+        <button style={button} disabled={loading} type="submit">
+          {loading ? "Processing transfer..." : "Send Transfer"}
         </button>
-      </header>
+      </form>
 
-      <DemoBanner />
-
-      <div style={gridThree}>
-        <BalanceCard balance={balance} />
-        <TopUp onTopUpSuccess={handleTopUpSuccess} />
-        <SendMoney onPaymentSuccess={refreshAll} />
-      </div>
-
-      <div style={{ marginTop: 20 }}>
-        <div style={infoCard}>
-          <h3 style={{ marginTop: 0 }}>Last Transfer Result</h3>
-
-          {!latestTransaction ? (
-            <p style={{ color: "#666", margin: 0 }}>
-              No transfers yet.
-            </p>
-          ) : (
-            <>
-              <p>
-                <strong>Status:</strong>{" "}
-                {latestTransaction.status ||
-                  (latestTransaction.success ? "SUCCESS" : "FAILED")}
-              </p>
-              <p>
-                <strong>Provider:</strong>{" "}
-                {latestTransaction.provider || "-"}
-              </p>
-              <p>
-                <strong>Latency:</strong>{" "}
-                {typeof latestTransaction.latency === "number"
-                  ? `${latestTransaction.latency} ms`
-                  : "-"}
-              </p>
-              <p>
-                <strong>Transaction ID:</strong>{" "}
-                {latestTransaction.transactionId || "-"}
-              </p>
-              <p>
-                <strong>Amount:</strong> {latestTransaction.amount}{" "}
-                {String(latestTransaction.currency || "").toUpperCase()}
-              </p>
-              <p>
-                <strong>Date:</strong>{" "}
-                {latestTransaction.createdAt
-                  ? new Date(latestTransaction.createdAt).toLocaleString()
-                  : "-"}
-              </p>
-            </>
-          )}
-        </div>
-      </div>
-
-      <div style={{ marginTop: 20 }}>
-        <div style={infoCard}>
-          <h3 style={{ marginTop: 0 }}>System Intelligence</h3>
-
-          {intelligence.length === 0 ? (
-            <p style={{ color: "#666", margin: 0 }}>
-              No routing intelligence data available yet.
-            </p>
-          ) : (
-            intelligence.map((item, index) => (
-              <div key={index} style={intelligenceRow}>
-                <p>
-                  <strong>Provider:</strong> {item.provider || "-"}
-                </p>
-                <p>
-                  <strong>Success Rate:</strong>{" "}
-                  {typeof item.successRate === "number"
-                    ? `${(item.successRate * 100).toFixed(1)}%`
-                    : "-"}
-                </p>
-                <p>
-                  <strong>Avg Latency:</strong>{" "}
-                  {typeof item.avgLatency === "number"
-                    ? `${item.avgLatency.toFixed(0)} ms`
-                    : "-"}
-                </p>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-
-      <div style={{ marginTop: 20 }}>
-        <FraudStatus />
-      </div>
-
-      <div style={{ marginTop: 20 }}>
-        <Transactions reloadKey={reloadKey} />
-      </div>
+      <TransferConfirmationCard transfer={lastTransfer} />
     </div>
   );
 }
 
-const page = {
-  minHeight: "100vh",
-  background: "#f5f7fb",
-  padding: 24,
-};
-
-const header = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  marginBottom: 20,
-};
-
-const gridThree = {
-  display: "grid",
-  gridTemplateColumns: "repeat(3, 1fr)",
-  gap: 20,
-};
-
-const infoCard = {
+const card = {
   border: "1px solid #ddd",
   borderRadius: 12,
   padding: 20,
   background: "#fff",
 };
 
-const intelligenceRow = {
-  borderTop: "1px solid #eee",
-  padding: "10px 0",
+const input = {
+  width: "100%",
+  padding: 12,
+  marginBottom: 12,
+  borderRadius: 8,
+  border: "1px solid #ccc",
+  boxSizing: "border-box",
 };
 
-const logoutBtn = {
-  padding: "10px 16px",
+const button = {
+  width: "100%",
+  padding: 12,
   border: "none",
   borderRadius: 8,
   background: "#111827",
