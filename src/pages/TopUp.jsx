@@ -8,6 +8,10 @@ export default function TopUp({ onTopUpSuccess }) {
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  function applyPreset(value) {
+    setAmount(String(value));
+  }
+
   async function handleTopUp(e) {
     e.preventDefault();
 
@@ -31,17 +35,12 @@ export default function TopUp({ onTopUpSuccess }) {
       });
 
       setAmount("");
-
       onTopUpSuccess?.(res.data.balance);
     } catch (err) {
       const data = err?.response?.data;
-
       setMessage({
         type: "danger",
-        text:
-          data?.message ||
-          data?.error ||
-          "❌ Top-up failed. Please try again.",
+        text: data?.message || data?.error || "❌ Top-up failed. Please try again.",
       });
     } finally {
       setLoading(false);
@@ -52,9 +51,19 @@ export default function TopUp({ onTopUpSuccess }) {
     <div style={card}>
       <h3 style={{ marginTop: 0 }}>Top Up Wallet</h3>
 
-      {message && (
-        <AlertBanner message={message.text} type={message.type} />
-      )}
+      {message && <AlertBanner message={message.text} type={message.type} />}
+
+      <div style={presetRow}>
+        <button type="button" style={presetButton} onClick={() => applyPreset(100)}>
+          +$100
+        </button>
+        <button type="button" style={presetButton} onClick={() => applyPreset(1000)}>
+          +$1,000
+        </button>
+        <button type="button" style={presetButton} onClick={() => applyPreset(10000)}>
+          +$10,000
+        </button>
+      </div>
 
       <form onSubmit={handleTopUp}>
         <input
@@ -88,6 +97,22 @@ const card = {
   borderRadius: 12,
   padding: 20,
   background: "#fff",
+};
+
+const presetRow = {
+  display: "flex",
+  gap: 8,
+  marginBottom: 12,
+  flexWrap: "wrap",
+};
+
+const presetButton = {
+  border: "1px solid #d1d5db",
+  background: "#fff",
+  borderRadius: 8,
+  padding: "8px 10px",
+  cursor: "pointer",
+  fontWeight: 600,
 };
 
 const input = {

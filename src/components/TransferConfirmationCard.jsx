@@ -1,6 +1,14 @@
 export default function TransferConfirmationCard({ transfer }) {
   if (!transfer) return null;
 
+  const formattedAmount = Number(transfer.amount || 0).toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+  const symbol =
+    String(transfer.currency || "").toLowerCase() === "eur" ? "€" : "$";
+
   return (
     <div style={card}>
       <p style={eyebrow}>TRANSFER RECEIPT</p>
@@ -8,34 +16,31 @@ export default function TransferConfirmationCard({ transfer }) {
 
       <div style={row}>
         <span style={label}>Status</span>
-        <span style={value}>
-          {transfer.status || "completed"}
-        </span>
+        <span style={value}>{transfer.status || "completed"}</span>
       </div>
 
       <div style={row}>
         <span style={label}>Amount</span>
         <span style={value}>
-          {transfer.amount} {String(transfer.currency || "").toUpperCase()}
+          {symbol}
+          {formattedAmount}
         </span>
       </div>
 
       <div style={row}>
-        <span style={label}>Provider</span>
+        <span style={label}>Payment Network</span>
         <span style={value}>{transfer.provider || "-"}</span>
       </div>
 
       <div style={row}>
-        <span style={label}>Latency</span>
+        <span style={label}>Processing Time</span>
         <span style={value}>
-          {typeof transfer.latency === "number"
-            ? `${transfer.latency} ms`
-            : "-"}
+          {typeof transfer.latency === "number" ? `${transfer.latency} ms` : "-"}
         </span>
       </div>
 
       <div style={row}>
-        <span style={label}>Transaction ID</span>
+        <span style={label}>Transfer Reference</span>
         <span style={transactionId}>{transfer.transactionId || "-"}</span>
       </div>
 

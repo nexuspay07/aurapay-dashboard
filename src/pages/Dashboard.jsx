@@ -180,7 +180,9 @@ export default function Dashboard() {
           <h3 style={{ marginTop: 0 }}>Last Transfer Result</h3>
 
           {!latestTransaction ? (
-            <p style={{ color: "#666", margin: 0 }}>No transfers yet.</p>
+            <p style={{ color: "#666", margin: 0 }}>
+  No transfer activity yet. Top up your wallet and send a transfer to begin.
+</p>
           ) : (
             <>
               <p>

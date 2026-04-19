@@ -51,7 +51,9 @@ export default function FraudStatus() {
         <h3 style={{ marginTop: 0 }}>Recent Fraud Logs</h3>
 
         {fraudLogs.length === 0 ? (
-          <p style={{ color: "#666", margin: 0 }}>No fraud activity recorded.</p>
+          <p style={{ color: "#666", margin: 0 }}>
+  No security activity recorded yet.
+</p>
         ) : (
           fraudLogs.slice(0, 5).map((log) => (
             <div key={log._id} style={logBox}>
