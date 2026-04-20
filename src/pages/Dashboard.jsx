@@ -147,6 +147,13 @@ export default function Dashboard() {
     [isMobile, isTablet]
   );
 
+  const verificationLabel =
+    user?.status === "verified"
+      ? "Verified"
+      : user?.status === "pending"
+      ? "Pending Verification"
+      : "Unverified";
+
   return (
     <div
       style={{
@@ -167,27 +174,27 @@ export default function Dashboard() {
         </button>
       </header>
 
-      <div style={{ marginTop: 20 }}>
-  <div style={infoCard}>
-    <h3 style={{ marginTop: 0 }}>Account Status</h3>
-    <p>
-      <strong>Verification Status:</strong>{" "}
-      {user?.status === "verified"
-        ? "Verified"
-        : user?.status === "pending"
-        ? "Pending Verification"
-        : "Unverified"}
-    </p>
-    <p>
-      <strong>Onboarding:</strong>{" "}
-      {user?.onboardingCompleted ? "Completed" : "Not Completed"}
-    </p>
-  </div>
-</div>
-
       <DemoBanner />
 
-      <div style={responsiveGrid}>
+      <div style={{ marginTop: 20 }}>
+        <div style={infoCard}>
+          <h3 style={{ marginTop: 0 }}>Account Status</h3>
+          <p>
+            <strong>Verification Status:</strong> {verificationLabel}
+          </p>
+          <p>
+            <strong>Onboarding:</strong>{" "}
+            {user?.onboardingCompleted ? "Completed" : "Not Completed"}
+          </p>
+          {user?.status !== "verified" && (
+            <p style={{ color: "#92400e", marginBottom: 0 }}>
+              Complete onboarding and verification to unlock larger transfer limits.
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div style={{ ...responsiveGrid, marginTop: 20 }}>
         <BalanceCard balance={balance} />
         <TopUp onTopUpSuccess={handleTopUpSuccess} />
         <SendMoney onPaymentSuccess={refreshAll} />
@@ -199,8 +206,8 @@ export default function Dashboard() {
 
           {!latestTransaction ? (
             <p style={{ color: "#666", margin: 0 }}>
-  No transfer activity yet. Top up your wallet and send a transfer to begin.
-</p>
+              No transfer activity yet. Top up your wallet and send a transfer to begin.
+            </p>
           ) : (
             <>
               <p>
@@ -223,7 +230,8 @@ export default function Dashboard() {
                 {latestTransaction.transactionId || "-"}
               </p>
               <p>
-                <strong>Amount:</strong> {latestTransaction.amount}{" "}
+                <strong>Amount:</strong>{" "}
+                {latestTransaction.amount}{" "}
                 {String(latestTransaction.currency || "").toUpperCase()}
               </p>
               <p>
