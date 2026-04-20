@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import AlertBanner from "../components/AlertBanner";
+import { useEffect } from "react";
 
 export default function Login() {
   const { login } = useAuth();
@@ -16,7 +17,11 @@ export default function Login() {
 
     try {
       await login(form.email, form.password);
-      navigate("/dashboard");
+      if (resUserNeedsOnboarding()) {
+  navigate("/onboarding");
+} else {
+  navigate("/dashboard");
+}
     } catch (err) {
       setError(err?.response?.data?.error || "Login failed");
     }

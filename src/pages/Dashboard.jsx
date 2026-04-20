@@ -167,6 +167,24 @@ export default function Dashboard() {
         </button>
       </header>
 
+      <div style={{ marginTop: 20 }}>
+  <div style={infoCard}>
+    <h3 style={{ marginTop: 0 }}>Account Status</h3>
+    <p>
+      <strong>Verification Status:</strong>{" "}
+      {user?.status === "verified"
+        ? "Verified"
+        : user?.status === "pending"
+        ? "Pending Verification"
+        : "Unverified"}
+    </p>
+    <p>
+      <strong>Onboarding:</strong>{" "}
+      {user?.onboardingCompleted ? "Completed" : "Not Completed"}
+    </p>
+  </div>
+</div>
+
       <DemoBanner />
 
       <div style={responsiveGrid}>
