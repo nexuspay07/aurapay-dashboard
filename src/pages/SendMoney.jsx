@@ -6,27 +6,29 @@ import TransferConfirmationCard from "../components/TransferConfirmationCard";
 import { useAuth } from "../context/AuthContext";
 
 export default function SendMoney({ onPaymentSuccess }) {
+  const { user } = useAuth();
+
   const [amount, setAmount] = useState("");
   const [currency, setCurrency] = useState("usd");
   const [message, setMessage] = useState(null);
   const [fraud, setFraud] = useState(null);
   const [loading, setLoading] = useState(false);
   const [lastTransfer, setLastTransfer] = useState(null);
-  const { user } = useAuth();
 
   async function handlePay(e) {
     e.preventDefault();
 
-    if (user?.status !== "verified" && Number(amount) > 1000) {
-  setMessage({
-    type: "danger",
-    text: "Verification required for transfers above $1,000",
-  });
-  return;
-}
-
     if (!amount || Number(amount) <= 0) {
       setMessage({ type: "danger", text: "Enter a valid amount" });
+      return;
+    }
+
+    // ✅ Verification rule
+    if (user?.status !== "verified" && Number(amount) > 1000) {
+      setMessage({
+        type: "danger",
+        text: "Verification required for transfers above $1,000",
+      });
       return;
     }
 
