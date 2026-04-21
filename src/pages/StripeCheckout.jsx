@@ -37,19 +37,24 @@ export default function StripeCheckout() {
       if (result.error) {
         setMessage(`❌ Payment failed: ${result.error.message}`);
       } else if (result.paymentIntent?.status === "succeeded") {
+        console.log("✅ STRIPE SUCCESS:", result.paymentIntent);
+
         // 3. Save successful payment in DB
-        await API.post("/stripe/save-payment", {
+        const saveRes = await API.post("/stripe/save-payment", {
           amount: Number(amount),
           currency: "usd",
           paymentIntentId: result.paymentIntent.id,
           status: result.paymentIntent.status,
         });
 
+        console.log("✅ SAVE RESPONSE:", saveRes.data);
+
         setMessage("✅ Payment successful and saved to AuraPay!");
       } else {
         setMessage("Payment did not complete.");
       }
     } catch (err) {
+      console.log("❌ CHECKOUT ERROR:", err?.response?.data || err.message);
       setMessage(err?.response?.data?.error || "❌ Payment error");
     } finally {
       setLoading(false);
