@@ -195,9 +195,21 @@ export default function Dashboard() {
       </div>
 
       <div style={{ ...responsiveGrid, marginTop: 20 }}>
-        <BalanceCard balance={balance} />
-        <TopUp onTopUpSuccess={handleTopUpSuccess} />
-        <SendMoney onPaymentSuccess={refreshAll} />
+        <div style={columnCard}>
+          <BalanceCard balance={balance} />
+        </div>
+
+        <div style={columnCard}>
+          <TopUp onTopUpSuccess={handleTopUpSuccess} />
+
+          <button style={stripeButton} onClick={() => navigate("/checkout")}>
+            Pay with Card (Stripe)
+          </button>
+        </div>
+
+        <div style={columnCard}>
+          <SendMoney onPaymentSuccess={refreshAll} />
+        </div>
       </div>
 
       <div style={{ marginTop: 20 }}>
@@ -336,4 +348,21 @@ const logoutBtn = {
   background: "#111827",
   color: "#fff",
   cursor: "pointer",
+};
+
+const columnCard = {
+  display: "flex",
+  flexDirection: "column",
+  gap: 12,
+};
+
+const stripeButton = {
+  width: "100%",
+  padding: 12,
+  border: "none",
+  borderRadius: 8,
+  background: "#0ea5e9",
+  color: "#fff",
+  cursor: "pointer",
+  fontWeight: 700,
 };
