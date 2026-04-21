@@ -6,27 +6,20 @@ export default function StripeCheckout() {
   const stripe = useStripe();
   const elements = useElements();
 
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState(1000);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
 
-    if (!stripe || !elements) {
-      setMessage("Stripe is still loading. Please wait a moment.");
-      return;
-    }
-
-    if (!amount || Number(amount) <= 0) {
-      setMessage("Enter a valid amount.");
-      return;
-    }
+    if (!stripe || !elements) return;
 
     setLoading(true);
     setMessage("");
 
     try {
+      // 1. Create payment intent
       const res = await API.post("/stripe/create-payment-intent", {
         amount: Number(amount),
         currency: "usd",
@@ -34,6 +27,7 @@ export default function StripeCheckout() {
 
       const clientSecret = res.data.clientSecret;
 
+      // 2. Confirm payment
       const result = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
           card: elements.getElement(CardElement),
@@ -43,119 +37,87 @@ export default function StripeCheckout() {
       if (result.error) {
         setMessage(`❌ Payment failed: ${result.error.message}`);
       } else if (result.paymentIntent?.status === "succeeded") {
-        setMessage("✅ Payment successful!");
+        // 3. Save successful payment in DB
+        await API.post("/stripe/save-payment", {
+          amount: Number(amount),
+          currency: "usd",
+          paymentIntentId: result.paymentIntent.id,
+          status: result.paymentIntent.status,
+        });
+
+        setMessage("✅ Payment successful and saved to AuraPay!");
       } else {
         setMessage("Payment did not complete.");
       }
     } catch (err) {
-      const data = err?.response?.data;
-      setMessage(data?.error || "❌ Payment error");
+      setMessage(err?.response?.data?.error || "❌ Payment error");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div style={page}>
-      <div style={card}>
-        <h2 style={{ marginTop: 0 }}>Make a Payment</h2>
-        <p style={subtext}>
-          Use Stripe test card: 4242 4242 4242 4242
-        </p>
+    <div style={container}>
+      <form onSubmit={handleSubmit} style={card}>
+        <h2>Make a Payment</h2>
 
-        <form onSubmit={handleSubmit}>
-          <input
-            style={input}
-            type="number"
-            placeholder="Amount"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-          />
+        <p>Use Stripe test card:</p>
+        <p style={{ marginTop: -8, color: "#666" }}>4242 4242 4242 4242</p>
 
-          <div style={cardInput}>
-            <CardElement
-              options={{
-                style: {
-                  base: {
-                    fontSize: "16px",
-                    color: "#111827",
-                    "::placeholder": {
-                      color: "#6b7280",
-                    },
-                  },
-                  invalid: {
-                    color: "#dc2626",
-                  },
-                },
-              }}
-            />
-          </div>
+        <input
+          type="number"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          style={input}
+        />
 
-          <button style={button} disabled={loading || !stripe}>
-            {loading ? "Processing..." : "Pay"}
-          </button>
-        </form>
+        <div style={cardElementBox}>
+          <CardElement />
+        </div>
 
-        {message && <p style={messageStyle}>{message}</p>}
-      </div>
+        <button disabled={!stripe || loading} style={button}>
+          {loading ? "Processing..." : "Pay"}
+        </button>
+
+        {message && <p style={{ marginTop: 14 }}>{message}</p>}
+      </form>
     </div>
   );
 }
 
-const page = {
+const container = {
   minHeight: "100vh",
   display: "grid",
   placeItems: "center",
-  background: "#f5f7fb",
-  padding: 24,
 };
 
 const card = {
-  width: "100%",
-  maxWidth: 420,
-  padding: 24,
-  background: "#fff",
-  borderRadius: 12,
+  width: 400,
+  padding: 20,
   border: "1px solid #ddd",
-};
-
-const subtext = {
-  color: "#6b7280",
-  marginTop: 0,
-  marginBottom: 16,
+  borderRadius: 10,
+  background: "#fff",
 };
 
 const input = {
   width: "100%",
-  padding: 12,
-  marginBottom: 12,
-  borderRadius: 8,
-  border: "1px solid #ccc",
+  padding: 10,
+  marginBottom: 10,
   boxSizing: "border-box",
 };
 
-const cardInput = {
-  padding: "14px 12px",
+const cardElementBox = {
+  padding: 12,
   border: "1px solid #ccc",
-  borderRadius: 8,
+  borderRadius: 6,
   marginBottom: 12,
-  background: "#fff",
-  minHeight: 48,
-  display: "flex",
-  alignItems: "center",
-  boxSizing: "border-box",
 };
 
 const button = {
   width: "100%",
   padding: 12,
-  border: "none",
-  borderRadius: 8,
   background: "#111827",
   color: "#fff",
-  cursor: "pointer",
-};
-
-const messageStyle = {
-  marginTop: 14,
+  border: "none",
+  borderRadius: 6,
 };

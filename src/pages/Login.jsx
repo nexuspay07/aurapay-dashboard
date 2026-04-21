@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import AlertBanner from "../components/AlertBanner";
-import { useEffect } from "react";
+import API from "../services/api";
 
 export default function Login() {
   const { login } = useAuth();
@@ -16,12 +16,18 @@ export default function Login() {
     setError("");
 
     try {
-      await login(form.email, form.password);
-      if (resUserNeedsOnboarding()) {
-  navigate("/onboarding");
-} else {
-  navigate("/dashboard");
-}
+      // 🔥 Call backend login
+      const res = await API.post("/auth/login", {
+        email: form.email,
+        password: form.password,
+      });
+
+      // 🔐 Save token
+      login(res.data.token);
+
+      // 🚀 Redirect
+      navigate("/dashboard");
+
     } catch (err) {
       setError(err?.response?.data?.error || "Login failed");
     }

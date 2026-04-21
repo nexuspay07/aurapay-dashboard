@@ -6,6 +6,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Onboarding from "./pages/Onboarding";
+import StripePayment from "./pages/StripePayment";
+import StripeCheckout from "./pages/StripeCheckout";
 
 function ProtectedRoute({ children }) {
   const { token, loading } = useAuth();
@@ -24,6 +26,8 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/stripe-test" element={<StripePayment />} />
+        <Route path="/checkout" element={<StripeCheckout />} />
         <Route
           path="/dashboard"
           element={
