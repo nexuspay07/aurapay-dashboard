@@ -4,8 +4,6 @@ import App from "./App";
 
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
-
-// ✅ ADD THIS
 import { AuthProvider } from "./context/AuthContext";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);

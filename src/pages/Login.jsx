@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import AlertBanner from "../components/AlertBanner";
-import API from "../services/api";
 
 export default function Login() {
   const { login } = useAuth();
@@ -16,18 +15,8 @@ export default function Login() {
     setError("");
 
     try {
-      // 🔥 Call backend login
-      const res = await API.post("/auth/login", {
-        email: form.email,
-        password: form.password,
-      });
-
-      // 🔐 Save token
-      login(res.data.token);
-
-      // 🚀 Redirect
+      await login(form.email, form.password);
       navigate("/dashboard");
-
     } catch (err) {
       setError(err?.response?.data?.error || "Login failed");
     }
@@ -56,7 +45,9 @@ export default function Login() {
           onChange={(e) => setForm({ ...form, password: e.target.value })}
         />
 
-        <button style={button} type="submit">Login</button>
+        <button style={button} type="submit">
+          Login
+        </button>
 
         <p>
           No account? <Link to="/register">Register</Link>

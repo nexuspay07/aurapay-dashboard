@@ -11,16 +11,29 @@ export default function Register() {
   const [error, setError] = useState("");
 
   async function handleSubmit(e) {
-    e.preventDefault();
-    setError("");
+  e.preventDefault();
 
-    try {
-      await register(form.email, form.password);
-      navigate("/dashboard");
-    } catch (err) {
-      setError(err?.response?.data?.error || "Register failed");
-    }
+  console.log("🚀 Register clicked", form);
+
+  try {
+    const res = await API.post("/auth/register", {
+      email: form.email,
+      password: form.password,
+    });
+
+    console.log("✅ RESPONSE:", res.data);
+
+    navigate("/dashboard");
+  } catch (err) {
+    console.log("❌ ERROR:", err?.response?.data || err.message);
+
+    setError(
+      err?.response?.data?.error ||
+      err?.response?.data?.message ||
+      "Register failed"
+    );
   }
+}
 
   return (
     <div style={container}>
@@ -45,10 +58,12 @@ export default function Register() {
           onChange={(e) => setForm({ ...form, password: e.target.value })}
         />
 
-        <button style={button} type="submit">Create Account</button>
+        <button style={button} type="submit">
+          Create Account
+        </button>
 
         <p>
-          Already have an account? <Link to="/">Login</Link>
+          Already have an account? <Link to="/login">Login</Link>
         </p>
       </form>
     </div>
