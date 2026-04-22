@@ -26,6 +26,8 @@ export default function Dashboard() {
     avgLatency: 0,
   });
 
+  const [providerAnalytics, setProviderAnalytics] = useState(null);
+
   async function loadBalance() {
     try {
       const res = await API.get("/user/balance");
@@ -92,6 +94,16 @@ export default function Dashboard() {
     }
   }
 
+  async function loadProviderAnalytics() {
+    try {
+      const res = await API.get("/provider-analytics");
+      setProviderAnalytics(res.data);
+    } catch (err) {
+      console.log("Failed to load provider analytics:", err.message);
+      setProviderAnalytics(null);
+    }
+  }
+
   async function refreshAll() {
     await Promise.all([
       loadBalance(),
@@ -99,6 +111,7 @@ export default function Dashboard() {
       loadLatestTransaction(),
       loadIntelligence(),
       loadMetrics(),
+      loadProviderAnalytics(),
     ]);
     setReloadKey((prev) => prev + 1);
   }
@@ -115,6 +128,7 @@ export default function Dashboard() {
     loadLatestTransaction();
     loadIntelligence();
     loadMetrics();
+    loadProviderAnalytics();
   }, []);
 
   useEffect(() => {
@@ -153,6 +167,9 @@ export default function Dashboard() {
       : user?.status === "pending"
       ? "Pending Verification"
       : "Unverified";
+
+  const stripeData = providerAnalytics?.analytics?.Stripe;
+  const paypalData = providerAnalytics?.analytics?.PayPal;
 
   return (
     <div
@@ -203,12 +220,41 @@ export default function Dashboard() {
           <TopUp onTopUpSuccess={handleTopUpSuccess} />
 
           <button style={stripeButton} onClick={() => navigate("/checkout")}>
-            Pay with Card (Stripe)
+            Open Checkout
           </button>
         </div>
 
         <div style={columnCard}>
           <SendMoney onPaymentSuccess={refreshAll} />
+        </div>
+      </div>
+
+      <div style={{ marginTop: 20 }}>
+        <div style={infoCard}>
+          <h3 style={{ marginTop: 0 }}>Provider Analytics</h3>
+
+          <p>
+            <strong>Recommended Provider:</strong>{" "}
+            {providerAnalytics?.recommendedProvider || "Stripe"}
+          </p>
+
+          <div style={providerRow}>
+            <div style={providerBox}>
+              <h4 style={providerTitle}>Stripe</h4>
+              <p><strong>Payments:</strong> {stripeData?.totalCount || 0}</p>
+              <p><strong>Volume:</strong> {stripeData?.totalVolume || 0}</p>
+              <p><strong>Success Rate:</strong> {(stripeData?.successRate || 0).toFixed(1)}%</p>
+              <p><strong>Avg Latency:</strong> {(stripeData?.avgLatency || 0).toFixed(0)} ms</p>
+            </div>
+
+            <div style={providerBox}>
+              <h4 style={providerTitle}>PayPal</h4>
+              <p><strong>Payments:</strong> {paypalData?.totalCount || 0}</p>
+              <p><strong>Volume:</strong> {paypalData?.totalVolume || 0}</p>
+              <p><strong>Success Rate:</strong> {(paypalData?.successRate || 0).toFixed(1)}%</p>
+              <p><strong>Avg Latency:</strong> {(paypalData?.avgLatency || 0).toFixed(0)} ms</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -365,4 +411,23 @@ const stripeButton = {
   color: "#fff",
   cursor: "pointer",
   fontWeight: 700,
+};
+
+const providerRow = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+  gap: 16,
+  marginTop: 16,
+};
+
+const providerBox = {
+  border: "1px solid #eee",
+  borderRadius: 10,
+  padding: 16,
+  background: "#fafafa",
+};
+
+const providerTitle = {
+  marginTop: 0,
+  marginBottom: 12,
 };
