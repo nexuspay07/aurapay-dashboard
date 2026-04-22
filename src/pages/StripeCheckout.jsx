@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import API from "../services/api";
 
 export default function StripeCheckout() {
@@ -11,63 +12,45 @@ export default function StripeCheckout() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e) {
+  async function handleStripeSubmit(e) {
     e.preventDefault();
+
+    if (!stripe || !elements) return;
 
     setLoading(true);
     setMessage("");
 
     try {
       const res = await API.post("/checkout", {
-        provider,
+        provider: "stripe",
         amount: Number(amount),
         currency: "usd",
       });
 
-      // ===============================
-      // STRIPE FLOW
-      // ===============================
-      if (res.data.mode === "stripe") {
-        if (!stripe || !elements) {
-          setMessage("Stripe is still loading.");
-          setLoading(false);
-          return;
-        }
+      const clientSecret = res.data.clientSecret;
 
-        const clientSecret = res.data.clientSecret;
+      const result = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: elements.getElement(CardElement),
+        },
+      });
 
-        const result = await stripe.confirmCardPayment(clientSecret, {
-          payment_method: {
-            card: elements.getElement(CardElement),
-          },
+      if (result.error) {
+        setMessage(`❌ Payment failed: ${result.error.message}`);
+      } else if (result.paymentIntent?.status === "succeeded") {
+        await API.post("/checkout/save-stripe-payment", {
+          amount: Number(amount),
+          currency: "usd",
+          paymentIntentId: result.paymentIntent.id,
+          status: result.paymentIntent.status,
         });
 
-        if (result.error) {
-          setMessage(`❌ Payment failed: ${result.error.message}`);
-        } else if (result.paymentIntent?.status === "succeeded") {
-          await API.post("/checkout/save-stripe-payment", {
-            amount: Number(amount),
-            currency: "usd",
-            paymentIntentId: result.paymentIntent.id,
-            status: result.paymentIntent.status,
-          });
-
-          setMessage("✅ Stripe payment successful and saved!");
-        } else {
-          setMessage("Stripe payment did not complete.");
-        }
-      }
-
-      // ===============================
-      // PAYPAL FLOW
-      // ===============================
-      else if (res.data.mode === "direct") {
-        setMessage("✅ PayPal payment completed and saved!");
+        setMessage("✅ Stripe payment successful and saved!");
       } else {
-        setMessage("Unknown checkout response.");
+        setMessage("Stripe payment did not complete.");
       }
     } catch (err) {
-      setMessage(err?.response?.data?.error || "❌ Checkout failed");
+      setMessage(err?.response?.data?.error || "❌ Stripe checkout failed");
     } finally {
       setLoading(false);
     }
@@ -75,7 +58,7 @@ export default function StripeCheckout() {
 
   return (
     <div style={container}>
-      <form onSubmit={handleSubmit} style={card}>
+      <div style={card}>
         <h2>Checkout</h2>
 
         <p style={{ color: "#666" }}>
@@ -84,7 +67,10 @@ export default function StripeCheckout() {
 
         <select
           value={provider}
-          onChange={(e) => setProvider(e.target.value)}
+          onChange={(e) => {
+            setProvider(e.target.value);
+            setMessage("");
+          }}
           style={input}
         >
           <option value="stripe">Stripe</option>
@@ -99,17 +85,57 @@ export default function StripeCheckout() {
         />
 
         {provider === "stripe" && (
-          <div style={cardElementBox}>
-            <CardElement />
+          <form onSubmit={handleStripeSubmit}>
+            <div style={cardElementBox}>
+              <CardElement />
+            </div>
+
+            <button disabled={loading} style={button}>
+              {loading ? "Processing..." : "Pay with Stripe"}
+            </button>
+          </form>
+        )}
+
+        {provider === "paypal" && (
+          <div style={{ marginTop: 12 }}>
+            <PayPalScriptProvider
+              options={{
+                clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID,
+                currency: "USD",
+                intent: "capture",
+              }}
+            >
+              <PayPalButtons
+                style={{ layout: "vertical" }}
+                createOrder={async () => {
+                  const res = await API.post("/paypal-checkout/create-order", {
+                    amount: Number(amount),
+                    currency: "USD",
+                  });
+
+                  return res.data.id;
+                }}
+                onApprove={async (data) => {
+                  const res = await API.post("/paypal-checkout/capture-order", {
+                    orderID: data.orderID,
+                    amount: Number(amount),
+                    currency: "USD",
+                  });
+
+                  setMessage("✅ PayPal payment captured and saved!");
+                  console.log("PayPal capture response:", res.data);
+                }}
+                onError={(err) => {
+                  console.error("PayPal error:", err);
+                  setMessage("❌ PayPal checkout failed");
+                }}
+              />
+            </PayPalScriptProvider>
           </div>
         )}
 
-        <button disabled={loading} style={button}>
-          {loading ? "Processing..." : `Pay with ${provider === "stripe" ? "Stripe" : "PayPal"}`}
-        </button>
-
         {message && <p style={{ marginTop: 14 }}>{message}</p>}
-      </form>
+      </div>
     </div>
   );
 }
