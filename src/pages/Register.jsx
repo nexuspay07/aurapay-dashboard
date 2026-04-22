@@ -11,29 +11,26 @@ export default function Register() {
   const [error, setError] = useState("");
 
   async function handleSubmit(e) {
-  e.preventDefault();
+    e.preventDefault();
+    setError("");
 
-  console.log("🚀 Register clicked", form);
+    console.log("🚀 Register clicked", form);
 
-  try {
-    const res = await API.post("/auth/register", {
-      email: form.email,
-      password: form.password,
-    });
+    try {
+      await register(form.email, form.password);
+      console.log("✅ Register success");
+      navigate("/dashboard");
+    } catch (err) {
+      console.log("❌ ERROR:", err?.response?.data || err.message);
 
-    console.log("✅ RESPONSE:", res.data);
-
-    navigate("/dashboard");
-  } catch (err) {
-    console.log("❌ ERROR:", err?.response?.data || err.message);
-
-    setError(
-      err?.response?.data?.error ||
-      err?.response?.data?.message ||
-      "Register failed"
-    );
+      setError(
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        err.message ||
+        "Register failed"
+      );
+    }
   }
-}
 
   return (
     <div style={container}>
