@@ -6,6 +6,7 @@ export default function StripeCheckout() {
   const stripe = useStripe();
   const elements = useElements();
 
+  const [provider, setProvider] = useState("stripe");
   const [amount, setAmount] = useState(1000);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -13,49 +14,60 @@ export default function StripeCheckout() {
   async function handleSubmit(e) {
     e.preventDefault();
 
-    if (!stripe || !elements) return;
-
     setLoading(true);
     setMessage("");
 
     try {
-      // 1. Create payment intent
-      const res = await API.post("/stripe/create-payment-intent", {
+      const res = await API.post("/checkout", {
+        provider,
         amount: Number(amount),
         currency: "usd",
       });
 
-      const clientSecret = res.data.clientSecret;
+      // ===============================
+      // STRIPE FLOW
+      // ===============================
+      if (res.data.mode === "stripe") {
+        if (!stripe || !elements) {
+          setMessage("Stripe is still loading.");
+          setLoading(false);
+          return;
+        }
 
-      // 2. Confirm payment
-      const result = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: {
-          card: elements.getElement(CardElement),
-        },
-      });
+        const clientSecret = res.data.clientSecret;
 
-      if (result.error) {
-        setMessage(`❌ Payment failed: ${result.error.message}`);
-      } else if (result.paymentIntent?.status === "succeeded") {
-        console.log("✅ STRIPE SUCCESS:", result.paymentIntent);
-
-        // 3. Save successful payment in DB
-        const saveRes = await API.post("/stripe/save-payment", {
-          amount: Number(amount),
-          currency: "usd",
-          paymentIntentId: result.paymentIntent.id,
-          status: result.paymentIntent.status,
+        const result = await stripe.confirmCardPayment(clientSecret, {
+          payment_method: {
+            card: elements.getElement(CardElement),
+          },
         });
 
-        console.log("✅ SAVE RESPONSE:", saveRes.data);
+        if (result.error) {
+          setMessage(`❌ Payment failed: ${result.error.message}`);
+        } else if (result.paymentIntent?.status === "succeeded") {
+          await API.post("/checkout/save-stripe-payment", {
+            amount: Number(amount),
+            currency: "usd",
+            paymentIntentId: result.paymentIntent.id,
+            status: result.paymentIntent.status,
+          });
 
-        setMessage("✅ Payment successful and saved to AuraPay!");
+          setMessage("✅ Stripe payment successful and saved!");
+        } else {
+          setMessage("Stripe payment did not complete.");
+        }
+      }
+
+      // ===============================
+      // PAYPAL FLOW
+      // ===============================
+      else if (res.data.mode === "direct") {
+        setMessage("✅ PayPal payment completed and saved!");
       } else {
-        setMessage("Payment did not complete.");
+        setMessage("Unknown checkout response.");
       }
     } catch (err) {
-      console.log("❌ CHECKOUT ERROR:", err?.response?.data || err.message);
-      setMessage(err?.response?.data?.error || "❌ Payment error");
+      setMessage(err?.response?.data?.error || "❌ Checkout failed");
     } finally {
       setLoading(false);
     }
@@ -64,10 +76,20 @@ export default function StripeCheckout() {
   return (
     <div style={container}>
       <form onSubmit={handleSubmit} style={card}>
-        <h2>Make a Payment</h2>
+        <h2>Checkout</h2>
 
-        <p>Use Stripe test card:</p>
-        <p style={{ marginTop: -8, color: "#666" }}>4242 4242 4242 4242</p>
+        <p style={{ color: "#666" }}>
+          Choose a payment network and complete the payment.
+        </p>
+
+        <select
+          value={provider}
+          onChange={(e) => setProvider(e.target.value)}
+          style={input}
+        >
+          <option value="stripe">Stripe</option>
+          <option value="paypal">PayPal</option>
+        </select>
 
         <input
           type="number"
@@ -76,12 +98,14 @@ export default function StripeCheckout() {
           style={input}
         />
 
-        <div style={cardElementBox}>
-          <CardElement />
-        </div>
+        {provider === "stripe" && (
+          <div style={cardElementBox}>
+            <CardElement />
+          </div>
+        )}
 
-        <button disabled={!stripe || loading} style={button}>
-          {loading ? "Processing..." : "Pay"}
+        <button disabled={loading} style={button}>
+          {loading ? "Processing..." : `Pay with ${provider === "stripe" ? "Stripe" : "PayPal"}`}
         </button>
 
         {message && <p style={{ marginTop: 14 }}>{message}</p>}
@@ -97,7 +121,7 @@ const container = {
 };
 
 const card = {
-  width: 400,
+  width: 420,
   padding: 20,
   border: "1px solid #ddd",
   borderRadius: 10,
@@ -125,4 +149,5 @@ const button = {
   color: "#fff",
   border: "none",
   borderRadius: 6,
+  cursor: "pointer",
 };
