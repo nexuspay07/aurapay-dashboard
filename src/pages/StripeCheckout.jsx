@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import API from "../services/api";
@@ -7,22 +7,53 @@ export default function StripeCheckout() {
   const stripe = useStripe();
   const elements = useElements();
 
-  const [provider, setProvider] = useState("stripe");
+  const [provider, setProvider] = useState("auto");
   const [amount, setAmount] = useState(1000);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [recommendedProvider, setRecommendedProvider] = useState("stripe");
+
+  const paypalClientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
+
+  useEffect(() => {
+    loadRecommendation();
+  }, []);
+
+  async function loadRecommendation() {
+    try {
+      const res = await API.get("/provider-analytics");
+      setRecommendedProvider(
+        String(res.data?.recommendedProvider || "stripe").toLowerCase()
+      );
+    } catch (err) {
+      console.log("Failed to load recommendation:", err?.response?.data || err.message);
+      setRecommendedProvider("stripe");
+    }
+  }
+
+  function getEffectiveProvider() {
+    if (provider === "auto") {
+      return recommendedProvider;
+    }
+    return provider;
+  }
 
   async function handleStripeSubmit(e) {
     e.preventDefault();
 
-    if (!stripe || !elements) return;
+    if (!stripe || !elements) {
+      setMessage("Stripe is still loading.");
+      return;
+    }
 
     setLoading(true);
     setMessage("");
 
     try {
+      const effectiveProvider = getEffectiveProvider();
+
       const res = await API.post("/checkout", {
-        provider: "stripe",
+        provider: effectiveProvider,
         amount: Number(amount),
         currency: "usd",
       });
@@ -45,7 +76,7 @@ export default function StripeCheckout() {
           status: result.paymentIntent.status,
         });
 
-        setMessage("✅ Stripe payment successful and saved!");
+        setMessage(`✅ ${effectiveProvider.toUpperCase()} payment successful and saved!`);
       } else {
         setMessage("Stripe payment did not complete.");
       }
@@ -73,9 +104,14 @@ export default function StripeCheckout() {
           }}
           style={input}
         >
+          <option value="auto">Auto (Recommended)</option>
           <option value="stripe">Stripe</option>
           <option value="paypal">PayPal</option>
         </select>
+
+        <p style={{ fontSize: 13, color: "#666", marginBottom: 10 }}>
+          Recommended: <strong>{recommendedProvider.toUpperCase()}</strong>
+        </p>
 
         <input
           type="number"
@@ -84,7 +120,7 @@ export default function StripeCheckout() {
           style={input}
         />
 
-        {provider === "stripe" && (
+        {getEffectiveProvider() === "stripe" && (
           <form onSubmit={handleStripeSubmit}>
             <div style={cardElementBox}>
               <CardElement />
@@ -96,41 +132,47 @@ export default function StripeCheckout() {
           </form>
         )}
 
-        {provider === "paypal" && (
+        {getEffectiveProvider() === "paypal" && (
           <div style={{ marginTop: 12 }}>
-            <PayPalScriptProvider
-              options={{
-                clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID,
-                currency: "USD",
-                intent: "capture",
-              }}
-            >
-              <PayPalButtons
-                style={{ layout: "vertical" }}
-                createOrder={async () => {
-                  const res = await API.post("/paypal-checkout/create-order", {
-                    amount: Number(amount),
-                    currency: "USD",
-                  });
+            {!paypalClientId ? (
+              <p style={{ color: "red", margin: 0 }}>
+                PayPal client ID is missing. Add VITE_PAYPAL_CLIENT_ID to your frontend .env and restart Vite.
+              </p>
+            ) : (
+              <PayPalScriptProvider
+                options={{
+                  clientId: paypalClientId,
+                  currency: "USD",
+                  intent: "capture",
+                }}
+              >
+                <PayPalButtons
+                  style={{ layout: "vertical" }}
+                  createOrder={async () => {
+                    const res = await API.post("/paypal-checkout/create-order", {
+                      amount: Number(amount),
+                      currency: "USD",
+                    });
 
-                  return res.data.id;
-                }}
-                onApprove={async (data) => {
-                  const res = await API.post("/paypal-checkout/capture-order", {
-                    orderID: data.orderID,
-                    amount: Number(amount),
-                    currency: "USD",
-                  });
+                    return res.data.id;
+                  }}
+                  onApprove={async (data) => {
+                    const res = await API.post("/paypal-checkout/capture-order", {
+                      orderID: data.orderID,
+                      amount: Number(amount),
+                      currency: "USD",
+                    });
 
-                  setMessage("✅ PayPal payment captured and saved!");
-                  console.log("PayPal capture response:", res.data);
-                }}
-                onError={(err) => {
-                  console.error("PayPal error:", err);
-                  setMessage("❌ PayPal checkout failed");
-                }}
-              />
-            </PayPalScriptProvider>
+                    console.log("PayPal capture response:", res.data);
+                    setMessage("✅ PayPal payment captured and saved!");
+                  }}
+                  onError={(err) => {
+                    console.error("PayPal error:", err);
+                    setMessage("❌ PayPal checkout failed");
+                  }}
+                />
+              </PayPalScriptProvider>
+            )}
           </div>
         )}
 
