@@ -50,14 +50,15 @@ export default function SendMoney({ onPaymentSuccess }) {
       });
 
       setLastTransfer({
-        status: res.data.status || "completed",
-        amount: res.data.amount ?? Number(amount),
-        currency: res.data.currency ?? currency,
-        provider: res.data.provider,
-        latency: res.data.latency,
-        transactionId: res.data.transactionId || "-",
-        timestamp: new Date().toISOString(),
-      });
+  status: res.data.status || "completed",
+  amount: res.data.amount ?? Number(amount),
+  currency: res.data.currency ?? currency,
+  provider: res.data.provider,
+  latency: res.data.latency,
+  transactionId: res.data.transactionId || "-",
+  timestamp: new Date().toISOString(),
+  routing: res.data.routing || null,
+});
 
       setAmount("");
       onPaymentSuccess?.();

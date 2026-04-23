@@ -1,107 +1,113 @@
 export default function TransferConfirmationCard({ transfer }) {
   if (!transfer) return null;
 
-  const formattedAmount = Number(transfer.amount || 0).toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-
-  const symbol =
-    String(transfer.currency || "").toLowerCase() === "eur" ? "€" : "$";
-
   return (
     <div style={card}>
       <p style={eyebrow}>TRANSFER RECEIPT</p>
-      <h3 style={title}>Transfer Confirmed</h3>
+      <h3 style={{ marginTop: 0 }}>Transfer Confirmed</h3>
 
       <div style={row}>
-        <span style={label}>Status</span>
-        <span style={value}>{transfer.status || "completed"}</span>
+        <span>Status</span>
+        <strong>{transfer.status || "-"}</strong>
       </div>
 
       <div style={row}>
-        <span style={label}>Amount</span>
-        <span style={value}>
-          {symbol}
-          {formattedAmount}
-        </span>
+        <span>Amount</span>
+        <strong>
+          {Number(transfer.amount || 0).toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+        </strong>
       </div>
 
       <div style={row}>
-        <span style={label}>Payment Network</span>
-        <span style={value}>{transfer.provider || "-"}</span>
+        <span>Payment Network</span>
+        <strong>{transfer.provider || "-"}</strong>
       </div>
 
       <div style={row}>
-        <span style={label}>Processing Time</span>
-        <span style={value}>
+        <span>Processing Time</span>
+        <strong>
           {typeof transfer.latency === "number" ? `${transfer.latency} ms` : "-"}
-        </span>
+        </strong>
       </div>
 
       <div style={row}>
-        <span style={label}>Transfer Reference</span>
-        <span style={transactionId}>{transfer.transactionId || "-"}</span>
+        <span>Transfer Reference</span>
+        <strong>{transfer.transactionId || "-"}</strong>
       </div>
 
       <div style={row}>
-        <span style={label}>Time</span>
-        <span style={value}>
+        <span>Time</span>
+        <strong>
           {transfer.timestamp
             ? new Date(transfer.timestamp).toLocaleString()
-            : new Date().toLocaleString()}
-        </span>
+            : "-"}
+        </strong>
       </div>
+
+      {transfer.routing && (
+        <div style={routingBox}>
+          <h4 style={{ marginTop: 0, marginBottom: 10 }}>Routing Explanation</h4>
+
+          <div style={row}>
+            <span>Recommended Provider</span>
+            <strong>{transfer.routing.recommendedProvider || "-"}</strong>
+          </div>
+
+          <div style={row}>
+            <span>Selected Provider</span>
+            <strong>{transfer.routing.selectedProvider || transfer.provider || "-"}</strong>
+          </div>
+
+          <div style={row}>
+            <span>Attempt Order</span>
+            <strong>
+              {Array.isArray(transfer.routing.attemptOrder)
+                ? transfer.routing.attemptOrder.join(" → ")
+                : "-"}
+            </strong>
+          </div>
+
+          <div style={{ marginTop: 10 }}>
+            <span style={{ display: "block", marginBottom: 6 }}>Reason</span>
+            <strong>{transfer.routing.reasonSummary || "-"}</strong>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 const card = {
-  marginTop: 16,
-  border: "1px solid #dbeafe",
-  background: "#f8fbff",
+  border: "1px solid #ddd",
   borderRadius: 12,
-  padding: 18,
+  padding: 20,
+  background: "#fff",
+  marginTop: 16,
 };
 
 const eyebrow = {
-  margin: 0,
+  color: "#1d4ed8",
   fontSize: 12,
   fontWeight: 700,
-  color: "#1d4ed8",
   letterSpacing: "0.08em",
-};
-
-const title = {
-  marginTop: 8,
-  marginBottom: 16,
+  marginBottom: 8,
 };
 
 const row = {
   display: "flex",
   justifyContent: "space-between",
-  alignItems: "flex-start",
-  gap: 12,
-  padding: "8px 0",
-  borderTop: "1px solid #e5e7eb",
+  gap: 16,
+  padding: "10px 0",
+  borderTop: "1px solid #eee",
 };
 
-const label = {
-  color: "#6b7280",
-  fontWeight: 600,
-  minWidth: 120,
-};
-
-const value = {
-  color: "#111827",
-  textAlign: "right",
-  wordBreak: "break-word",
-};
-
-const transactionId = {
-  color: "#111827",
-  textAlign: "right",
-  wordBreak: "break-all",
-  fontFamily: "monospace",
-  fontSize: 12,
+const routingBox = {
+  marginTop: 18,
+  padding: 16,
+  border: "1px solid #e5e7eb",
+  borderRadius: 10,
+  background: "#fafafa",
 };
