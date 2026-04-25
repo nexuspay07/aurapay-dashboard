@@ -304,36 +304,42 @@ export default function Dashboard() {
       </div>
 
       <div style={{ marginTop: 20 }}>
-        <div style={infoCard}>
-          <h3 style={{ marginTop: 0 }}>System Insights</h3>
+  <div style={infoCard}>
+    <h3 style={{ marginTop: 0 }}>System Insights</h3>
 
-          {intelligence.length === 0 ? (
-            <p style={{ color: "#666", margin: 0 }}>
-              No routing intelligence data available yet.
+    {intelligence.length === 0 ? (
+      <p style={{ color: "#666", margin: 0 }}>
+        No routing intelligence data available yet.
+      </p>
+    ) : (
+      <div style={providerRow}>
+        {intelligence.map((item, index) => (
+          <div key={index} style={providerBox}>
+            <h4 style={providerTitle}>{item.provider || "-"}</h4>
+            <p>
+              <strong>Total Payments:</strong> {item.totalPayments || 0}
             </p>
-          ) : (
-            intelligence.map((item, index) => (
-              <div key={index} style={intelligenceRow}>
-                <p>
-                  <strong>Payment Network:</strong> {item.provider || "-"}
-                </p>
-                <p>
-                  <strong>Success Rate:</strong>{" "}
-                  {typeof item.successRate === "number"
-                    ? `${(item.successRate * 100).toFixed(1)}%`
-                    : "-"}
-                </p>
-                <p>
-                  <strong>Avg Processing Time:</strong>{" "}
-                  {typeof item.avgLatency === "number"
-                    ? `${item.avgLatency.toFixed(0)} ms`
-                    : "-"}
-                </p>
-              </div>
-            ))
-          )}
-        </div>
+            <p>
+              <strong>Total Volume:</strong> {item.totalVolume || 0}
+            </p>
+            <p>
+              <strong>Success Rate:</strong>{" "}
+              {typeof item.successRate === "number"
+                ? `${item.successRate.toFixed(1)}%`
+                : "0.0%"}
+            </p>
+            <p>
+              <strong>Avg Processing Time:</strong>{" "}
+              {typeof item.avgLatency === "number"
+                ? `${item.avgLatency} ms`
+                : "-"}
+            </p>
+          </div>
+        ))}
       </div>
+    )}
+  </div>
+</div>
 
       <div style={{ marginTop: 20 }}>
         <div style={infoCard}>
