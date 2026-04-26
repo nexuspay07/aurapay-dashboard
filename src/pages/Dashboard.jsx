@@ -170,6 +170,7 @@ export default function Dashboard() {
 
   const stripeData = providerAnalytics?.analytics?.Stripe;
   const paypalData = providerAnalytics?.analytics?.PayPal;
+  const routingPerformance = providerAnalytics?.routingPerformance;
 
   return (
     <div
@@ -238,6 +239,60 @@ export default function Dashboard() {
             {providerAnalytics?.recommendedProvider || "Stripe"}
           </p>
 
+          <div style={{ marginTop: 20 }}>
+  <div style={infoCard}>
+    <h3 style={{ marginTop: 0 }}>Routing Performance Intelligence</h3>
+
+    {!routingPerformance ? (
+      <p style={{ color: "#666", margin: 0 }}>
+        No routing performance data available yet.
+      </p>
+    ) : (
+      <div style={providerRow}>
+        <div style={providerBox}>
+          <h4 style={providerTitle}>Fallback Rate</h4>
+          <p>
+            <strong>{routingPerformance.fallbackRate.toFixed(1)}%</strong>
+          </p>
+          <p style={{ color: "#666" }}>
+            Payments that needed more than one provider attempt.
+          </p>
+        </div>
+
+        <div style={providerBox}>
+          <h4 style={providerTitle}>Average Attempts</h4>
+          <p>
+            <strong>{routingPerformance.avgAttempts.toFixed(2)}</strong>
+          </p>
+          <p style={{ color: "#666" }}>
+            Average provider attempts per transfer.
+          </p>
+        </div>
+
+        <div style={providerBox}>
+          <h4 style={providerTitle}>Most Used Provider</h4>
+          <p>
+            <strong>{routingPerformance.mostUsedProvider}</strong>
+          </p>
+          <p style={{ color: "#666" }}>
+            Provider used most often across completed transfers.
+          </p>
+        </div>
+
+        <div style={providerBox}>
+          <h4 style={providerTitle}>Fastest Provider</h4>
+          <p>
+            <strong>{routingPerformance.fastestProvider}</strong>
+          </p>
+          <p style={{ color: "#666" }}>
+            Provider with the lowest average processing time.
+          </p>
+        </div>
+      </div>
+    )}
+  </div>
+</div>
+
           <div style={providerRow}>
             <div style={providerBox}>
               <h4 style={providerTitle}>Stripe</h4>
@@ -245,6 +300,10 @@ export default function Dashboard() {
               <p><strong>Volume:</strong> {stripeData?.totalVolume || 0}</p>
               <p><strong>Success Rate:</strong> {(stripeData?.successRate || 0).toFixed(1)}%</p>
               <p><strong>Avg Latency:</strong> {(stripeData?.avgLatency || 0).toFixed(0)} ms</p>
+              <p>
+  <strong>Reliability Score:</strong>{" "}
+  {(stripeData?.reliabilityScore || 0).toFixed(1)}
+</p>
             </div>
 
             <div style={providerBox}>
@@ -253,6 +312,10 @@ export default function Dashboard() {
               <p><strong>Volume:</strong> {paypalData?.totalVolume || 0}</p>
               <p><strong>Success Rate:</strong> {(paypalData?.successRate || 0).toFixed(1)}%</p>
               <p><strong>Avg Latency:</strong> {(paypalData?.avgLatency || 0).toFixed(0)} ms</p>
+              <p>
+  <strong>Reliability Score:</strong>{" "}
+  {(paypalData?.reliabilityScore || 0).toFixed(1)}
+</p>
             </div>
           </div>
         </div>
