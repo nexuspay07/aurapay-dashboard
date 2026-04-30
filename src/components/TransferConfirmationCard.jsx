@@ -1,6 +1,12 @@
 export default function TransferConfirmationCard({ transfer }) {
   if (!transfer) return null;
 
+  const selectedProvider = transfer.routing?.selectedProvider || transfer.provider;
+
+  const selectedProviderData = transfer.routing?.rankedProviders?.find(
+    (item) => item.provider === selectedProvider
+  );
+
   return (
     <div style={card}>
       <p style={eyebrow}>TRANSFER RECEIPT</p>
@@ -49,7 +55,9 @@ export default function TransferConfirmationCard({ transfer }) {
 
       {transfer.routing && (
         <div style={routingBox}>
-          <h4 style={{ marginTop: 0, marginBottom: 10 }}>Routing Explanation</h4>
+          <h4 style={{ marginTop: 0, marginBottom: 10 }}>
+            Routing Explanation
+          </h4>
 
           <div style={row}>
             <span>Recommended Provider</span>
@@ -58,7 +66,7 @@ export default function TransferConfirmationCard({ transfer }) {
 
           <div style={row}>
             <span>Selected Provider</span>
-            <strong>{transfer.routing.selectedProvider || transfer.provider || "-"}</strong>
+            <strong>{selectedProvider || "-"}</strong>
           </div>
 
           <div style={row}>
@@ -70,10 +78,35 @@ export default function TransferConfirmationCard({ transfer }) {
             </strong>
           </div>
 
+          {selectedProviderData && (
+            <>
+              <div style={row}>
+                <span>Estimated Fee</span>
+                <strong>${selectedProviderData.estimatedFee ?? "0.00"}</strong>
+              </div>
+
+              <div style={row}>
+                <span>Estimated Net</span>
+                <strong>${selectedProviderData.estimatedNet ?? "-"}</strong>
+              </div>
+
+              <div style={row}>
+                <span>Cost Score</span>
+                <strong>{selectedProviderData.costScore ?? "-"}</strong>
+              </div>
+            </>
+          )}
+
           <div style={{ marginTop: 10 }}>
             <span style={{ display: "block", marginBottom: 6 }}>Reason</span>
             <strong>{transfer.routing.reasonSummary || "-"}</strong>
           </div>
+
+          {selectedProviderData?.reason && (
+            <p style={detailReason}>
+              {selectedProviderData.reason}
+            </p>
+          )}
         </div>
       )}
     </div>
@@ -110,4 +143,14 @@ const routingBox = {
   border: "1px solid #e5e7eb",
   borderRadius: 10,
   background: "#fafafa",
+};
+
+const detailReason = {
+  marginTop: 12,
+  padding: 12,
+  borderRadius: 8,
+  background: "#fff",
+  border: "1px solid #eee",
+  color: "#555",
+  lineHeight: 1.5,
 };
