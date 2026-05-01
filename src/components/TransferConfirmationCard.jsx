@@ -97,15 +97,32 @@ export default function TransferConfirmationCard({ transfer }) {
             </>
           )}
 
+          {transfer.profit && (
+            <>
+              <div style={row}>
+                <span>Platform Fee</span>
+                <strong>${transfer.profit.platformFee}</strong>
+              </div>
+
+              <div style={row}>
+                <span>Estimated Profit</span>
+                <strong>${transfer.profit.estimatedProfit}</strong>
+              </div>
+
+              <div style={row}>
+                <span>Profit Margin</span>
+                <strong>{transfer.profit.profitMargin}%</strong>
+              </div>
+            </>
+          )}
+
           <div style={{ marginTop: 10 }}>
             <span style={{ display: "block", marginBottom: 6 }}>Reason</span>
             <strong>{transfer.routing.reasonSummary || "-"}</strong>
           </div>
 
           {selectedProviderData?.reason && (
-            <p style={detailReason}>
-              {selectedProviderData.reason}
-            </p>
+            <p style={detailReason}>{selectedProviderData.reason}</p>
           )}
         </div>
       )}
