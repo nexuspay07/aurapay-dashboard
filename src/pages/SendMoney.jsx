@@ -57,7 +57,8 @@ export default function SendMoney({ onPaymentSuccess }) {
   latency: res.data.latency,
   transactionId: res.data.transactionId || "-",
   timestamp: new Date().toISOString(),
-  routing: res.data.routing || null,
+  routing: res.data.routing,
+  profit: res.data.profit,
 });
 
       setAmount("");
