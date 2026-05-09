@@ -19,6 +19,16 @@ export default function TransactionTable({
       : `$${formatted}`;
   }
 
+  function getRefundId(tx) {
+    return (
+      tx?.refund?.providerRefundId ||
+      tx?.refundId ||
+      tx?.providerRefundId ||
+      tx?.metadata?.providerRefundId ||
+      null
+    );
+  }
+
   async function handleRefund(tx) {
     const confirmRefund = window.confirm(
       `Refund ${formatAmount(tx.amount, tx.currency)} for transaction ${tx._id}?`
@@ -30,9 +40,19 @@ export default function TransactionTable({
       setMessage("");
       setRefundingId(tx._id);
 
-      await API.post(`/payments/refund/${tx._id}`);
+      const res = await API.post(`/payments/refund/${tx._id}`);
 
-      setMessage("✅ Refund completed successfully.");
+      const refundId =
+        res?.data?.providerRefund?.refundId ||
+        res?.data?.transaction?.refund?.providerRefundId ||
+        null;
+
+      setMessage(
+        refundId
+          ? `✅ Refund completed successfully. Refund ID: ${refundId}`
+          : "✅ Refund completed successfully."
+      );
+
       onRefundSuccess?.();
     } catch (err) {
       setMessage(
@@ -73,6 +93,7 @@ export default function TransactionTable({
               <th style={th}>Currency</th>
               <th style={th}>Payment Network</th>
               <th style={th}>Status</th>
+              <th style={th}>Refund ID</th>
               <th style={th}>Processing Time</th>
               <th style={th}>Date</th>
               <th style={th}>Action</th>
@@ -81,8 +102,13 @@ export default function TransactionTable({
 
           <tbody>
             {transactions.map((tx) => {
+              const isRefunded = tx.status === "refunded";
+              const refundId = getRefundId(tx);
+
               const canRefund =
-                tx.status === "completed" || tx.status === "provider_confirmed";
+                !isRefunded &&
+                (tx.status === "completed" ||
+                  tx.status === "provider_confirmed");
 
               return (
                 <tr key={tx._id}>
@@ -97,22 +123,28 @@ export default function TransactionTable({
                         borderRadius: 999,
                         fontSize: 12,
                         fontWeight: 700,
-                        background:
-                          tx.status === "refunded"
-                            ? "#e0f2fe"
-                            : tx.success === true
-                            ? "#dcfce7"
-                            : "#fee2e2",
-                        color:
-                          tx.status === "refunded"
-                            ? "#075985"
-                            : tx.success === true
-                            ? "#166534"
-                            : "#991b1b",
+                        background: isRefunded
+                          ? "#e0f2fe"
+                          : tx.success === true
+                          ? "#dcfce7"
+                          : "#fee2e2",
+                        color: isRefunded
+                          ? "#075985"
+                          : tx.success === true
+                          ? "#166534"
+                          : "#991b1b",
                       }}
                     >
-                      {tx.status || (tx.success ? "SUCCESS" : "FAILED")}
+                      {isRefunded ? "refunded" : tx.status || "-"}
                     </span>
+                  </td>
+
+                  <td style={td}>
+                    {refundId ? (
+                      <code style={codeText}>{refundId}</code>
+                    ) : (
+                      <span style={{ color: "#999" }}>-</span>
+                    )}
                   </td>
 
                   <td style={td}>
@@ -134,6 +166,8 @@ export default function TransactionTable({
                       >
                         {refundingId === tx._id ? "Refunding..." : "Refund"}
                       </button>
+                    ) : isRefunded ? (
+                      <span style={refundedText}>Refunded</span>
                     ) : (
                       <span style={{ color: "#999" }}>-</span>
                     )}
@@ -174,6 +208,7 @@ const td = {
   borderBottom: "1px solid #eee",
   padding: 10,
   fontSize: 14,
+  verticalAlign: "top",
 };
 
 const refundButton = {
@@ -184,4 +219,20 @@ const refundButton = {
   color: "#fff",
   cursor: "pointer",
   fontWeight: 700,
+};
+
+const refundedText = {
+  padding: "6px 10px",
+  borderRadius: 8,
+  background: "#e0f2fe",
+  color: "#075985",
+  fontWeight: 700,
+  display: "inline-block",
+};
+
+const codeText = {
+  fontSize: 12,
+  background: "#f3f4f6",
+  padding: "3px 6px",
+  borderRadius: 6,
 };
