@@ -29,6 +29,10 @@ export default function TransactionTable({
     );
   }
 
+  function getRefundInfo(tx) {
+  return tx?.refund || null;
+}
+
   async function handleRefund(tx) {
     const confirmRefund = window.confirm(
       `Refund ${formatAmount(tx.amount, tx.currency)} for transaction ${tx._id}?`
@@ -140,12 +144,45 @@ export default function TransactionTable({
                   </td>
 
                   <td style={td}>
-                    {refundId ? (
-                      <code style={codeText}>{refundId}</code>
-                    ) : (
-                      <span style={{ color: "#999" }}>-</span>
-                    )}
-                  </td>
+  {refundId ? (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <code style={codeText}>{refundId}</code>
+
+      {getRefundInfo(tx)?.providerRefundStatus && (
+        <span style={refundStatus}>
+          {getRefundInfo(tx)?.providerRefundStatus}
+        </span>
+      )}
+
+      {getRefundInfo(tx)?.refundAmount > 0 && (
+        <span style={refundMeta}>
+          Amount: {formatAmount(
+            getRefundInfo(tx)?.refundAmount,
+            getRefundInfo(tx)?.refundCurrency
+          )}
+        </span>
+      )}
+
+      {getRefundInfo(tx)?.refundReason && (
+        <span style={refundMeta}>
+          Reason: {getRefundInfo(tx)?.refundReason}
+        </span>
+      )}
+
+      {getRefundInfo(tx)?.refundCompletedAt && (
+        <span style={refundMeta}>
+          Refunded:
+          {" "}
+          {new Date(
+            getRefundInfo(tx)?.refundCompletedAt
+          ).toLocaleString()}
+        </span>
+      )}
+    </div>
+  ) : (
+    <span style={{ color: "#999" }}>-</span>
+  )}
+</td>
 
                   <td style={td}>
                     {typeof tx.latency === "number" ? `${tx.latency} ms` : "-"}
@@ -235,4 +272,21 @@ const codeText = {
   background: "#f3f4f6",
   padding: "3px 6px",
   borderRadius: 6,
+};
+
+const refundStatus = {
+  display: "inline-block",
+  padding: "4px 8px",
+  borderRadius: 999,
+  background: "#dcfce7",
+  color: "#166534",
+  fontSize: 11,
+  fontWeight: 700,
+  width: "fit-content",
+};
+
+const refundMeta = {
+  fontSize: 11,
+  color: "#555",
+  lineHeight: 1.4,
 };
