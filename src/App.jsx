@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import Onboarding from "./pages/Onboarding";
 import StripePayment from "./pages/StripePayment";
 import StripeCheckout from "./pages/StripeCheckout";
+import AdminDashboard from "./pages/AdminDashboard";
 
 function ProtectedRoute({ children }) {
   const { token, loading } = useAuth();
@@ -28,6 +29,7 @@ export default function App() {
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/stripe-test" element={<StripePayment />} />
         <Route path="/checkout" element={<StripeCheckout />} />
+        <Route path="/admin" element={<AdminDashboard />} />
         <Route
           path="/dashboard"
           element={
