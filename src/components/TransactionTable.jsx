@@ -1,13 +1,4 @@
-import { useState } from "react";
-import API from "../services/api";
-
-export default function TransactionTable({
-  transactions = [],
-  onRefundSuccess,
-}) {
-  const [message, setMessage] = useState("");
-  const [refundingId, setRefundingId] = useState(null);
-
+export default function TransactionTable({ transactions = [] }) {
   function formatAmount(amount, currency) {
     const formatted = Number(amount || 0).toLocaleString(undefined, {
       minimumFractionDigits: 2,
@@ -30,59 +21,12 @@ export default function TransactionTable({
   }
 
   function getRefundInfo(tx) {
-  return tx?.refund || null;
-}
-
-  async function handleRefund(tx) {
-    const confirmRefund = window.confirm(
-      `Refund ${formatAmount(tx.amount, tx.currency)} for transaction ${tx._id}?`
-    );
-
-    if (!confirmRefund) return;
-
-    try {
-      setMessage("");
-      setRefundingId(tx._id);
-
-      const res = await API.post(`/payments/refund/${tx._id}`);
-
-      const refundId =
-        res?.data?.providerRefund?.refundId ||
-        res?.data?.transaction?.refund?.providerRefundId ||
-        null;
-
-      setMessage(
-        refundId
-          ? `✅ Refund completed successfully. Refund ID: ${refundId}`
-          : "✅ Refund completed successfully."
-      );
-
-      onRefundSuccess?.();
-    } catch (err) {
-      setMessage(
-        err?.response?.data?.error || "❌ Refund failed. Please try again."
-      );
-    } finally {
-      setRefundingId(null);
-    }
+    return tx?.refund || null;
   }
 
   return (
     <div style={card}>
       <h3 style={{ marginTop: 0 }}>Transactions</h3>
-
-      {message && (
-        <div
-          style={{
-            ...alert,
-            borderColor: message.startsWith("✅") ? "#86efac" : "#fecaca",
-            background: message.startsWith("✅") ? "#f0fdf4" : "#fef2f2",
-            color: message.startsWith("✅") ? "#166534" : "#991b1b",
-          }}
-        >
-          {message}
-        </div>
-      )}
 
       {transactions.length === 0 ? (
         <p style={{ color: "#666", margin: 0 }}>
@@ -97,10 +41,9 @@ export default function TransactionTable({
               <th style={th}>Currency</th>
               <th style={th}>Payment Network</th>
               <th style={th}>Status</th>
-              <th style={th}>Refund ID</th>
+              <th style={th}>Refund Info</th>
               <th style={th}>Processing Time</th>
               <th style={th}>Date</th>
-              <th style={th}>Action</th>
             </tr>
           </thead>
 
@@ -108,11 +51,7 @@ export default function TransactionTable({
             {transactions.map((tx) => {
               const isRefunded = tx.status === "refunded";
               const refundId = getRefundId(tx);
-
-              const canRefund =
-                !isRefunded &&
-                (tx.status === "completed" ||
-                  tx.status === "provider_confirmed");
+              const refundInfo = getRefundInfo(tx);
 
               return (
                 <tr key={tx._id}>
@@ -144,45 +83,43 @@ export default function TransactionTable({
                   </td>
 
                   <td style={td}>
-  {refundId ? (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <code style={codeText}>{refundId}</code>
+                    {refundId ? (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                        <code style={codeText}>{refundId}</code>
 
-      {getRefundInfo(tx)?.providerRefundStatus && (
-        <span style={refundStatus}>
-          {getRefundInfo(tx)?.providerRefundStatus}
-        </span>
-      )}
+                        {refundInfo?.providerRefundStatus && (
+                          <span style={refundStatus}>
+                            {refundInfo.providerRefundStatus}
+                          </span>
+                        )}
 
-      {getRefundInfo(tx)?.refundAmount > 0 && (
-        <span style={refundMeta}>
-          Amount: {formatAmount(
-            getRefundInfo(tx)?.refundAmount,
-            getRefundInfo(tx)?.refundCurrency
-          )}
-        </span>
-      )}
+                        {refundInfo?.refundAmount > 0 && (
+                          <span style={refundMeta}>
+                            Amount:{" "}
+                            {formatAmount(
+                              refundInfo.refundAmount,
+                              refundInfo.refundCurrency
+                            )}
+                          </span>
+                        )}
 
-      {getRefundInfo(tx)?.refundReason && (
-        <span style={refundMeta}>
-          Reason: {getRefundInfo(tx)?.refundReason}
-        </span>
-      )}
+                        {refundInfo?.refundReason && (
+                          <span style={refundMeta}>
+                            Reason: {refundInfo.refundReason}
+                          </span>
+                        )}
 
-      {getRefundInfo(tx)?.refundCompletedAt && (
-        <span style={refundMeta}>
-          Refunded:
-          {" "}
-          {new Date(
-            getRefundInfo(tx)?.refundCompletedAt
-          ).toLocaleString()}
-        </span>
-      )}
-    </div>
-  ) : (
-    <span style={{ color: "#999" }}>-</span>
-  )}
-</td>
+                        {refundInfo?.refundCompletedAt && (
+                          <span style={refundMeta}>
+                            Refunded:{" "}
+                            {new Date(refundInfo.refundCompletedAt).toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <span style={{ color: "#999" }}>-</span>
+                    )}
+                  </td>
 
                   <td style={td}>
                     {typeof tx.latency === "number" ? `${tx.latency} ms` : "-"}
@@ -192,22 +129,6 @@ export default function TransactionTable({
                     {tx.createdAt
                       ? new Date(tx.createdAt).toLocaleString()
                       : "-"}
-                  </td>
-
-                  <td style={td}>
-                    {canRefund ? (
-                      <button
-                        style={refundButton}
-                        disabled={refundingId === tx._id}
-                        onClick={() => handleRefund(tx)}
-                      >
-                        {refundingId === tx._id ? "Refunding..." : "Refund"}
-                      </button>
-                    ) : isRefunded ? (
-                      <span style={refundedText}>Refunded</span>
-                    ) : (
-                      <span style={{ color: "#999" }}>-</span>
-                    )}
                   </td>
                 </tr>
               );
@@ -227,13 +148,6 @@ const card = {
   overflowX: "auto",
 };
 
-const alert = {
-  padding: 12,
-  borderRadius: 8,
-  border: "1px solid",
-  marginBottom: 12,
-};
-
 const th = {
   textAlign: "left",
   borderBottom: "1px solid #ddd",
@@ -246,25 +160,6 @@ const td = {
   padding: 10,
   fontSize: 14,
   verticalAlign: "top",
-};
-
-const refundButton = {
-  padding: "6px 10px",
-  border: "none",
-  borderRadius: 8,
-  background: "#991b1b",
-  color: "#fff",
-  cursor: "pointer",
-  fontWeight: 700,
-};
-
-const refundedText = {
-  padding: "6px 10px",
-  borderRadius: 8,
-  background: "#e0f2fe",
-  color: "#075985",
-  fontWeight: 700,
-  display: "inline-block",
 };
 
 const codeText = {
