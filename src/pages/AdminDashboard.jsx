@@ -8,6 +8,7 @@ export default function AdminDashboard() {
   const [fraudLogs, setFraudLogs] = useState([]);
   const [activeTab, setActiveTab] = useState("transactions");
   const [message, setMessage] = useState("");
+  const [selectedTx, setSelectedTx] = useState(null);
 
   async function loadAdminData() {
     try {
@@ -60,40 +61,64 @@ export default function AdminDashboard() {
   }
 
   async function refundTransaction(tx) {
-  const confirmRefund = window.confirm(
-    `Refund ${tx.amount} ${String(tx.currency || "").toUpperCase()}?`
-  );
-
-  if (!confirmRefund) return;
-
-  try {
-    const reason =
-      prompt("Refund reason?") || "admin_refund";
-
-    const res = await API.post(
-      `/payments/refund/${tx._id}`,
-      {
-        reason,
-      }
+    const confirmRefund = window.confirm(
+      `Refund ${tx.amount} ${String(tx.currency || "").toUpperCase()}?`
     );
 
-    const refundId =
-      res?.data?.providerRefund?.refundId || null;
+    if (!confirmRefund) return;
 
-    setMessage(
-      refundId
-        ? `✅ Refund completed. Refund ID: ${refundId}`
-        : "✅ Refund completed"
-    );
+    try {
+      const reason = prompt("Refund reason?") || "admin_refund";
 
-    loadAdminData();
-  } catch (err) {
-    setMessage(
-      err?.response?.data?.error ||
-        "Refund failed"
-    );
+      const res = await API.post(`/payments/refund/${tx._id}`, { reason });
+
+      const refundId = res?.data?.providerRefund?.refundId || null;
+
+      setMessage(
+        refundId
+          ? `✅ Refund completed. Refund ID: ${refundId}`
+          : "✅ Refund completed"
+      );
+
+      await loadAdminData();
+      setSelectedTx(null);
+    } catch (err) {
+      setMessage(err?.response?.data?.error || "Refund failed");
+    }
   }
-}
+
+  function getLedgerForTransaction(txId) {
+    return ledger.filter((entry) => {
+      const entryTxId =
+        typeof entry.transaction === "string"
+          ? entry.transaction
+          : entry.transaction?._id;
+
+      return String(entryTxId) === String(txId);
+    });
+  }
+
+  function getAccountingSummary(txId) {
+    const entries = getLedgerForTransaction(txId);
+
+    const debitTotal = entries
+      .filter((entry) =>
+        ["debit", "refund", "reversal"].includes(entry.type)
+      )
+      .reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+
+    const creditTotal = entries
+      .filter((entry) => entry.type === "credit")
+      .reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+
+    return {
+      balanced: debitTotal === creditTotal,
+      debitTotal,
+      creditTotal,
+      difference: debitTotal - creditTotal,
+      entriesCount: entries.length,
+    };
+  }
 
   return (
     <div style={page}>
@@ -105,16 +130,28 @@ export default function AdminDashboard() {
       {message && <div style={alert}>{message}</div>}
 
       <div style={tabs}>
-        <button style={tab(activeTab === "transactions")} onClick={() => setActiveTab("transactions")}>
+        <button
+          style={tab(activeTab === "transactions")}
+          onClick={() => setActiveTab("transactions")}
+        >
           Transactions
         </button>
-        <button style={tab(activeTab === "users")} onClick={() => setActiveTab("users")}>
+        <button
+          style={tab(activeTab === "users")}
+          onClick={() => setActiveTab("users")}
+        >
           Users
         </button>
-        <button style={tab(activeTab === "ledger")} onClick={() => setActiveTab("ledger")}>
+        <button
+          style={tab(activeTab === "ledger")}
+          onClick={() => setActiveTab("ledger")}
+        >
           Ledger
         </button>
-        <button style={tab(activeTab === "fraud")} onClick={() => setActiveTab("fraud")}>
+        <button
+          style={tab(activeTab === "fraud")}
+          onClick={() => setActiveTab("fraud")}
+        >
           Fraud Logs
         </button>
       </div>
@@ -122,6 +159,16 @@ export default function AdminDashboard() {
       {activeTab === "transactions" && (
         <section style={card}>
           <h2>All Transactions</h2>
+
+          {selectedTx && (
+            <AuditPanel
+              tx={selectedTx}
+              ledgerEntries={getLedgerForTransaction(selectedTx._id)}
+              accounting={getAccountingSummary(selectedTx._id)}
+              onClose={() => setSelectedTx(null)}
+            />
+          )}
+
           <table style={table}>
             <thead>
               <tr>
@@ -135,6 +182,7 @@ export default function AdminDashboard() {
                 <th style={th}>Action</th>
               </tr>
             </thead>
+
             <tbody>
               {transactions.map((tx) => (
                 <tr key={tx._id}>
@@ -144,23 +192,29 @@ export default function AdminDashboard() {
                   <td style={td}>{tx.provider || "-"}</td>
                   <td style={td}>{tx.status || "-"}</td>
                   <td style={td}>{tx.estimatedProfit ?? "-"}</td>
-                  <td style={td}>{tx.createdAt ? new Date(tx.createdAt).toLocaleString() : "-"}</td>
                   <td style={td}>
-  {tx.status === "completed" ? (
-    <button
-      style={dangerButton}
-      onClick={() => refundTransaction(tx)}
-    >
-      Refund
-    </button>
-  ) : tx.status === "refunded" ? (
-    <span style={refundedBadge}>
-      Refunded
-    </span>
-  ) : (
-    "-"
-  )}
-</td>
+                    {tx.createdAt ? new Date(tx.createdAt).toLocaleString() : "-"}
+                  </td>
+                  <td style={td}>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      <button style={neutralButton} onClick={() => setSelectedTx(tx)}>
+                        View Audit
+                      </button>
+
+                      {tx.status === "completed" ? (
+                        <button
+                          style={dangerButton}
+                          onClick={() => refundTransaction(tx)}
+                        >
+                          Refund
+                        </button>
+                      ) : tx.status === "refunded" ? (
+                        <span style={refundedBadge}>Refunded</span>
+                      ) : (
+                        <span style={{ color: "#999" }}>-</span>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -183,6 +237,7 @@ export default function AdminDashboard() {
                 <th style={th}>Action</th>
               </tr>
             </thead>
+
             <tbody>
               {users.map((user) => (
                 <tr key={user._id}>
@@ -194,11 +249,17 @@ export default function AdminDashboard() {
                   <td style={td}>{user.balance?.eur ?? 0}</td>
                   <td style={td}>
                     {user.frozen ? (
-                      <button style={goodButton} onClick={() => unfreezeUser(user._id)}>
+                      <button
+                        style={goodButton}
+                        onClick={() => unfreezeUser(user._id)}
+                      >
                         Unfreeze
                       </button>
                     ) : (
-                      <button style={dangerButton} onClick={() => freezeUser(user._id)}>
+                      <button
+                        style={dangerButton}
+                        onClick={() => freezeUser(user._id)}
+                      >
                         Freeze
                       </button>
                     )}
@@ -225,6 +286,7 @@ export default function AdminDashboard() {
                 <th style={th}>Date</th>
               </tr>
             </thead>
+
             <tbody>
               {ledger.map((entry) => (
                 <tr key={entry._id}>
@@ -232,9 +294,15 @@ export default function AdminDashboard() {
                   <td style={td}>{entry.type}</td>
                   <td style={td}>{entry.account}</td>
                   <td style={td}>{entry.amount}</td>
-                  <td style={td}>{String(entry.currency || "").toUpperCase()}</td>
+                  <td style={td}>
+                    {String(entry.currency || "").toUpperCase()}
+                  </td>
                   <td style={td}>{entry.provider || "-"}</td>
-                  <td style={td}>{entry.createdAt ? new Date(entry.createdAt).toLocaleString() : "-"}</td>
+                  <td style={td}>
+                    {entry.createdAt
+                      ? new Date(entry.createdAt).toLocaleString()
+                      : "-"}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -257,6 +325,7 @@ export default function AdminDashboard() {
                 <th style={th}>Date</th>
               </tr>
             </thead>
+
             <tbody>
               {fraudLogs.map((log) => (
                 <tr key={log._id}>
@@ -265,14 +334,117 @@ export default function AdminDashboard() {
                   <td style={td}>{String(log.currency || "").toUpperCase()}</td>
                   <td style={td}>{log.riskScore}</td>
                   <td style={td}>{log.decision}</td>
-                  <td style={td}>{Array.isArray(log.reasons) ? log.reasons.join(", ") : "-"}</td>
-                  <td style={td}>{log.createdAt ? new Date(log.createdAt).toLocaleString() : "-"}</td>
+                  <td style={td}>
+                    {Array.isArray(log.reasons) ? log.reasons.join(", ") : "-"}
+                  </td>
+                  <td style={td}>
+                    {log.createdAt
+                      ? new Date(log.createdAt).toLocaleString()
+                      : "-"}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </section>
       )}
+    </div>
+  );
+}
+
+function AuditPanel({ tx, ledgerEntries, accounting, onClose }) {
+  return (
+    <div style={auditBox}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+        <h3 style={{ marginTop: 0 }}>Transaction Audit Detail</h3>
+        <button style={neutralButton} onClick={onClose}>
+          Close
+        </button>
+      </div>
+
+      <div style={auditGrid}>
+        <Info label="Transaction ID" value={tx._id} />
+        <Info label="User" value={tx.user?.email || "-"} />
+        <Info label="Provider" value={tx.provider || "-"} />
+        <Info label="Provider Payment ID" value={tx.providerPaymentId || tx.transactionId || "-"} />
+        <Info label="Status" value={tx.status || "-"} />
+        <Info label="Amount" value={`${tx.amount} ${String(tx.currency || "").toUpperCase()}`} />
+        <Info label="Estimated Fee" value={tx.estimatedFee ?? "-"} />
+        <Info label="Estimated Profit" value={tx.estimatedProfit ?? "-"} />
+        <Info label="Created" value={tx.createdAt ? new Date(tx.createdAt).toLocaleString() : "-"} />
+        <Info label="Confirmed" value={tx.confirmedAt ? new Date(tx.confirmedAt).toLocaleString() : "-"} />
+      </div>
+
+      {tx.refund && (
+        <div style={miniCard}>
+          <h4 style={{ marginTop: 0 }}>Refund Audit</h4>
+          <Info label="Refund ID" value={tx.refund.providerRefundId || "-"} />
+          <Info label="Refund Status" value={tx.refund.providerRefundStatus || "-"} />
+          <Info label="Refund Amount" value={tx.refund.refundAmount || "-"} />
+          <Info label="Refund Currency" value={tx.refund.refundCurrency || "-"} />
+          <Info label="Refund Reason" value={tx.refund.refundReason || "-"} />
+          <Info
+            label="Refund Completed"
+            value={
+              tx.refund.refundCompletedAt
+                ? new Date(tx.refund.refundCompletedAt).toLocaleString()
+                : "-"
+            }
+          />
+        </div>
+      )}
+
+      <div style={miniCard}>
+        <h4 style={{ marginTop: 0 }}>Accounting Validation</h4>
+        <Info label="Balanced" value={accounting.balanced ? "Yes ✅" : "No 🚨"} />
+        <Info label="Debit Total" value={accounting.debitTotal} />
+        <Info label="Credit Total" value={accounting.creditTotal} />
+        <Info label="Difference" value={accounting.difference} />
+        <Info label="Ledger Entries" value={accounting.entriesCount} />
+      </div>
+
+      <div style={miniCard}>
+        <h4 style={{ marginTop: 0 }}>Linked Ledger Entries</h4>
+        {ledgerEntries.length === 0 ? (
+          <p style={{ color: "#666" }}>No ledger entries found.</p>
+        ) : (
+          <table style={table}>
+            <thead>
+              <tr>
+                <th style={th}>Type</th>
+                <th style={th}>Account</th>
+                <th style={th}>Amount</th>
+                <th style={th}>Currency</th>
+                <th style={th}>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ledgerEntries.map((entry) => (
+                <tr key={entry._id}>
+                  <td style={td}>{entry.type}</td>
+                  <td style={td}>{entry.account}</td>
+                  <td style={td}>{entry.amount}</td>
+                  <td style={td}>{String(entry.currency || "").toUpperCase()}</td>
+                  <td style={td}>
+                    {entry.createdAt
+                      ? new Date(entry.createdAt).toLocaleString()
+                      : "-"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Info({ label, value }) {
+  return (
+    <div style={infoRow}>
+      <span style={infoLabel}>{label}</span>
+      <strong style={infoValue}>{String(value)}</strong>
     </div>
   );
 }
@@ -324,6 +496,7 @@ const td = {
   borderBottom: "1px solid #eee",
   padding: 10,
   fontSize: 14,
+  verticalAlign: "top",
 };
 
 const alert = {
@@ -354,6 +527,16 @@ const goodButton = {
   fontWeight: 700,
 };
 
+const neutralButton = {
+  padding: "6px 10px",
+  border: "none",
+  borderRadius: 8,
+  background: "#111827",
+  color: "#fff",
+  cursor: "pointer",
+  fontWeight: 700,
+};
+
 const refundedBadge = {
   padding: "6px 10px",
   borderRadius: 8,
@@ -361,4 +544,45 @@ const refundedBadge = {
   color: "#075985",
   fontWeight: 700,
   display: "inline-block",
+};
+
+const auditBox = {
+  marginBottom: 20,
+  padding: 16,
+  borderRadius: 12,
+  border: "1px solid #d1d5db",
+  background: "#f9fafb",
+};
+
+const auditGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+  gap: 10,
+  marginBottom: 14,
+};
+
+const miniCard = {
+  marginTop: 14,
+  padding: 14,
+  borderRadius: 10,
+  border: "1px solid #e5e7eb",
+  background: "#fff",
+};
+
+const infoRow = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: 12,
+  padding: "8px 0",
+  borderBottom: "1px solid #eee",
+};
+
+const infoLabel = {
+  color: "#666",
+  fontSize: 13,
+};
+
+const infoValue = {
+  fontSize: 13,
+  wordBreak: "break-word",
 };
