@@ -59,6 +59,42 @@ export default function AdminDashboard() {
     }
   }
 
+  async function refundTransaction(tx) {
+  const confirmRefund = window.confirm(
+    `Refund ${tx.amount} ${String(tx.currency || "").toUpperCase()}?`
+  );
+
+  if (!confirmRefund) return;
+
+  try {
+    const reason =
+      prompt("Refund reason?") || "admin_refund";
+
+    const res = await API.post(
+      `/payments/refund/${tx._id}`,
+      {
+        reason,
+      }
+    );
+
+    const refundId =
+      res?.data?.providerRefund?.refundId || null;
+
+    setMessage(
+      refundId
+        ? `✅ Refund completed. Refund ID: ${refundId}`
+        : "✅ Refund completed"
+    );
+
+    loadAdminData();
+  } catch (err) {
+    setMessage(
+      err?.response?.data?.error ||
+        "Refund failed"
+    );
+  }
+}
+
   return (
     <div style={page}>
       <h1>Admin Operations Dashboard</h1>
@@ -96,6 +132,7 @@ export default function AdminDashboard() {
                 <th style={th}>Status</th>
                 <th style={th}>Profit</th>
                 <th style={th}>Date</th>
+                <th style={th}>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -108,6 +145,22 @@ export default function AdminDashboard() {
                   <td style={td}>{tx.status || "-"}</td>
                   <td style={td}>{tx.estimatedProfit ?? "-"}</td>
                   <td style={td}>{tx.createdAt ? new Date(tx.createdAt).toLocaleString() : "-"}</td>
+                  <td style={td}>
+  {tx.status === "completed" ? (
+    <button
+      style={dangerButton}
+      onClick={() => refundTransaction(tx)}
+    >
+      Refund
+    </button>
+  ) : tx.status === "refunded" ? (
+    <span style={refundedBadge}>
+      Refunded
+    </span>
+  ) : (
+    "-"
+  )}
+</td>
                 </tr>
               ))}
             </tbody>
@@ -299,4 +352,13 @@ const goodButton = {
   color: "#fff",
   cursor: "pointer",
   fontWeight: 700,
+};
+
+const refundedBadge = {
+  padding: "6px 10px",
+  borderRadius: 8,
+  background: "#e0f2fe",
+  color: "#075985",
+  fontWeight: 700,
+  display: "inline-block",
 };
