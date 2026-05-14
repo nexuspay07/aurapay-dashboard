@@ -1,3 +1,5 @@
+
+
 import { useEffect, useState } from "react";
 import API from "../services/api";
 
@@ -128,6 +130,40 @@ const [adminAllowed, setAdminAllowed] = useState(false);
       .filter((entry) => entry.type === "credit")
       .reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
 
+      function getRiskSeverity(score) {
+  const risk = Number(score || 0);
+
+  if (risk >= 80) {
+    return {
+      label: "CRITICAL",
+      background: "#7f1d1d",
+      color: "#fff",
+    };
+  }
+
+  if (risk >= 60) {
+    return {
+      label: "HIGH",
+      background: "#dc2626",
+      color: "#fff",
+    };
+  }
+
+  if (risk >= 40) {
+    return {
+      label: "MEDIUM",
+      background: "#f59e0b",
+      color: "#111",
+    };
+  }
+
+  return {
+    label: "LOW",
+    background: "#dcfce7",
+    color: "#166534",
+  };
+}
+
     return {
       balanced: debitTotal === creditTotal,
       debitTotal,
@@ -216,6 +252,8 @@ if (!adminAllowed) {
                 <th style={th}>Status</th>
                 <th style={th}>Profit</th>
                 <th style={th}>Date</th>
+                <th style={th}>Severity</th>
+<th style={th}>Action</th>
                 <th style={th}>Action</th>
               </tr>
             </thead>
@@ -232,6 +270,38 @@ if (!adminAllowed) {
                   <td style={td}>
                     {tx.createdAt ? new Date(tx.createdAt).toLocaleString() : "-"}
                   </td>
+
+                  <td style={td}>
+  <span
+    style={{
+      padding: "5px 10px",
+      borderRadius: 999,
+      fontWeight: 700,
+      fontSize: 12,
+      background: getRiskSeverity(log.riskScore).background,
+      color: getRiskSeverity(log.riskScore).color,
+    }}
+  >
+    {getRiskSeverity(log.riskScore).label}
+  </span>
+</td>
+
+<td style={td}>
+  {log.riskScore >= 60 ? (
+    <button
+      style={dangerButton}
+      onClick={() => freezeUser(log.user?._id)}
+    >
+      Freeze User
+    </button>
+  ) : (
+    <span style={{ color: "#999" }}>
+      Monitoring
+    </span>
+  )}
+</td>
+
+
                   <td style={td}>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                       <button style={neutralButton} onClick={() => setSelectedTx(tx)}>
