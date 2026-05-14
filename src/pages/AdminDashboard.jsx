@@ -14,6 +14,40 @@ export default function AdminDashboard() {
   const [checkingAdmin, setCheckingAdmin] = useState(true);
 const [adminAllowed, setAdminAllowed] = useState(false);
 
+function getRiskSeverity(score) {
+  const risk = Number(score || 0);
+
+  if (risk >= 80) {
+    return {
+      label: "CRITICAL",
+      background: "#7f1d1d",
+      color: "#fff",
+    };
+  }
+
+  if (risk >= 60) {
+    return {
+      label: "HIGH",
+      background: "#dc2626",
+      color: "#fff",
+    };
+  }
+
+  if (risk >= 40) {
+    return {
+      label: "MEDIUM",
+      background: "#f59e0b",
+      color: "#111",
+    };
+  }
+
+  return {
+    label: "LOW",
+    background: "#dcfce7",
+    color: "#166534",
+  };
+}
+
   async function loadAdminData() {
     try {
       const [usersRes, txRes, ledgerRes, fraudRes] = await Promise.all([
