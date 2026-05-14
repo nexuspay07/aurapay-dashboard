@@ -9,6 +9,8 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("transactions");
   const [message, setMessage] = useState("");
   const [selectedTx, setSelectedTx] = useState(null);
+  const [checkingAdmin, setCheckingAdmin] = useState(true);
+const [adminAllowed, setAdminAllowed] = useState(false);
 
   async function loadAdminData() {
     try {
@@ -29,8 +31,23 @@ export default function AdminDashboard() {
   }
 
   useEffect(() => {
-    loadAdminData();
-  }, []);
+  async function checkAdminAccess() {
+    try {
+      await API.get("/admin/test");
+      setAdminAllowed(true);
+      await loadAdminData();
+    } catch (err) {
+      setAdminAllowed(false);
+      setMessage(
+        err?.response?.data?.error || "Admin access required"
+      );
+    } finally {
+      setCheckingAdmin(false);
+    }
+  }
+
+  checkAdminAccess();
+}, []);
 
   async function freezeUser(userId) {
     const reason = prompt("Reason for freezing this user?");
@@ -119,6 +136,26 @@ export default function AdminDashboard() {
       entriesCount: entries.length,
     };
   }
+
+  if (checkingAdmin) {
+  return (
+    <div style={page}>
+      <h2>Checking admin access...</h2>
+    </div>
+  );
+}
+
+if (!adminAllowed) {
+  return (
+    <div style={page}>
+      <div style={card}>
+        <h2>Access Denied</h2>
+        <p>You do not have permission to access the admin dashboard.</p>
+        {message && <div style={alert}>{message}</div>}
+      </div>
+    </div>
+  );
+}
 
   return (
     <div style={page}>
