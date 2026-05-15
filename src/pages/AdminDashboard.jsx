@@ -184,41 +184,82 @@ export default function AdminDashboard() {
       {message && <div style={alert}>{message}</div>}
 
       <div style={tabs}>
-        <button
-          style={tab(activeTab === "transactions")}
-          onClick={() => setActiveTab("transactions")}
-        >
-          Transactions
-        </button>
+  <button
+    style={tab(activeTab === "transactions")}
+    onClick={() => setActiveTab("transactions")}
+  >
+    Transactions
+  </button>
 
-        <button
-          style={tab(activeTab === "users")}
-          onClick={() => setActiveTab("users")}
-        >
-          Users
-        </button>
+  <button
+    style={tab(activeTab === "users")}
+    onClick={() => setActiveTab("users")}
+  >
+    Users
+  </button>
 
-        <button
-          style={tab(activeTab === "ledger")}
-          onClick={() => setActiveTab("ledger")}
-        >
-          Ledger
-        </button>
+  <button
+    style={tab(activeTab === "ledger")}
+    onClick={() => setActiveTab("ledger")}
+  >
+    Ledger
+  </button>
 
-        <button
-          style={tab(activeTab === "fraud")}
-          onClick={() => setActiveTab("fraud")}
-        >
-          Fraud Logs
-        </button>
-      </div>
+  <button
+    style={tab(activeTab === "fraud")}
+    onClick={() => setActiveTab("fraud")}
+  >
+    Fraud Logs
+  </button>
 
-      <button
-  style={tab(activeTab === "audit")}
-  onClick={() => setActiveTab("audit")}
->
-  Audit Logs
-</button>
+  <button
+    style={tab(activeTab === "audit")}
+    onClick={() => setActiveTab("audit")}
+  >
+    Audit Logs
+  </button>
+</div>
+
+{activeTab === "audit" && (
+  <section style={card}>
+    <h2>Admin Audit Logs</h2>
+
+    <table style={table}>
+      <thead>
+        <tr>
+          <th style={th}>Admin</th>
+          <th style={th}>Action</th>
+          <th style={th}>Target User</th>
+          <th style={th}>Date</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {auditLogs.map((log) => (
+          <tr key={log._id}>
+            <td style={td}>
+              {log.admin?.email || "-"}
+            </td>
+
+            <td style={td}>
+              {log.action}
+            </td>
+
+            <td style={td}>
+              {log.targetUser?.email || "-"}
+            </td>
+
+            <td style={td}>
+              {log.createdAt
+                ? new Date(log.createdAt).toLocaleString()
+                : "-"}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </section>
+)}
 
       {activeTab === "transactions" && (
         <section style={card}>
@@ -296,70 +337,6 @@ export default function AdminDashboard() {
               ))}
             </tbody>
           </table>
-
-          {activeTab === "audit" && (
-  <section style={card}>
-    <h2>Admin Audit Logs</h2>
-
-    <table style={table}>
-      <thead>
-        <tr>
-          <th style={th}>Admin</th>
-          <th style={th}>Action</th>
-          <th style={th}>Target User</th>
-          <th style={th}>Transaction</th>
-          <th style={th}>Metadata</th>
-          <th style={th}>IP</th>
-          <th style={th}>Date</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        {auditLogs.map((log) => (
-          <tr key={log._id}>
-            <td style={td}>
-              {log.admin?.email || "-"}
-            </td>
-
-            <td style={td}>
-              {log.action}
-            </td>
-
-            <td style={td}>
-              {log.targetUser?.email || "-"}
-            </td>
-
-            <td style={td}>
-              {log.transaction?._id || "-"}
-            </td>
-
-            <td style={td}>
-              <pre
-                style={{
-                  whiteSpace: "pre-wrap",
-                  fontSize: 12,
-                  margin: 0,
-                }}
-              >
-                {JSON.stringify(log.metadata, null, 2)}
-              </pre>
-            </td>
-
-            <td style={td}>
-              {log.ipAddress || "-"}
-            </td>
-
-            <td style={td}>
-              {log.createdAt
-                ? new Date(log.createdAt).toLocaleString()
-                : "-"}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </section>
-)}
 
           {selectedTx && (
             <div style={auditBox}>
