@@ -68,10 +68,13 @@ export default function AdminDashboard() {
     async function checkAdminAccess() {
       try {
         await API.get("/admin/test");
+
         setAdminAllowed(true);
+
         await loadAdminData();
       } catch (err) {
         setAdminAllowed(false);
+
         setMessage(
           err?.response?.data?.error || "Admin access required"
         );
@@ -85,6 +88,7 @@ export default function AdminDashboard() {
 
   async function freezeUser(userId) {
     const reason = prompt("Reason for freezing this user?");
+
     if (!reason) return;
 
     try {
@@ -94,6 +98,7 @@ export default function AdminDashboard() {
       });
 
       setMessage("✅ User frozen");
+
       loadAdminData();
     } catch (err) {
       setMessage(err?.response?.data?.error || "Freeze failed");
@@ -105,6 +110,7 @@ export default function AdminDashboard() {
       await API.post(`/admin/users/${userId}/unfreeze`);
 
       setMessage("✅ User unfrozen");
+
       loadAdminData();
     } catch (err) {
       setMessage(err?.response?.data?.error || "Unfreeze failed");
@@ -121,9 +127,12 @@ export default function AdminDashboard() {
     try {
       const reason = prompt("Refund reason?") || "admin_refund";
 
-      const res = await API.post(`/payments/refund/${tx._id}`, { reason });
+      const res = await API.post(`/payments/refund/${tx._id}`, {
+        reason,
+      });
 
-      const refundId = res?.data?.providerRefund?.refundId || null;
+      const refundId =
+        res?.data?.providerRefund?.refundId || null;
 
       setMessage(
         refundId
@@ -132,43 +141,11 @@ export default function AdminDashboard() {
       );
 
       await loadAdminData();
+
       setSelectedTx(null);
     } catch (err) {
       setMessage(err?.response?.data?.error || "Refund failed");
     }
-  }
-
-  function getLedgerForTransaction(txId) {
-    return ledger.filter((entry) => {
-      const entryTxId =
-        typeof entry.transaction === "string"
-          ? entry.transaction
-          : entry.transaction?._id;
-
-      return String(entryTxId) === String(txId);
-    });
-  }
-
-  function getAccountingSummary(txId) {
-    const entries = getLedgerForTransaction(txId);
-
-    const debitTotal = entries
-      .filter((entry) =>
-        ["debit", "refund", "reversal"].includes(entry.type)
-      )
-      .reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
-
-    const creditTotal = entries
-      .filter((entry) => entry.type === "credit")
-      .reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
-
-    return {
-      balanced: debitTotal === creditTotal,
-      debitTotal,
-      creditTotal,
-      difference: debitTotal - creditTotal,
-      entriesCount: entries.length,
-    };
   }
 
   if (checkingAdmin) {
@@ -184,7 +161,12 @@ export default function AdminDashboard() {
       <div style={page}>
         <div style={card}>
           <h2>Access Denied</h2>
-          <p>You do not have permission to access the admin dashboard.</p>
+
+          <p>
+            You do not have permission to access the admin
+            dashboard.
+          </p>
+
           {message && <div style={alert}>{message}</div>}
         </div>
       </div>
@@ -247,22 +229,39 @@ export default function AdminDashboard() {
             <tbody>
               {transactions.map((tx) => (
                 <tr key={tx._id}>
-                  <td style={td}>{tx.user?.email || "-"}</td>
+                  <td style={td}>
+                    {tx.user?.email || "-"}
+                  </td>
+
                   <td style={td}>{tx.amount}</td>
+
                   <td style={td}>
                     {String(tx.currency || "").toUpperCase()}
                   </td>
-                  <td style={td}>{tx.provider || "-"}</td>
-                  <td style={td}>{tx.status || "-"}</td>
+
+                  <td style={td}>
+                    {tx.provider || "-"}
+                  </td>
+
+                  <td style={td}>
+                    {tx.status || "-"}
+                  </td>
 
                   <td style={td}>
                     {tx.createdAt
-                      ? new Date(tx.createdAt).toLocaleString()
+                      ? new Date(
+                          tx.createdAt
+                        ).toLocaleString()
                       : "-"}
                   </td>
 
                   <td style={td}>
-                    <div style={{ display: "flex", gap: 8 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: 8,
+                      }}
+                    >
                       <button
                         style={neutralButton}
                         onClick={() => setSelectedTx(tx)}
@@ -273,7 +272,9 @@ export default function AdminDashboard() {
                       {tx.status === "completed" && (
                         <button
                           style={dangerButton}
-                          onClick={() => refundTransaction(tx)}
+                          onClick={() =>
+                            refundTransaction(tx)
+                          }
                         >
                           Refund
                         </button>
@@ -289,13 +290,25 @@ export default function AdminDashboard() {
             <div style={auditBox}>
               <h3>Transaction Audit</h3>
 
-              <Info label="Transaction ID" value={selectedTx._id} />
+              <Info
+                label="Transaction ID"
+                value={selectedTx._id}
+              />
+
               <Info
                 label="User"
                 value={selectedTx.user?.email || "-"}
               />
-              <Info label="Provider" value={selectedTx.provider} />
-              <Info label="Status" value={selectedTx.status} />
+
+              <Info
+                label="Provider"
+                value={selectedTx.provider}
+              />
+
+              <Info
+                label="Status"
+                value={selectedTx.status}
+              />
 
               <button
                 style={neutralButton}
@@ -327,22 +340,35 @@ export default function AdminDashboard() {
               {users.map((user) => (
                 <tr key={user._id}>
                   <td style={td}>{user.email}</td>
-                  <td style={td}>{user.role}</td>
-                  <td style={td}>{user.status}</td>
-                  <td style={td}>{user.frozen ? "Yes" : "No"}</td>
+
+                  <td style={td}>
+                    {user.role || "user"}
+                  </td>
+
+                  <td style={td}>
+                    {user.status || "-"}
+                  </td>
+
+                  <td style={td}>
+                    {user.frozen ? "Yes" : "No"}
+                  </td>
 
                   <td style={td}>
                     {user.frozen ? (
                       <button
                         style={goodButton}
-                        onClick={() => unfreezeUser(user._id)}
+                        onClick={() =>
+                          unfreezeUser(user._id)
+                        }
                       >
                         Unfreeze
                       </button>
                     ) : (
                       <button
                         style={dangerButton}
-                        onClick={() => freezeUser(user._id)}
+                        onClick={() =>
+                          freezeUser(user._id)
+                        }
                       >
                         Freeze
                       </button>
@@ -372,9 +398,14 @@ export default function AdminDashboard() {
             <tbody>
               {ledger.map((entry) => (
                 <tr key={entry._id}>
-                  <td style={td}>{entry.user?.email || "-"}</td>
+                  <td style={td}>
+                    {entry.user?.email || "-"}
+                  </td>
+
                   <td style={td}>{entry.type}</td>
+
                   <td style={td}>{entry.account}</td>
+
                   <td style={td}>{entry.amount}</td>
                 </tr>
               ))}
@@ -399,43 +430,63 @@ export default function AdminDashboard() {
             </thead>
 
             <tbody>
-              {fraudLogs.map((log) => (
-                <tr key={log._id}>
-                  <td style={td}>{log.user?.email || "-"}</td>
-                  <td style={td}>{log.riskScore}</td>
-                  <td style={td}>{log.decision}</td>
+              {fraudLogs.map((log) => {
+                const severity = getRiskSeverity(
+                  log.riskScore
+                );
 
-                  <td style={td}>
-                    <span
-                      style={{
-                        padding: "5px 10px",
-                        borderRadius: 999,
-                        background:
-                          getRiskSeverity(log.riskScore).background,
-                        color: getRiskSeverity(log.riskScore).color,
-                        fontWeight: 700,
-                      }}
-                    >
-                      {getRiskSeverity(log.riskScore).label}
-                    </span>
-                  </td>
+                return (
+                  <tr key={log._id}>
+                    <td style={td}>
+                      {log.user?.email || "-"}
+                    </td>
 
-                  <td style={td}>
-                    {log.riskScore >= 60 ? (
-                      <button
-                        style={dangerButton}
-                        onClick={() => freezeUser(log.user?._id)}
+                    <td style={td}>
+                      {log.riskScore}
+                    </td>
+
+                    <td style={td}>
+                      {log.decision}
+                    </td>
+
+                    <td style={td}>
+                      <span
+                        style={{
+                          padding: "5px 10px",
+                          borderRadius: 999,
+                          background:
+                            severity.background,
+                          color: severity.color,
+                          fontWeight: 700,
+                        }}
                       >
-                        Freeze User
-                      </button>
-                    ) : (
-                      <span style={{ color: "#666" }}>
-                        Monitoring
+                        {severity.label}
                       </span>
-                    )}
-                  </td>
-                </tr>
-              ))}
+                    </td>
+
+                    <td style={td}>
+                      {log.riskScore >= 60 ? (
+                        <button
+                          style={dangerButton}
+                          onClick={() =>
+                            freezeUser(log.user?._id)
+                          }
+                        >
+                          Freeze User
+                        </button>
+                      ) : (
+                        <span
+                          style={{
+                            color: "#666",
+                          }}
+                        >
+                          Monitoring
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </section>
@@ -448,6 +499,7 @@ function Info({ label, value }) {
   return (
     <div style={infoRow}>
       <span style={infoLabel}>{label}</span>
+
       <strong>{String(value)}</strong>
     </div>
   );
