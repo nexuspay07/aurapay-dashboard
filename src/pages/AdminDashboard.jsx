@@ -11,6 +11,7 @@ export default function AdminDashboard() {
   const [selectedTx, setSelectedTx] = useState(null);
   const [checkingAdmin, setCheckingAdmin] = useState(true);
   const [adminAllowed, setAdminAllowed] = useState(false);
+  const [auditLogs, setAuditLogs] = useState([]);
 
   function getRiskSeverity(score) {
     const risk = Number(score || 0);
@@ -48,17 +49,20 @@ export default function AdminDashboard() {
 
   async function loadAdminData() {
     try {
-      const [usersRes, txRes, ledgerRes, fraudRes] = await Promise.all([
+      const [usersRes, txRes, ledgerRes, fraudRes, auditRes] =
+  await Promise.all([
         API.get("/admin/users"),
         API.get("/admin/transactions"),
         API.get("/admin/ledger"),
         API.get("/admin/fraud-logs"),
+        API.get("/admin/audit-logs"),
       ]);
 
       setUsers(usersRes.data);
       setTransactions(txRes.data);
       setLedger(ledgerRes.data);
       setFraudLogs(fraudRes.data);
+      setAuditLogs(auditRes.data);
     } catch (err) {
       setMessage(err?.response?.data?.error || "Failed to load admin data");
     }
@@ -209,6 +213,13 @@ export default function AdminDashboard() {
         </button>
       </div>
 
+      <button
+  style={tab(activeTab === "audit")}
+  onClick={() => setActiveTab("audit")}
+>
+  Audit Logs
+</button>
+
       {activeTab === "transactions" && (
         <section style={card}>
           <h2>All Transactions</h2>
@@ -285,6 +296,70 @@ export default function AdminDashboard() {
               ))}
             </tbody>
           </table>
+
+          {activeTab === "audit" && (
+  <section style={card}>
+    <h2>Admin Audit Logs</h2>
+
+    <table style={table}>
+      <thead>
+        <tr>
+          <th style={th}>Admin</th>
+          <th style={th}>Action</th>
+          <th style={th}>Target User</th>
+          <th style={th}>Transaction</th>
+          <th style={th}>Metadata</th>
+          <th style={th}>IP</th>
+          <th style={th}>Date</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {auditLogs.map((log) => (
+          <tr key={log._id}>
+            <td style={td}>
+              {log.admin?.email || "-"}
+            </td>
+
+            <td style={td}>
+              {log.action}
+            </td>
+
+            <td style={td}>
+              {log.targetUser?.email || "-"}
+            </td>
+
+            <td style={td}>
+              {log.transaction?._id || "-"}
+            </td>
+
+            <td style={td}>
+              <pre
+                style={{
+                  whiteSpace: "pre-wrap",
+                  fontSize: 12,
+                  margin: 0,
+                }}
+              >
+                {JSON.stringify(log.metadata, null, 2)}
+              </pre>
+            </td>
+
+            <td style={td}>
+              {log.ipAddress || "-"}
+            </td>
+
+            <td style={td}>
+              {log.createdAt
+                ? new Date(log.createdAt).toLocaleString()
+                : "-"}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </section>
+)}
 
           {selectedTx && (
             <div style={auditBox}>
