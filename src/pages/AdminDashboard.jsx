@@ -12,6 +12,7 @@ export default function AdminDashboard() {
   const [checkingAdmin, setCheckingAdmin] = useState(true);
   const [adminAllowed, setAdminAllowed] = useState(false);
   const [auditLogs, setAuditLogs] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
 
   function getRiskSeverity(score) {
     const risk = Number(score || 0);
@@ -49,20 +50,28 @@ export default function AdminDashboard() {
 
   async function loadAdminData() {
     try {
-      const [usersRes, txRes, ledgerRes, fraudRes, auditRes] =
-  await Promise.all([
-        API.get("/admin/users"),
-        API.get("/admin/transactions"),
-        API.get("/admin/ledger"),
-        API.get("/admin/fraud-logs"),
-        API.get("/admin/audit-logs"),
-      ]);
+      const [
+  usersRes,
+  txRes,
+  ledgerRes,
+  fraudRes,
+  auditRes,
+  analyticsRes,
+] = await Promise.all([
+  API.get("/admin/users"),
+  API.get("/admin/transactions"),
+  API.get("/admin/ledger"),
+  API.get("/admin/fraud-logs"),
+  API.get("/admin/audit-logs"),
+  API.get("/analytics/overview"),
+]);
 
       setUsers(usersRes.data);
       setTransactions(txRes.data);
       setLedger(ledgerRes.data);
       setFraudLogs(fraudRes.data);
       setAuditLogs(auditRes.data);
+      setAnalytics(analyticsRes.data);
     } catch (err) {
       setMessage(err?.response?.data?.error || "Failed to load admin data");
     }
@@ -152,6 +161,16 @@ export default function AdminDashboard() {
     }
   }
 
+  function StatCard({ title, value }) {
+  return (
+    <div style={statCard}>
+      <div style={statTitle}>{title}</div>
+
+      <div style={statValue}>{value}</div>
+    </div>
+  );
+}
+
   if (checkingAdmin) {
     return (
       <div style={page}>
@@ -177,9 +196,56 @@ export default function AdminDashboard() {
     );
   }
 
+  
+
   return (
     <div style={page}>
       <h1>Admin Operations Dashboard</h1>
+
+      {analytics && (
+  <div style={statsGrid}>
+    <StatCard
+      title="Total Users"
+      value={analytics.totalUsers}
+    />
+
+    <StatCard
+      title="Transactions"
+      value={analytics.totalTransactions}
+    />
+
+    <StatCard
+      title="Completed"
+      value={analytics.completedTransactions}
+    />
+
+    <StatCard
+      title="Refunds"
+      value={analytics.refundedTransactions}
+    />
+
+    <StatCard
+      title="Fraud Alerts"
+      value={analytics.fraudAlerts}
+    />
+
+    <StatCard
+      title="Success Rate"
+      value={`${analytics.successRate}%`}
+    />
+
+    <StatCard
+      title="Total Volume"
+      value={`$${analytics.totalVolume}`}
+    />
+
+    <StatCard
+      title="Refund Volume"
+      value={`$${analytics.refundVolume}`}
+    />
+  </div>
+)}
+
 
       {message && <div style={alert}>{message}</div>}
 
@@ -556,6 +622,32 @@ function Info({ label, value }) {
     </div>
   );
 }
+
+const statsGrid = {
+  display: "grid",
+  gridTemplateColumns:
+    "repeat(auto-fit, minmax(220px, 1fr))",
+  gap: 16,
+  marginBottom: 24,
+};
+
+const statCard = {
+  background: "#fff",
+  border: "1px solid #ddd",
+  borderRadius: 12,
+  padding: 20,
+};
+
+const statTitle = {
+  color: "#666",
+  fontSize: 14,
+  marginBottom: 8,
+};
+
+const statValue = {
+  fontSize: 28,
+  fontWeight: 700,
+};
 
 const page = {
   padding: 24,
