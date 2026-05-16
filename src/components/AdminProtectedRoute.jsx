@@ -1,22 +1,8 @@
 import { Navigate } from "react-router-dom";
-
 import { useAdminAuth } from "../context/AdminAuthContext";
 
-export default function AdminProtectedRoute({
-  children,
-}) {
-  const {
-    adminToken,
-    adminLoading,
-  } = useAdminAuth();
-
-  if (adminLoading) {
-    return (
-      <div style={{ padding: 24 }}>
-        Loading admin...
-      </div>
-    );
-  }
+export default function AdminProtectedRoute({ children }) {
+  const { adminToken } = useAdminAuth();
 
   if (!adminToken) {
     return (

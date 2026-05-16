@@ -14,6 +14,7 @@ import Dashboard from "./pages/Dashboard";
 import Onboarding from "./pages/Onboarding";
 import StripePayment from "./pages/StripePayment";
 import StripeCheckout from "./pages/StripeCheckout";
+
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
 
 import AdminDashboard from "./pages/AdminDashboard";
