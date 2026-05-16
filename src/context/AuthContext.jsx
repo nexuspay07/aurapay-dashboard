@@ -5,22 +5,67 @@ import React, {
   useState,
 } from "react";
 
+import API from "../services/api";
+
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(
-    localStorage.getItem("token")
+    localStorage.getItem("token") || null
   );
 
-  const [loading] = useState(false);
+  const [user, setUser] = useState(() => {
+    const saved =
+      localStorage.getItem("user");
+
+    return saved
+      ? JSON.parse(saved)
+      : null;
+  });
+
+  const [loading, setLoading] =
+    useState(false);
 
   useEffect(() => {
     if (token) {
-      localStorage.setItem("token", token);
+      localStorage.setItem(
+        "token",
+        token
+      );
     } else {
-      localStorage.removeItem("token");
+      localStorage.removeItem(
+        "token"
+      );
     }
   }, [token]);
+
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem(
+        "user",
+        JSON.stringify(user)
+      );
+    } else {
+      localStorage.removeItem(
+        "user"
+      );
+    }
+  }, [user]);
+
+  async function refreshUser() {
+    try {
+      const res = await API.get(
+        "/auth/me"
+      );
+
+      setUser(res.data);
+    } catch (err) {
+      console.log(
+        "Failed to refresh user:",
+        err.message
+      );
+    }
+  }
 
   const login = (newToken) => {
     setToken(newToken);
@@ -28,15 +73,27 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     setToken(null);
+    setUser(null);
+
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
   };
+
+  useEffect(() => {
+    if (token && !user) {
+      refreshUser();
+    }
+  }, [token]);
 
   return (
     <AuthContext.Provider
       value={{
         token,
+        user,
         loading,
         login,
         logout,
+        refreshUser,
       }}
     >
       {children}
@@ -45,7 +102,8 @@ export function AuthProvider({ children }) {
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext);
+  const context =
+    useContext(AuthContext);
 
   if (!context) {
     throw new Error(
