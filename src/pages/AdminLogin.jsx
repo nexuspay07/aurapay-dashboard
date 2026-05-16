@@ -4,10 +4,10 @@ import { useAdminAuth } from "../context/AdminAuthContext";
 
 import API from "../services/api";
 
-const { adminLogin } = useAdminAuth();
-
 export default function AdminLogin() {
   const navigate = useNavigate();
+
+  const { adminLogin } = useAdminAuth();
 
   const [form, setForm] = useState({
     email: "",
