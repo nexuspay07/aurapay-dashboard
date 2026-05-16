@@ -1,33 +1,25 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 const AdminAuthContext = createContext();
 
 export function AdminAuthProvider({ children }) {
-  const [adminToken, setAdminToken] = useState(null);
-  const [adminLoading, setAdminLoading] = useState(true);
+  const [adminToken, setAdminToken] = useState(
+    localStorage.getItem("adminToken") || null
+  );
 
   useEffect(() => {
-    const token = localStorage.getItem("adminToken");
-
-    if (token) {
-      setAdminToken(token);
+    if (adminToken) {
+      localStorage.setItem("adminToken", adminToken);
+    } else {
+      localStorage.removeItem("adminToken");
     }
-
-    setAdminLoading(false);
-  }, []);
+  }, [adminToken]);
 
   function adminLogin(token) {
-    localStorage.setItem("adminToken", token);
     setAdminToken(token);
   }
 
   function adminLogout() {
-    localStorage.removeItem("adminToken");
     setAdminToken(null);
   }
 
@@ -35,7 +27,6 @@ export function AdminAuthProvider({ children }) {
     <AdminAuthContext.Provider
       value={{
         adminToken,
-        adminLoading,
         adminLogin,
         adminLogout,
       }}
