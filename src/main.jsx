@@ -8,11 +8,9 @@ import { AdminAuthProvider } from "./context/AdminAuthContext";
 
 import "./index.css";
 
-const root = ReactDOM.createRoot(
+ReactDOM.createRoot(
   document.getElementById("root")
-);
-
-root.render(
+).render(
   <React.StrictMode>
     <AuthProvider>
       <AdminAuthProvider>

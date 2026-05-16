@@ -1,6 +1,11 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
-const AdminAuthContext = createContext();
+const AdminAuthContext = createContext(null);
 
 export function AdminAuthProvider({ children }) {
   const [adminToken, setAdminToken] = useState(
@@ -15,20 +20,20 @@ export function AdminAuthProvider({ children }) {
     }
   }, [adminToken]);
 
-  function adminLogin(token) {
+  const loginAdmin = (token) => {
     setAdminToken(token);
-  }
+  };
 
-  function adminLogout() {
+  const logoutAdmin = () => {
     setAdminToken(null);
-  }
+  };
 
   return (
     <AdminAuthContext.Provider
       value={{
         adminToken,
-        adminLogin,
-        adminLogout,
+        loginAdmin,
+        logoutAdmin,
       }}
     >
       {children}
@@ -37,5 +42,13 @@ export function AdminAuthProvider({ children }) {
 }
 
 export function useAdminAuth() {
-  return useContext(AdminAuthContext);
+  const context = useContext(AdminAuthContext);
+
+  if (!context) {
+    throw new Error(
+      "useAdminAuth must be used inside AdminAuthProvider"
+    );
+  }
+
+  return context;
 }
