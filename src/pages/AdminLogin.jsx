@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAdminAuth } from "../context/AdminAuthContext";
 
 import API from "../services/api";
+
+const { adminLogin } = useAdminAuth();
 
 export default function AdminLogin() {
   const navigate = useNavigate();
@@ -29,10 +32,7 @@ export default function AdminLogin() {
         form
       );
 
-      localStorage.setItem(
-        "adminToken",
-        res.data.token
-      );
+      adminLogin(res.data.token);
 
       localStorage.setItem(
         "adminUser",
