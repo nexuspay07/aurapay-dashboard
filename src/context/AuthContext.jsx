@@ -14,86 +14,72 @@ export function AuthProvider({ children }) {
     localStorage.getItem("token") || null
   );
 
-  const [user, setUser] = useState(() => {
-    const saved =
-      localStorage.getItem("user");
-
-    return saved
-      ? JSON.parse(saved)
-      : null;
-  });
-
-  const [loading, setLoading] =
-    useState(false);
+  const [loading] = useState(false);
 
   useEffect(() => {
     if (token) {
-      localStorage.setItem(
-        "token",
-        token
-      );
+      localStorage.setItem("token", token);
     } else {
-      localStorage.removeItem(
-        "token"
-      );
+      localStorage.removeItem("token");
     }
   }, [token]);
 
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem(
-        "user",
-        JSON.stringify(user)
-      );
-    } else {
-      localStorage.removeItem(
-        "user"
-      );
-    }
-  }, [user]);
+  // LOGIN
+  async function login(email, password) {
+    const res = await API.post(
+      "/auth/login",
+      {
+        email,
+        password,
+      }
+    );
 
-  async function refreshUser() {
-    try {
-      const res = await API.get(
-        "/auth/me"
-      );
+    const newToken = res.data.token;
 
-      setUser(res.data);
-    } catch (err) {
-      console.log(
-        "Failed to refresh user:",
-        err.message
-      );
-    }
+    setToken(newToken);
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify(res.data.user)
+    );
+
+    return res.data;
   }
 
-  const login = (newToken) => {
+  // REGISTER
+  async function register(form) {
+    const res = await API.post(
+      "/auth/register",
+      form
+    );
+
+    const newToken = res.data.token;
+
     setToken(newToken);
-  };
 
-  const logout = () => {
+    localStorage.setItem(
+      "user",
+      JSON.stringify(res.data.user)
+    );
+
+    return res.data;
+  }
+
+  // LOGOUT
+  function logout() {
     setToken(null);
-    setUser(null);
 
-    localStorage.removeItem("token");
     localStorage.removeItem("user");
-  };
-
-  useEffect(() => {
-    if (token && !user) {
-      refreshUser();
-    }
-  }, [token]);
+  }
 
   return (
     <AuthContext.Provider
       value={{
         token,
-        user,
         loading,
         login,
+        register,
         logout,
-        refreshUser,
       }}
     >
       {children}
@@ -102,8 +88,7 @@ export function AuthProvider({ children }) {
 }
 
 export function useAuth() {
-  const context =
-    useContext(AuthContext);
+  const context = useContext(AuthContext);
 
   if (!context) {
     throw new Error(
