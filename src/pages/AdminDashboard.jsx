@@ -1,747 +1,140 @@
-import { useEffect, useState } from "react";
-import API from "../services/api";
+import usePermission from "../hooks/usePermission";
+
+import AdminSection from "../components/admin/AdminSection";
 
 export default function AdminDashboard() {
-  const [users, setUsers] = useState([]);
-  const [transactions, setTransactions] = useState([]);
-  const [ledger, setLedger] = useState([]);
-  const [fraudLogs, setFraudLogs] = useState([]);
-  const [activeTab, setActiveTab] = useState("transactions");
-  const [message, setMessage] = useState("");
-  const [selectedTx, setSelectedTx] = useState(null);
-  const [checkingAdmin, setCheckingAdmin] = useState(true);
-  const [adminAllowed, setAdminAllowed] = useState(false);
-  const [auditLogs, setAuditLogs] = useState([]);
-  const [analytics, setAnalytics] = useState(null);
+  const {
+    role,
+    hasPermission,
+    adminUser,
+  } = usePermission();
 
-  function getRiskSeverity(score) {
-    const risk = Number(score || 0);
-
-    if (risk >= 80) {
-      return {
-        label: "CRITICAL",
-        background: "#7f1d1d",
-        color: "#fff",
-      };
-    }
-
-    if (risk >= 60) {
-      return {
-        label: "HIGH",
-        background: "#dc2626",
-        color: "#fff",
-      };
-    }
-
-    if (risk >= 40) {
-      return {
-        label: "MEDIUM",
-        background: "#f59e0b",
-        color: "#111",
-      };
-    }
-
-    return {
-      label: "LOW",
-      background: "#dcfce7",
-      color: "#166534",
-    };
-  }
-
-  async function loadAdminData() {
-    try {
-      const [
-  usersRes,
-  txRes,
-  ledgerRes,
-  fraudRes,
-  auditRes,
-  analyticsRes,
-] = await Promise.all([
-  API.get("/admin/users"),
-  API.get("/admin/transactions"),
-  API.get("/admin/ledger"),
-  API.get("/admin/fraud-logs"),
-  API.get("/admin/audit-logs"),
-  API.get("/analytics/overview"),
-]);
-
-      setUsers(usersRes.data);
-      setTransactions(txRes.data);
-      setLedger(ledgerRes.data);
-      setFraudLogs(fraudRes.data);
-      setAuditLogs(auditRes.data);
-      setAnalytics(analyticsRes.data);
-    } catch (err) {
-      setMessage(err?.response?.data?.error || "Failed to load admin data");
-    }
-  }
-
-  useEffect(() => {
-    async function checkAdminAccess() {
-      try {
-        await API.get("/admin/test");
-
-        setAdminAllowed(true);
-
-        await loadAdminData();
-      } catch (err) {
-        setAdminAllowed(false);
-
-        setMessage(
-          err?.response?.data?.error || "Admin access required"
-        );
-      } finally {
-        setCheckingAdmin(false);
-      }
-    }
-
-    checkAdminAccess();
-  }, []);
-
-  async function freezeUser(userId) {
-    const reason = prompt("Reason for freezing this user?");
-
-    if (!reason) return;
-
-    try {
-      await API.post(`/admin/users/${userId}/freeze`, {
-        reason,
-        hours: 24,
-      });
-
-      setMessage("✅ User frozen");
-
-      loadAdminData();
-    } catch (err) {
-      setMessage(err?.response?.data?.error || "Freeze failed");
-    }
-  }
-
-  async function unfreezeUser(userId) {
-    try {
-      await API.post(`/admin/users/${userId}/unfreeze`);
-
-      setMessage("✅ User unfrozen");
-
-      loadAdminData();
-    } catch (err) {
-      setMessage(err?.response?.data?.error || "Unfreeze failed");
-    }
-  }
-
-  async function refundTransaction(tx) {
-    const confirmRefund = window.confirm(
-      `Refund ${tx.amount} ${String(tx.currency || "").toUpperCase()}?`
-    );
-
-    if (!confirmRefund) return;
-
-    try {
-      const reason = prompt("Refund reason?") || "admin_refund";
-
-      const res = await API.post(`/payments/refund/${tx._id}`, {
-        reason,
-      });
-
-      const refundId =
-        res?.data?.providerRefund?.refundId || null;
-
-      setMessage(
-        refundId
-          ? `✅ Refund completed. Refund ID: ${refundId}`
-          : "✅ Refund completed"
-      );
-
-      await loadAdminData();
-
-      setSelectedTx(null);
-    } catch (err) {
-      setMessage(err?.response?.data?.error || "Refund failed");
-    }
-  }
-
-  function StatCard({ title, value }) {
   return (
-    <div style={statCard}>
-      <div style={statTitle}>{title}</div>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#f3f4f6",
+        padding: 32,
+      }}
+    >
+      {/* HEADER */}
 
-      <div style={statValue}>{value}</div>
-    </div>
-  );
-}
+      <div
+        style={{
+          marginBottom: 32,
+        }}
+      >
+        <h1
+          style={{
+            fontSize: 38,
+            fontWeight: 800,
+            marginBottom: 10,
+          }}
+        >
+          AuraPay Admin
+        </h1>
 
-  if (checkingAdmin) {
-    return (
-      <div style={page}>
-        <h2>Checking admin access...</h2>
-      </div>
-    );
-  }
+        <p
+          style={{
+            color: "#6b7280",
+            fontSize: 18,
+          }}
+        >
+          Signed in as{" "}
+          <strong>
+            {adminUser?.email}
+          </strong>
+        </p>
 
-  if (!adminAllowed) {
-    return (
-      <div style={page}>
-        <div style={card}>
-          <h2>Access Denied</h2>
-
-          <p>
-            You do not have permission to access the admin
-            dashboard.
-          </p>
-
-          {message && <div style={alert}>{message}</div>}
+        <div
+          style={{
+            marginTop: 12,
+            display: "inline-block",
+            padding: "8px 14px",
+            borderRadius: 999,
+            background: "#111827",
+            color: "#fff",
+            fontSize: 14,
+            fontWeight: 700,
+          }}
+        >
+          {role}
         </div>
       </div>
-    );
-  }
 
-  
+      {/* USER MANAGEMENT */}
 
-  return (
-    <div style={page}>
-      <h1>Admin Operations Dashboard</h1>
-
-      {analytics && (
-  <div style={statsGrid}>
-    <StatCard
-      title="Total Users"
-      value={analytics.totalUsers}
-    />
-
-    <StatCard
-      title="Transactions"
-      value={analytics.totalTransactions}
-    />
-
-    <StatCard
-      title="Completed"
-      value={analytics.completedTransactions}
-    />
-
-    <StatCard
-      title="Refunds"
-      value={analytics.refundedTransactions}
-    />
-
-    <StatCard
-      title="Fraud Alerts"
-      value={analytics.fraudAlerts}
-    />
-
-    <StatCard
-      title="Success Rate"
-      value={`${analytics.successRate}%`}
-    />
-
-    <StatCard
-      title="Total Volume"
-      value={`$${analytics.totalVolume}`}
-    />
-
-    <StatCard
-      title="Refund Volume"
-      value={`$${analytics.refundVolume}`}
-    />
-  </div>
-)}
-
-
-      {message && <div style={alert}>{message}</div>}
-
-      <div style={tabs}>
-  <button
-    style={tab(activeTab === "transactions")}
-    onClick={() => setActiveTab("transactions")}
-  >
-    Transactions
-  </button>
-
-  <button
-    style={tab(activeTab === "users")}
-    onClick={() => setActiveTab("users")}
-  >
-    Users
-  </button>
-
-  <button
-    style={tab(activeTab === "ledger")}
-    onClick={() => setActiveTab("ledger")}
-  >
-    Ledger
-  </button>
-
-  <button
-    style={tab(activeTab === "fraud")}
-    onClick={() => setActiveTab("fraud")}
-  >
-    Fraud Logs
-  </button>
-
-  <button
-    style={tab(activeTab === "audit")}
-    onClick={() => setActiveTab("audit")}
-  >
-    Audit Logs
-  </button>
-</div>
-
-{activeTab === "audit" && (
-  <section style={card}>
-    <h2>Admin Audit Logs</h2>
-
-    <table style={table}>
-      <thead>
-        <tr>
-          <th style={th}>Admin</th>
-          <th style={th}>Action</th>
-          <th style={th}>Target User</th>
-          <th style={th}>Date</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        {auditLogs.map((log) => (
-          <tr key={log._id}>
-            <td style={td}>
-              {log.admin?.email || "-"}
-            </td>
-
-            <td style={td}>
-              {log.action}
-            </td>
-
-            <td style={td}>
-              {log.targetUser?.email || "-"}
-            </td>
-
-            <td style={td}>
-              {log.createdAt
-                ? new Date(log.createdAt).toLocaleString()
-                : "-"}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </section>
-)}
-
-      {activeTab === "transactions" && (
-        <section style={card}>
-          <h2>All Transactions</h2>
-
-          <table style={table}>
-            <thead>
-              <tr>
-                <th style={th}>User</th>
-                <th style={th}>Amount</th>
-                <th style={th}>Currency</th>
-                <th style={th}>Provider</th>
-                <th style={th}>Status</th>
-                <th style={th}>Date</th>
-                <th style={th}>Action</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {transactions.map((tx) => (
-                <tr key={tx._id}>
-                  <td style={td}>
-                    {tx.user?.email || "-"}
-                  </td>
-
-                  <td style={td}>{tx.amount}</td>
-
-                  <td style={td}>
-                    {String(tx.currency || "").toUpperCase()}
-                  </td>
-
-                  <td style={td}>
-                    {tx.provider || "-"}
-                  </td>
-
-                  <td style={td}>
-                    {tx.status || "-"}
-                  </td>
-
-                  <td style={td}>
-                    {tx.createdAt
-                      ? new Date(
-                          tx.createdAt
-                        ).toLocaleString()
-                      : "-"}
-                  </td>
-
-                  <td style={td}>
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: 8,
-                      }}
-                    >
-                      <button
-                        style={neutralButton}
-                        onClick={() => setSelectedTx(tx)}
-                      >
-                        View Audit
-                      </button>
-
-                      {tx.status === "completed" && (
-                        <button
-                          style={dangerButton}
-                          onClick={() =>
-                            refundTransaction(tx)
-                          }
-                        >
-                          Refund
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {selectedTx && (
-            <div style={auditBox}>
-              <h3>Transaction Audit</h3>
-
-              <Info
-                label="Transaction ID"
-                value={selectedTx._id}
-              />
-
-              <Info
-                label="User"
-                value={selectedTx.user?.email || "-"}
-              />
-
-              <Info
-                label="Provider"
-                value={selectedTx.provider}
-              />
-
-              <Info
-                label="Status"
-                value={selectedTx.status}
-              />
-
-              <button
-                style={neutralButton}
-                onClick={() => setSelectedTx(null)}
-              >
-                Close
-              </button>
-            </div>
-          )}
-        </section>
+      {hasPermission("user:view") && (
+        <AdminSection title="User Management">
+          <p>
+            View users, freeze accounts,
+            manage onboarding, and
+            investigate activity.
+          </p>
+        </AdminSection>
       )}
 
-      {activeTab === "users" && (
-        <section style={card}>
-          <h2>Users</h2>
+      {/* WALLET MANAGEMENT */}
 
-          <table style={table}>
-            <thead>
-              <tr>
-                <th style={th}>Email</th>
-                <th style={th}>Role</th>
-                <th style={th}>Status</th>
-                <th style={th}>Frozen</th>
-                <th style={th}>Action</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {users.map((user) => (
-                <tr key={user._id}>
-                  <td style={td}>{user.email}</td>
-
-                  <td style={td}>
-                    {user.role || "user"}
-                  </td>
-
-                  <td style={td}>
-                    {user.status || "-"}
-                  </td>
-
-                  <td style={td}>
-                    {user.frozen ? "Yes" : "No"}
-                  </td>
-
-                  <td style={td}>
-                    {user.frozen ? (
-                      <button
-                        style={goodButton}
-                        onClick={() =>
-                          unfreezeUser(user._id)
-                        }
-                      >
-                        Unfreeze
-                      </button>
-                    ) : (
-                      <button
-                        style={dangerButton}
-                        onClick={() =>
-                          freezeUser(user._id)
-                        }
-                      >
-                        Freeze
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
+      {hasPermission("wallet:view") && (
+        <AdminSection title="Wallet Management">
+          <p>
+            Monitor balances, liquidity,
+            and wallet operations.
+          </p>
+        </AdminSection>
       )}
 
-      {activeTab === "ledger" && (
-        <section style={card}>
-          <h2>Ledger Entries</h2>
+      {/* TRANSACTIONS */}
 
-          <table style={table}>
-            <thead>
-              <tr>
-                <th style={th}>User</th>
-                <th style={th}>Type</th>
-                <th style={th}>Account</th>
-                <th style={th}>Amount</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {ledger.map((entry) => (
-                <tr key={entry._id}>
-                  <td style={td}>
-                    {entry.user?.email || "-"}
-                  </td>
-
-                  <td style={td}>{entry.type}</td>
-
-                  <td style={td}>{entry.account}</td>
-
-                  <td style={td}>{entry.amount}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
+      {hasPermission(
+        "transaction:view"
+      ) && (
+        <AdminSection title="Transactions">
+          <p>
+            Monitor transfers, approvals,
+            reversals, and routing data.
+          </p>
+        </AdminSection>
       )}
 
-      {activeTab === "fraud" && (
-        <section style={card}>
-          <h2>Fraud Logs</h2>
+      {/* FRAUD */}
 
-          <table style={table}>
-            <thead>
-              <tr>
-                <th style={th}>User</th>
-                <th style={th}>Risk</th>
-                <th style={th}>Decision</th>
-                <th style={th}>Severity</th>
-                <th style={th}>Action</th>
-              </tr>
-            </thead>
+      {hasPermission("fraud:view") && (
+        <AdminSection title="Fraud Monitoring">
+          <p>
+            Review suspicious activity,
+            freeze users, and inspect
+            fraud signals.
+          </p>
+        </AdminSection>
+      )}
 
-            <tbody>
-              {fraudLogs.map((log) => {
-                const severity = getRiskSeverity(
-                  log.riskScore
-                );
+      {/* AUDIT */}
 
-                return (
-                  <tr key={log._id}>
-                    <td style={td}>
-                      {log.user?.email || "-"}
-                    </td>
+      {hasPermission("audit:view") && (
+        <AdminSection title="Audit Logs">
+          <p>
+            Access admin actions,
+            compliance logs, and
+            system-level changes.
+          </p>
+        </AdminSection>
+      )}
 
-                    <td style={td}>
-                      {log.riskScore}
-                    </td>
+      {/* ANALYTICS */}
 
-                    <td style={td}>
-                      {log.decision}
-                    </td>
-
-                    <td style={td}>
-                      <span
-                        style={{
-                          padding: "5px 10px",
-                          borderRadius: 999,
-                          background:
-                            severity.background,
-                          color: severity.color,
-                          fontWeight: 700,
-                        }}
-                      >
-                        {severity.label}
-                      </span>
-                    </td>
-
-                    <td style={td}>
-                      {log.riskScore >= 60 ? (
-                        <button
-                          style={dangerButton}
-                          onClick={() =>
-                            freezeUser(log.user?._id)
-                          }
-                        >
-                          Freeze User
-                        </button>
-                      ) : (
-                        <span
-                          style={{
-                            color: "#666",
-                          }}
-                        >
-                          Monitoring
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </section>
+      {hasPermission(
+        "analytics:view"
+      ) && (
+        <AdminSection title="Analytics">
+          <p>
+            Real-time operational metrics,
+            provider performance, and
+            system insights.
+          </p>
+        </AdminSection>
       )}
     </div>
   );
 }
-
-function Info({ label, value }) {
-  return (
-    <div style={infoRow}>
-      <span style={infoLabel}>{label}</span>
-
-      <strong>{String(value)}</strong>
-    </div>
-  );
-}
-
-const statsGrid = {
-  display: "grid",
-  gridTemplateColumns:
-    "repeat(auto-fit, minmax(220px, 1fr))",
-  gap: 16,
-  marginBottom: 24,
-};
-
-const statCard = {
-  background: "#fff",
-  border: "1px solid #ddd",
-  borderRadius: 12,
-  padding: 20,
-};
-
-const statTitle = {
-  color: "#666",
-  fontSize: 14,
-  marginBottom: 8,
-};
-
-const statValue = {
-  fontSize: 28,
-  fontWeight: 700,
-};
-
-const page = {
-  padding: 24,
-  background: "#f5f7fb",
-  minHeight: "100vh",
-};
-
-const card = {
-  background: "#fff",
-  padding: 20,
-  borderRadius: 12,
-  border: "1px solid #ddd",
-  overflowX: "auto",
-};
-
-const tabs = {
-  display: "flex",
-  gap: 10,
-  marginBottom: 20,
-};
-
-const tab = (active) => ({
-  padding: "10px 14px",
-  borderRadius: 8,
-  border: "1px solid #ddd",
-  background: active ? "#111827" : "#fff",
-  color: active ? "#fff" : "#111827",
-  cursor: "pointer",
-});
-
-const table = {
-  width: "100%",
-  borderCollapse: "collapse",
-};
-
-const th = {
-  textAlign: "left",
-  padding: 10,
-  borderBottom: "1px solid #ddd",
-};
-
-const td = {
-  padding: 10,
-  borderBottom: "1px solid #eee",
-};
-
-const alert = {
-  padding: 12,
-  borderRadius: 8,
-  background: "#fef3c7",
-  marginBottom: 12,
-};
-
-const dangerButton = {
-  padding: "6px 10px",
-  border: "none",
-  borderRadius: 8,
-  background: "#991b1b",
-  color: "#fff",
-  cursor: "pointer",
-};
-
-const goodButton = {
-  padding: "6px 10px",
-  border: "none",
-  borderRadius: 8,
-  background: "#166534",
-  color: "#fff",
-  cursor: "pointer",
-};
-
-const neutralButton = {
-  padding: "6px 10px",
-  border: "none",
-  borderRadius: 8,
-  background: "#111827",
-  color: "#fff",
-  cursor: "pointer",
-};
-
-const auditBox = {
-  marginTop: 20,
-  padding: 16,
-  borderRadius: 12,
-  background: "#f9fafb",
-  border: "1px solid #ddd",
-};
-
-const infoRow = {
-  display: "flex",
-  justifyContent: "space-between",
-  padding: "8px 0",
-};
-
-const infoLabel = {
-  color: "#666",
-};
