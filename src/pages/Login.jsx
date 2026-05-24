@@ -1,9 +1,12 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import {
+  useNavigate,
+  Link,
+} from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
+
 import AlertBanner from "../components/AlertBanner";
-import API from "../services/api";
 
 export default function Login() {
   const { login } = useAuth();
@@ -29,20 +32,15 @@ export default function Login() {
     try {
       setLoading(true);
 
-      const res = await API.post(
-        "/auth/login",
-        form
-      );
-
-      login(res.data.token);
-
-      localStorage.setItem(
-        "user",
-        JSON.stringify(res.data.user)
+      await login(
+        form.email,
+        form.password
       );
 
       navigate("/dashboard");
     } catch (err) {
+      console.log(err);
+
       setError(
         err?.response?.data?.error ||
           "Login failed"
