@@ -7,7 +7,7 @@ import API from "../services/api";
 export default function AdminLogin() {
   const navigate = useNavigate();
 
-  const { adminLogin } = useAdminAuth();
+  const { loginAdmin } = useAdminAuth();
 
   const [form, setForm] = useState({
     email: "",
@@ -32,7 +32,7 @@ export default function AdminLogin() {
         form
       );
 
-      adminLogin(res.data.token);
+      loginAdmin(res.data.token);
 
       localStorage.setItem(
         "adminUser",
