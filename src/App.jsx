@@ -17,11 +17,14 @@ import StripeCheckout from "./pages/StripeCheckout";
 
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
 
-import AdminDashboard from "./pages/AdminDashboard";
 import AdminLogin from "./pages/AdminLogin";
 
+// NEW ENTERPRISE ADMIN ROUTES
+import AdminRoutes from "./admin/routes/AdminRoutes";
+
 function ProtectedRoute({ children }) {
-  const { token, loading } = useAuth();
+  const { token, loading } =
+    useAuth();
 
   if (loading) {
     return (
@@ -47,7 +50,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* ====================================== */}
         {/* PUBLIC ROUTES */}
+        {/* ====================================== */}
 
         <Route
           path="/"
@@ -69,7 +74,9 @@ export default function App() {
           element={<AdminLogin />}
         />
 
+        {/* ====================================== */}
         {/* USER ROUTES */}
+        {/* ====================================== */}
 
         <Route
           path="/dashboard"
@@ -95,16 +102,18 @@ export default function App() {
           element={<StripeCheckout />}
         />
 
-        {/* ADMIN ROUTES */}
+        {/* ====================================== */}
+        {/* ENTERPRISE ADMIN ROUTES */}
+        {/* ====================================== */}
 
         <Route
-  path="/admin"
-  element={
-    <AdminProtectedRoute>
-      <AdminDashboard />
-    </AdminProtectedRoute>
-  }
-/>
+          path="/admin/*"
+          element={
+            <AdminProtectedRoute>
+              <AdminRoutes />
+            </AdminProtectedRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );
