@@ -6,6 +6,10 @@ import {
 import AdminLayout from "../layout/AdminLayout";
 import FraudPage from "../pages/FraudPage";
 import AdminsPage from "../pages/AdminsPage";
+import MerchantsPage from "../pages/MerchantsPage";
+import MerchantKYBPage from "../pages/MerchantKYBPage";
+import SettlementsPage from "../pages/SettlementsPage";
+
 
 // DASHBOARD
 import AdminDashboard from "../../pages/AdminDashboard";
@@ -45,10 +49,37 @@ export default function AdminRoutes() {
       />
 
       <Route
+  path="/settlements"
+  element={
+    <AdminLayout>
+      <SettlementsPage />
+    </AdminLayout>
+  }
+/>
+
+      <Route
+  path="/merchants"
+  element={
+    <AdminLayout>
+      <MerchantsPage />
+    </AdminLayout>
+  }
+/>
+
+      <Route
   path="/fraud"
   element={
     <AdminLayout>
       <FraudPage />
+    </AdminLayout>
+  }
+/>
+
+<Route
+  path="/merchant-kyb"
+  element={
+    <AdminLayout>
+      <MerchantKYBPage />
     </AdminLayout>
   }
 />

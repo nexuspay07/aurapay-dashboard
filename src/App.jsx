@@ -14,6 +14,11 @@ import Dashboard from "./pages/Dashboard";
 import Onboarding from "./pages/Onboarding";
 import StripePayment from "./pages/StripePayment";
 import StripeCheckout from "./pages/StripeCheckout";
+import MerchantLogin from "./merchant/pages/MerchantLogin";
+import MerchantRegister from "./merchant/pages/MerchantRegister";
+import MerchantDashboard from "./merchant/pages/MerchantDashboard";
+import MerchantProtectedRoute from "./merchant/components/MerchantProtectedRoute";
+
 
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
 
@@ -74,6 +79,16 @@ export default function App() {
           element={<AdminLogin />}
         />
 
+        <Route
+  path="/merchant/login"
+  element={<MerchantLogin />}
+/>
+
+<Route
+  path="/merchant/register"
+  element={<MerchantRegister />}
+/>
+
         {/* ====================================== */}
         {/* USER ROUTES */}
         {/* ====================================== */}
@@ -101,6 +116,19 @@ export default function App() {
           path="/checkout"
           element={<StripeCheckout />}
         />
+
+        {/* ====================================== */}
+{/* MERCHANT ROUTES */}
+{/* ====================================== */}
+
+<Route
+  path="/merchant/dashboard"
+  element={
+    <MerchantProtectedRoute>
+      <MerchantDashboard />
+    </MerchantProtectedRoute>
+  }
+/>
 
         {/* ====================================== */}
         {/* ENTERPRISE ADMIN ROUTES */}

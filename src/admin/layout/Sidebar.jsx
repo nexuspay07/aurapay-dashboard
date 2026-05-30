@@ -7,6 +7,21 @@ const navItems = [
   },
 
   {
+  label: "Merchants",
+  path: "/admin/merchants",
+},
+
+{
+  label: "Merchant KYB",
+  path: "/admin/merchant-kyb",
+},
+
+{
+  label: "Settlements",
+  path: "/admin/settlements",
+},
+
+  {
     label: "Users",
     path: "/admin/users",
   },
@@ -20,6 +35,7 @@ const navItems = [
     label: "Fraud Center",
     path: "/admin/fraud",
   },
+
 
   {
     label: "Audit Logs",
