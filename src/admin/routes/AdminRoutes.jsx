@@ -9,6 +9,8 @@ import AdminsPage from "../pages/AdminsPage";
 import MerchantsPage from "../pages/MerchantsPage";
 import MerchantKYBPage from "../pages/MerchantKYBPage";
 import SettlementsPage from "../pages/SettlementsPage";
+import CheckoutOperationsPage
+from "../pages/CheckoutOperationsPage";
 
 
 // DASHBOARD
@@ -47,6 +49,13 @@ export default function AdminRoutes() {
           </AdminLayout>
         }
       />
+
+      <Route
+  path="/checkouts"
+  element={
+    <CheckoutOperationsPage />
+  }
+/>
 
       <Route
   path="/settlements"
