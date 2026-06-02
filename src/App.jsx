@@ -18,6 +18,9 @@ import MerchantLogin from "./merchant/pages/MerchantLogin";
 import MerchantRegister from "./merchant/pages/MerchantRegister";
 import MerchantDashboard from "./merchant/pages/MerchantDashboard";
 import MerchantProtectedRoute from "./merchant/components/MerchantProtectedRoute";
+import CreateCheckoutPage
+from "./merchant/pages/CreateCheckoutPage";
+import HostedCheckout from "./pages/HostedCheckout";
 
 
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
@@ -51,6 +54,8 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
+
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -63,6 +68,11 @@ export default function App() {
           path="/"
           element={<Landing />}
         />
+
+        <Route
+  path="/pay/:sessionId"
+  element={<HostedCheckout />}
+/>
 
         <Route
           path="/login"
@@ -101,6 +111,15 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+  path="/merchant/create-checkout"
+  element={
+    <MerchantProtectedRoute>
+      <CreateCheckoutPage />
+    </MerchantProtectedRoute>
+  }
+/>
 
         <Route
           path="/onboarding"
