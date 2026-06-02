@@ -1,7 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import "@fontsource/inter";
 
 import App from "./App";
+
+document.body.style.fontFamily =
+  "Inter, sans-serif";
 
 import { AuthProvider } from "./context/AuthContext";
 import { AdminAuthProvider } from "./context/AdminAuthContext";
