@@ -19,7 +19,7 @@ import MerchantRegister from "./merchant/pages/MerchantRegister";
 import MerchantDashboard from "./merchant/pages/MerchantDashboard";
 import MerchantProtectedRoute from "./merchant/components/MerchantProtectedRoute";
 import CreateCheckoutPage
-from "./merchant/pages/CreateCheckoutPage";
+from "./pages/CreateCheckoutPage";
 import HostedCheckout from "./pages/HostedCheckout";
 
 
