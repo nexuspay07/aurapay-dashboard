@@ -9,201 +9,288 @@ export default function Landing() {
             <h1 style={logo}>AuraPay</h1>
 
             <p style={tagline}>
-              Smart transfer infrastructure powered by real-time intelligence
+              Merchant payment infrastructure for modern businesses
             </p>
           </div>
 
           <div style={navActions}>
-            <Link to="/login" style={ghostButton}>
-              Login
+            <Link to="/merchant/login" style={ghostButton}>
+              Merchant Login
             </Link>
 
-            <Link to="/register" style={primaryButton}>
-              Create Account
+            <Link
+              to="/merchant/register"
+              style={primaryButton}
+            >
+              Become a Merchant
             </Link>
           </div>
         </header>
 
         <section style={hero}>
           <div style={heroContent}>
-            <p style={eyebrow}>AURAPAY BETA</p>
+            <p style={eyebrow}>
+              PAYMENT INFRASTRUCTURE
+            </p>
 
             <h2 style={headline}>
-              Intelligent transfer infrastructure for secure, transparent digital
-              payments.
+              Accept payments online through
+              AuraPay.
             </h2>
 
             <p style={subtext}>
-              AuraPay combines intelligent routing, fraud protection, wallet
-              controls, and transfer visibility into one unified financial
-              experience.
+              Create checkout links, host secure
+              payment pages, monitor transactions,
+              and track settlements from one
+              unified merchant platform.
             </p>
 
             <div style={heroButtons}>
-              <Link to="/register" style={primaryButtonLarge}>
-                Get Started
+              <Link
+                to="/merchant/register"
+                style={primaryButtonLarge}
+              >
+                Start Accepting Payments
               </Link>
 
-              <Link to="/login" style={secondaryButtonLarge}>
-                Sign In
+              <Link
+                to="/merchant/login"
+                style={secondaryButtonLarge}
+              >
+                Merchant Login
               </Link>
             </div>
 
-            <div style={disclaimerBox}>
-              <strong>Demo Notice:</strong> AuraPay is currently running in beta
-              mode with test funds and simulated transfers. No real money is
-              being moved.
+            <div style={statusBox}>
+              <strong>
+                Enterprise Platform Status:
+              </strong>
+              <br />
+              Merchant onboarding, checkout
+              creation, hosted checkout, payment
+              monitoring, and settlement
+              infrastructure are operational.
             </div>
           </div>
 
           <div style={heroCard}>
             <div style={heroCardInner}>
-              <p style={cardLabel}>LIVE WALLET OVERVIEW</p>
+              <p style={cardLabel}>
+                LIVE PLATFORM STATUS
+              </p>
 
-              <h3 style={cardTitle}>Fast. Clear. Secure.</h3>
+              <h3 style={cardTitle}>
+                Fast. Secure. Scalable.
+              </h3>
 
               <div style={miniStat}>
-                <span style={miniLabel}>AI Routing</span>
-                <span style={miniValue}>Active</span>
+                <span style={miniLabel}>
+                  Checkout Engine
+                </span>
+                <span style={miniValue}>
+                  Active
+                </span>
               </div>
 
               <div style={miniStat}>
-                <span style={miniLabel}>Fraud Protection</span>
-                <span style={miniValue}>Enabled</span>
+                <span style={miniLabel}>
+                  Merchant Services
+                </span>
+                <span style={miniValue}>
+                  Online
+                </span>
               </div>
 
               <div style={miniStat}>
-                <span style={miniLabel}>Transfer Visibility</span>
-                <span style={miniValue}>Real-Time</span>
+                <span style={miniLabel}>
+                  Settlement Engine
+                </span>
+                <span style={miniValue}>
+                  Active
+                </span>
+              </div>
+
+              <div style={miniStat}>
+                <span style={miniLabel}>
+                  Fraud Monitoring
+                </span>
+                <span style={miniValue}>
+                  Active
+                </span>
               </div>
             </div>
           </div>
         </section>
 
         <section style={featuresSection}>
-          <h3 style={sectionTitle}>Why AuraPay</h3>
+          <h3 style={sectionTitle}>
+            Why Businesses Choose AuraPay
+          </h3>
 
           <div style={featuresGrid}>
             <div style={featureCard}>
-              <h4 style={featureTitle}>Intelligent Routing</h4>
+              <h4 style={featureTitle}>
+                Merchant Accounts
+              </h4>
 
               <p style={featureText}>
-                AuraPay selects the best transfer path in real time using live
-                provider performance data.
+                Register your business and manage
+                payment operations from a unified
+                merchant dashboard.
               </p>
             </div>
 
             <div style={featureCard}>
-              <h4 style={featureTitle}>Fraud Protection</h4>
+              <h4 style={featureTitle}>
+                Hosted Checkout
+              </h4>
 
               <p style={featureText}>
-                Built-in security checks help detect suspicious transfers before
-                they are completed.
+                Generate checkout sessions and
+                accept payments through secure
+                AuraPay payment pages.
               </p>
             </div>
 
             <div style={featureCard}>
-              <h4 style={featureTitle}>Wallet Infrastructure</h4>
+              <h4 style={featureTitle}>
+                Settlement Tracking
+              </h4>
 
               <p style={featureText}>
-                Users can manage balances, top up wallets, and track transfer
-                activity through one clean interface.
+                Monitor transaction activity,
+                revenue flow, and settlement
+                status in real time.
               </p>
             </div>
           </div>
         </section>
 
         <section style={sectionBlock}>
-          <h3 style={sectionTitle}>How AuraPay Works</h3>
+          <h3 style={sectionTitle}>
+            How AuraPay Works
+          </h3>
 
           <div style={stepsGrid}>
             <div style={stepCard}>
-              <div style={stepNumber}>1</div>
+              <div style={stepNumber}>
+                1
+              </div>
 
-              <h4 style={stepTitle}>Fund Wallet</h4>
+              <h4 style={stepTitle}>
+                Register Business
+              </h4>
 
               <p style={stepText}>
-                Users top up a demo wallet to simulate available transfer
-                balance.
+                Create a merchant account and
+                onboard your business to AuraPay.
               </p>
             </div>
 
             <div style={stepCard}>
-              <div style={stepNumber}>2</div>
+              <div style={stepNumber}>
+                2
+              </div>
 
-              <h4 style={stepTitle}>Send Transfer</h4>
+              <h4 style={stepTitle}>
+                Create Checkout
+              </h4>
 
               <p style={stepText}>
-                Users submit a transfer amount and currency through a simple
-                dashboard flow.
+                Generate checkout links and hosted
+                payment sessions for customers.
               </p>
             </div>
 
             <div style={stepCard}>
-              <div style={stepNumber}>3</div>
+              <div style={stepNumber}>
+                3
+              </div>
 
-              <h4 style={stepTitle}>Route + Protect</h4>
+              <h4 style={stepTitle}>
+                Accept Payments
+              </h4>
 
               <p style={stepText}>
-                AuraPay checks risk, evaluates network performance, and routes
-                the transfer through the best available path.
+                Receive payments, monitor revenue,
+                and track settlements from one
+                dashboard.
               </p>
             </div>
           </div>
         </section>
 
         <section style={sectionBlock}>
-          <h3 style={sectionTitle}>Why It Matters</h3>
+          <h3 style={sectionTitle}>
+            Platform Capabilities
+          </h3>
 
           <div style={featuresGrid}>
             <div style={featureCard}>
-              <h4 style={featureTitle}>Smarter Transfers</h4>
+              <h4 style={featureTitle}>
+                Checkout Operations
+              </h4>
 
               <p style={featureText}>
-                Instead of relying on one fixed provider, AuraPay can make
-                routing decisions dynamically.
+                Create, monitor, and manage hosted
+                checkout sessions.
               </p>
             </div>
 
             <div style={featureCard}>
-              <h4 style={featureTitle}>Safer Flow</h4>
+              <h4 style={featureTitle}>
+                Fraud Protection
+              </h4>
 
               <p style={featureText}>
-                Security checks and transfer monitoring help reduce suspicious
-                activity before it becomes a bigger issue.
+                Risk monitoring and transaction
+                intelligence built directly into
+                the platform.
               </p>
             </div>
 
             <div style={featureCard}>
-              <h4 style={featureTitle}>Better Transparency</h4>
+              <h4 style={featureTitle}>
+                Revenue Visibility
+              </h4>
 
               <p style={featureText}>
-                Users can see balances, transfer results, network information,
-                and system metrics from one place.
+                Track payments, transaction
+                success, and settlement activity
+                from one interface.
               </p>
             </div>
           </div>
         </section>
 
         <section style={pitchSection}>
-          <h3 style={sectionTitle}>Product Positioning</h3>
+          <h3 style={sectionTitle}>
+            Built For Modern Commerce
+          </h3>
 
           <p style={pitchText}>
-            AuraPay is an intelligent transfer infrastructure platform that
-            combines wallet systems, fraud protection, and real-time payment
-            routing into one seamless experience.
+            AuraPay provides merchant payment
+            infrastructure that enables businesses
+            to create checkout experiences, accept
+            payments, monitor transactions, manage
+            settlements, and operate through a
+            unified payment platform.
           </p>
         </section>
 
         <footer style={footer}>
           <p style={footerText}>
-            AuraPay Beta • Intelligent transfer infrastructure
+            AuraPay • Merchant Payment
+            Infrastructure
           </p>
         </footer>
       </div>
     </div>
   );
 }
+
+/* KEEP ALL YOUR EXISTING STYLES BELOW */
+/* page, contentWrapper, header, logo, tagline, navActions, hero, heroContent, etc */
 
 const page = {
   width: "100%",
@@ -285,14 +372,13 @@ const heroButtons = {
   flexWrap: "wrap",
 };
 
-const disclaimerBox = {
+const statusBox = {
   marginTop: 26,
   padding: 18,
   borderRadius: 14,
-  background: "#fffbeb",
-  border: "1px solid #fde68a",
-  color: "#92400e",
-  lineHeight: 1.7,
+  background: "#eef6ff",
+  border: "1px solid #bfdbfe",
+  color: "#1e3a8a",
 };
 
 const heroCard = {
@@ -300,43 +386,35 @@ const heroCard = {
   borderRadius: 22,
   padding: 40,
   color: "#ffffff",
-  display: "flex",
 };
 
 const heroCardInner = {
   width: "100%",
-  display: "flex",
-  flexDirection: "column",
-  justifyContent: "center",
 };
 
 const cardLabel = {
   color: "#cbd5e1",
   fontSize: 12,
-  letterSpacing: "0.08em",
 };
 
 const cardTitle = {
   fontSize: 42,
-  marginTop: 18,
-  marginBottom: 28,
 };
 
 const miniStat = {
   display: "flex",
   justifyContent: "space-between",
   padding: "18px 0",
-  borderTop: "1px solid rgba(255,255,255,0.15)",
+  borderTop:
+    "1px solid rgba(255,255,255,0.15)",
 };
 
 const miniLabel = {
   color: "#d1d5db",
-  fontSize: 18,
 };
 
 const miniValue = {
   fontWeight: 700,
-  fontSize: 18,
 };
 
 const featuresSection = {
@@ -354,12 +432,13 @@ const sectionTitle = {
 
 const featuresGrid = {
   display: "grid",
-  gridTemplateColumns: "repeat(3, 1fr)",
+  gridTemplateColumns:
+    "repeat(3, 1fr)",
   gap: 24,
 };
 
 const featureCard = {
-  background: "#ffffff",
+  background: "#fff",
   borderRadius: 18,
   border: "1px solid #e5e7eb",
   padding: 30,
@@ -367,23 +446,21 @@ const featureCard = {
 
 const featureTitle = {
   fontSize: 24,
-  marginBottom: 14,
 };
 
 const featureText = {
   color: "#4b5563",
-  lineHeight: 1.8,
-  fontSize: 17,
 };
 
 const stepsGrid = {
   display: "grid",
-  gridTemplateColumns: "repeat(3, 1fr)",
+  gridTemplateColumns:
+    "repeat(3, 1fr)",
   gap: 24,
 };
 
 const stepCard = {
-  background: "#ffffff",
+  background: "#fff",
   borderRadius: 18,
   border: "1px solid #e5e7eb",
   padding: 30,
@@ -394,43 +471,34 @@ const stepNumber = {
   height: 42,
   borderRadius: "50%",
   background: "#111827",
-  color: "#ffffff",
+  color: "#fff",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  fontWeight: 700,
-  marginBottom: 18,
 };
 
 const stepTitle = {
   fontSize: 24,
-  marginBottom: 14,
 };
 
 const stepText = {
   color: "#4b5563",
-  lineHeight: 1.8,
-  fontSize: 17,
 };
 
 const pitchSection = {
   marginTop: 50,
-  background: "#ffffff",
+  background: "#fff",
   borderRadius: 18,
   border: "1px solid #e5e7eb",
   padding: 32,
 };
 
 const pitchText = {
-  fontSize: 18,
-  lineHeight: 1.9,
   color: "#374151",
 };
 
 const footer = {
   marginTop: 50,
-  paddingTop: 24,
-  borderTop: "1px solid #e5e7eb",
 };
 
 const footerText = {
@@ -449,13 +517,13 @@ const baseButton = {
 const primaryButton = {
   ...baseButton,
   background: "#111827",
-  color: "#ffffff",
+  color: "#fff",
   padding: "12px 18px",
 };
 
 const ghostButton = {
   ...baseButton,
-  background: "#ffffff",
+  background: "#fff",
   color: "#111827",
   border: "1px solid #d1d5db",
   padding: "12px 18px",
@@ -464,13 +532,13 @@ const ghostButton = {
 const primaryButtonLarge = {
   ...baseButton,
   background: "#111827",
-  color: "#ffffff",
+  color: "#fff",
   padding: "16px 24px",
 };
 
 const secondaryButtonLarge = {
   ...baseButton,
-  background: "#ffffff",
+  background: "#fff",
   color: "#111827",
   border: "1px solid #d1d5db",
   padding: "16px 24px",
