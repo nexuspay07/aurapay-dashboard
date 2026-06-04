@@ -51,6 +51,8 @@ export default function MerchantDashboard() {
 </Link>
       </div>
 
+      
+
       {/* METRICS */}
 
       <div style={metricsGrid}>
@@ -304,6 +306,19 @@ const actionButton = {
   cursor: "pointer",
   fontWeight: 700,
   textDecoration: "none",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+};
+
+const secondaryButton = {
+  textDecoration: "none",
+  background: "#FFFFFF",
+  color: "#0F172A",
+  padding: "14px 22px",
+  borderRadius: 14,
+  border: "1px solid #CBD5E1",
+  fontWeight: 600,
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
