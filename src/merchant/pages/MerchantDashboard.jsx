@@ -303,6 +303,10 @@ const actionButton = {
   borderRadius: 14,
   cursor: "pointer",
   fontWeight: 700,
+  textDecoration: "none",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
 };
 
 const metricsGrid = {
