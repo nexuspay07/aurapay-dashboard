@@ -1,3 +1,6 @@
+import { Link }
+from "react-router-dom";
+
 export default function MerchantDashboard() {
   return (
     <div style={page}>
@@ -19,10 +22,33 @@ export default function MerchantDashboard() {
             one platform.
           </p>
         </div>
+<Link
+  to="/merchant/create-checkout"
+  style={actionButton}
+>
+  + Create Checkout
+</Link>
 
-        <button style={actionButton}>
-          + Create Checkout
-        </button>
+<Link
+  to="/merchant/settlements"
+  style={secondaryButton}
+>
+  Settlements
+</Link>
+
+<Link
+  to="/merchant/checkouts"
+  style={secondaryButton}
+>
+  View Checkouts
+</Link>
+
+<Link
+  to="/merchant/transactions"
+  style={secondaryButton}
+>
+  Transactions
+</Link>
       </div>
 
       {/* METRICS */}
@@ -41,10 +67,34 @@ export default function MerchantDashboard() {
         />
 
         <MetricCard
+  title="Successful Payments"
+  value="428"
+  change="+12%"
+/>
+
+<MetricCard
+  title="Failed Payments"
+  value="4"
+  change="Low Risk"
+/>
+
+        <MetricCard
           title="Transactions"
           value="432"
           change="+18%"
         />
+
+        <MetricCard
+  title="Pending Settlements"
+  value="$3,200"
+  change="2 Pending"
+/>
+
+<MetricCard
+  title="Completed Settlements"
+  value="$14,500"
+  change="Healthy"
+/>
 
         <MetricCard
           title="Success Rate"

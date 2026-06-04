@@ -7,10 +7,13 @@ import AdminLayout from "../layout/AdminLayout";
 import FraudPage from "../pages/FraudPage";
 import AdminsPage from "../pages/AdminsPage";
 import MerchantsPage from "../pages/MerchantsPage";
-import MerchantKYBPage from "../pages/MerchantKYBPage";
-import SettlementsPage from "../pages/SettlementsPage";
+import MerchantKYBPage from "../MerchantKYBPage";
 import CheckoutOperationsPage
 from "../pages/CheckoutOperationsPage";
+import SettlementOperationsPage
+from "../pages/SettlementOperationsPage";
+import TransactionOperationsPage
+from "../pages/TransactionOperationsPage";
 
 
 // DASHBOARD
@@ -51,18 +54,27 @@ export default function AdminRoutes() {
       />
 
       <Route
-  path="/checkouts"
+  path="/settlements"
   element={
-    <CheckoutOperationsPage />
+    <AdminLayout>
+      <SettlementOperationsPage />
+    </AdminLayout>
+  }
+/>
+
+<Route
+  path="/transactions"
+  element={
+    <AdminLayout>
+      <TransactionOperationsPage />
+    </AdminLayout>
   }
 />
 
       <Route
-  path="/settlements"
+  path="/checkouts"
   element={
-    <AdminLayout>
-      <SettlementsPage />
-    </AdminLayout>
+    <CheckoutOperationsPage />
   }
 />
 

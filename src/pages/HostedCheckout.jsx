@@ -27,56 +27,199 @@ export default function HostedCheckout() {
 
   if (!session) {
     return (
-      <div style={{ padding: 40 }}>
-        Loading Checkout...
+      <div style={loadingPage}>
+        Loading Secure Checkout...
       </div>
     );
   }
 
   return (
-    <div
-      style={{
-        maxWidth: 600,
-        margin: "50px auto",
-        padding: 30,
-        background: "#fff",
-        borderRadius: 16,
-        boxShadow:
-          "0 2px 12px rgba(0,0,0,0.08)",
-      }}
-    >
-      <h1>AuraPay Checkout</h1>
+    <div style={page}>
+      <div style={card}>
+        <div style={brand}>
+          AuraPay
+        </div>
 
-      <hr />
+        <h1 style={title}>
+          Secure Payment
+        </h1>
 
-      <p>
-        <strong>Session:</strong>{" "}
-        {session.sessionId}
-      </p>
+        <p style={subtitle}>
+          Complete your payment securely.
+        </p>
 
-      <p>
-        <strong>Amount:</strong> $
-        {session.amount}
-      </p>
+        <div style={summaryCard}>
+          <div style={summaryRow}>
+            <span>Session</span>
 
-      <p>
-        <strong>Currency:</strong>{" "}
-        {session.currency}
-      </p>
+            <strong>
+              {session.sessionId}
+            </strong>
+          </div>
 
-      <button
-        style={{
-          width: "100%",
-          padding: 14,
-          background: "#111827",
-          color: "#fff",
-          border: "none",
-          borderRadius: 10,
-          cursor: "pointer",
-        }}
-      >
-        Pay Now
-      </button>
+          <div style={summaryRow}>
+            <span>Email</span>
+
+            <strong>
+              {session.customerEmail ||
+                "Not Provided"}
+            </strong>
+          </div>
+
+          <div style={summaryRow}>
+            <span>Status</span>
+
+            <strong>
+              {session.status}
+            </strong>
+          </div>
+        </div>
+
+        <div style={amountCard}>
+          <div style={amountLabel}>
+            Total Amount
+          </div>
+
+          <div style={amountValue}>
+            $
+            {Number(
+              session.amount
+            ).toFixed(2)}
+          </div>
+
+          <div style={currency}>
+            {session.currency}
+          </div>
+        </div>
+
+        <div style={paymentMethods}>
+          <div style={method}>
+            💳 Card Payment
+          </div>
+
+          <div style={method}>
+            🔒 Secure Checkout
+          </div>
+        </div>
+
+        <button style={payButton}>
+          Pay Now
+        </button>
+
+        <div style={footer}>
+          Powered by AuraPay
+        </div>
+      </div>
     </div>
   );
 }
+
+const loadingPage = {
+  minHeight: "100vh",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  background: "#F8FAFC",
+  fontSize: 18,
+};
+
+const page = {
+  minHeight: "100vh",
+  background: "#F8FAFC",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  padding: 24,
+};
+
+const card = {
+  width: "100%",
+  maxWidth: 550,
+  background: "#fff",
+  borderRadius: 24,
+  padding: 32,
+  border: "1px solid #E2E8F0",
+  boxShadow:
+    "0 20px 50px rgba(15,23,42,0.08)",
+};
+
+const brand = {
+  color: "#2563EB",
+  fontWeight: 800,
+  marginBottom: 10,
+};
+
+const title = {
+  margin: 0,
+  fontSize: 36,
+};
+
+const subtitle = {
+  color: "#64748B",
+  marginBottom: 30,
+};
+
+const summaryCard = {
+  background: "#F8FAFC",
+  borderRadius: 16,
+  padding: 18,
+  border: "1px solid #E2E8F0",
+};
+
+const summaryRow = {
+  display: "flex",
+  justifyContent: "space-between",
+  marginBottom: 12,
+};
+
+const amountCard = {
+  textAlign: "center",
+  marginTop: 24,
+  marginBottom: 24,
+};
+
+const amountLabel = {
+  color: "#64748B",
+};
+
+const amountValue = {
+  fontSize: 52,
+  fontWeight: 800,
+  marginTop: 10,
+};
+
+const currency = {
+  color: "#64748B",
+};
+
+const paymentMethods = {
+  display: "grid",
+  gap: 12,
+  marginBottom: 24,
+};
+
+const method = {
+  padding: 16,
+  borderRadius: 12,
+  background: "#F8FAFC",
+  border: "1px solid #E2E8F0",
+};
+
+const payButton = {
+  width: "100%",
+  padding: 18,
+  borderRadius: 14,
+  border: "none",
+  background: "#0F172A",
+  color: "#fff",
+  fontWeight: 700,
+  cursor: "pointer",
+  fontSize: 16,
+};
+
+const footer = {
+  textAlign: "center",
+  marginTop: 20,
+  color: "#64748B",
+  fontSize: 14,
+};
