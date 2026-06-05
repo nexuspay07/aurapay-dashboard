@@ -23,9 +23,10 @@ import CreateCheckoutPage
 from "./pages/CreateCheckoutPage";
 import HostedCheckout from "./pages/HostedCheckout";
 import MerchantCheckouts
-from "./merchant/pages/MerchantCheckouts";
+from "./pages/MerchantCheckouts";
+
 import MerchantSettlements
-from "./merchant/pages/MerchantSettlements";
+from "./pages/MerchantSettlements";
 import MerchantTransactions
 from "./merchant/pages/MerchantTransactions";
 
