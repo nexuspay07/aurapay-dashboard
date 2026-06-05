@@ -9,6 +9,9 @@ export default function HostedCheckout() {
   const [session, setSession] =
     useState(null);
 
+    const [processing, setProcessing] =
+  useState(false);
+
   useEffect(() => {
     loadSession();
   }, []);
@@ -32,6 +35,31 @@ export default function HostedCheckout() {
       </div>
     );
   }
+
+  async function handlePayment() {
+  try {
+    setProcessing(true);
+
+    const res = await API.post(
+      `/checkout-ops/sessions/${session._id}/pay`
+    );
+
+    alert(
+      "Payment Intent Created Successfully"
+    );
+
+    console.log(res.data);
+  } catch (err) {
+    console.log(err);
+
+    alert(
+      err.response?.data?.error ||
+      "Payment Failed"
+    );
+  } finally {
+    setProcessing(false);
+  }
+}
 
   return (
     <div style={page}>
@@ -102,9 +130,15 @@ export default function HostedCheckout() {
           </div>
         </div>
 
-        <button style={payButton}>
-          Pay Now
-        </button>
+        <button
+  style={payButton}
+  onClick={handlePayment}
+  disabled={processing}
+>
+  {processing
+    ? "Processing..."
+    : "Pay Now"}
+</button>
 
         <div style={footer}>
           Powered by AuraPay
