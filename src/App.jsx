@@ -17,7 +17,8 @@ import StripeCheckout from "./pages/StripeCheckout";
 import MerchantLogin from "./merchant/pages/MerchantLogin";
 import MerchantRegister from "./merchant/pages/MerchantRegister";
 import MerchantDashboard from "./merchant/pages/MerchantDashboard";
-import MerchantProtectedRoute from "./merchant/components/MerchantProtectedRoute";
+import MerchantProtectedRoute
+from "./components/MerchantProtectedRoute";
 import CreateCheckoutPage
 from "./pages/CreateCheckoutPage";
 import HostedCheckout from "./pages/HostedCheckout";
