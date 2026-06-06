@@ -26,6 +26,8 @@ import MerchantCheckouts
 from "./pages/MerchantCheckouts";
 import StripeWrapper
 from "./components/StripeWrapper";
+import PaymentSuccess
+from "./pages/PaymentSuccess";
 
 import MerchantSettlements
 from "./pages/MerchantSettlements";
@@ -94,6 +96,11 @@ export default function App() {
       <HostedCheckout />
     </StripeWrapper>
   }
+/>
+
+<Route
+  path="/payment-success"
+  element={<PaymentSuccess />}
 />
 
         <Route

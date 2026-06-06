@@ -135,8 +135,9 @@ export default function HostedCheckout() {
   </button>
 ) : (
   <StripePaymentForm
-    clientSecret={clientSecret}
-  />
+  clientSecret={clientSecret}
+  sessionId={session.sessionId}
+/>
 )}
 
         <div style={footer}>
