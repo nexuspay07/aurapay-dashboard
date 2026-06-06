@@ -1,7 +1,36 @@
 import { Link }
 from "react-router-dom";
 
+import {
+  useEffect,
+  useState,
+} from "react";
+
+import API from
+  "../../services/api";
+
 export default function MerchantDashboard() {
+
+  const [stats, setStats] =
+    useState(null);
+
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  async function loadStats() {
+    try {
+      const res =
+        await API.get(
+          "/merchant-analytics/dashboard"
+        );
+
+      setStats(res.data);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
   return (
     <div style={page}>
       {/* HEADER */}
@@ -58,13 +87,21 @@ export default function MerchantDashboard() {
       <div style={metricsGrid}>
         <MetricCard
           title="Revenue Today"
-          value="$12,480"
+          value={
+  stats
+    ? `$${stats.revenueToday}`
+    : "..."
+}
           change="+12.4%"
         />
 
         <MetricCard
           title="Monthly Revenue"
-          value="$104,900"
+          value={
+  stats
+    ? `$${stats.monthlyRevenue}`
+    : "..."
+}
           change="+8.1%"
         />
 
@@ -82,7 +119,11 @@ export default function MerchantDashboard() {
 
         <MetricCard
           title="Transactions"
-          value="432"
+          value={
+  stats
+    ? stats.transactions
+    : "..."
+}
           change="+18%"
         />
 
@@ -100,7 +141,11 @@ export default function MerchantDashboard() {
 
         <MetricCard
           title="Success Rate"
-          value="99.2%"
+          value={
+  stats
+    ? `${stats.successRate}%`
+    : "..."
+}
           change="Healthy"
         />
       </div>
