@@ -24,6 +24,8 @@ from "./pages/CreateCheckoutPage";
 import HostedCheckout from "./pages/HostedCheckout";
 import MerchantCheckouts
 from "./pages/MerchantCheckouts";
+import StripeWrapper
+from "./components/StripeWrapper";
 
 import MerchantSettlements
 from "./pages/MerchantSettlements";
@@ -87,7 +89,11 @@ export default function App() {
 
         <Route
   path="/pay/:sessionId"
-  element={<HostedCheckout />}
+  element={
+    <StripeWrapper>
+      <HostedCheckout />
+    </StripeWrapper>
+  }
 />
 
         <Route

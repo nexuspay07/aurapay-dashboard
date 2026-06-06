@@ -3,18 +3,38 @@ import { useParams } from "react-router-dom";
 
 import API from "../services/api";
 
+import StripePaymentForm
+from "../components/StripePaymentForm";
+
 export default function HostedCheckout() {
   const { sessionId } = useParams();
 
   const [session, setSession] =
     useState(null);
 
-    const [processing, setProcessing] =
-  useState(false);
+    const [clientSecret, setClientSecret] =
+  useState("");
 
   useEffect(() => {
     loadSession();
   }, []);
+
+  async function createPaymentIntent() {
+  try {
+    const res = await API.post(
+      `/checkout-ops/sessions/${session._id}/pay`
+    );
+
+    setClientSecret(
+      res.data.clientSecret
+    );
+  } catch (err) {
+    console.log(err);
+    alert(
+      "Failed to initialize payment"
+    );
+  }
+}
 
   async function loadSession() {
     try {
@@ -36,30 +56,6 @@ export default function HostedCheckout() {
     );
   }
 
-  async function handlePayment() {
-  try {
-    setProcessing(true);
-
-    const res = await API.post(
-      `/checkout-ops/sessions/${session._id}/pay`
-    );
-
-    alert(
-      "Payment Intent Created Successfully"
-    );
-
-    console.log(res.data);
-  } catch (err) {
-    console.log(err);
-
-    alert(
-      err.response?.data?.error ||
-      "Payment Failed"
-    );
-  } finally {
-    setProcessing(false);
-  }
-}
 
   return (
     <div style={page}>
@@ -130,15 +126,18 @@ export default function HostedCheckout() {
           </div>
         </div>
 
-        <button
-  style={payButton}
-  onClick={handlePayment}
-  disabled={processing}
->
-  {processing
-    ? "Processing..."
-    : "Pay Now"}
-</button>
+        {!clientSecret ? (
+  <button
+    style={payButton}
+    onClick={createPaymentIntent}
+  >
+    Pay Now
+  </button>
+) : (
+  <StripePaymentForm
+    clientSecret={clientSecret}
+  />
+)}
 
         <div style={footer}>
           Powered by AuraPay
