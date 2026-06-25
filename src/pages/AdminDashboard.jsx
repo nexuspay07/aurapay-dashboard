@@ -12,12 +12,6 @@ import StatCard from "../components/admin/StatCard";
 
 import Transactions from "./Transactions";
 
-import { useEffect, useState }
-from "react";
-
-import API
-from "../../services/api";
-
 export default function AdminDashboard() {
   const {
     role,
