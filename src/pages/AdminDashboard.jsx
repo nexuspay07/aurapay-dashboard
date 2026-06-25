@@ -12,6 +12,12 @@ import StatCard from "../components/admin/StatCard";
 
 import Transactions from "./Transactions";
 
+import { useEffect, useState }
+from "react";
+
+import API
+from "../../services/api";
+
 export default function AdminDashboard() {
   const {
     role,
@@ -24,6 +30,26 @@ export default function AdminDashboard() {
 
   const [loading, setLoading] =
     useState(true);
+
+    const [stats, setStats] =
+  useState(null);
+
+useEffect(() => {
+  loadStats();
+}, []);
+
+async function loadStats() {
+  try {
+    const res =
+      await API.get(
+        "/admin-analytics/dashboard"
+      );
+
+    setStats(res.data);
+  } catch (err) {
+    console.log(err);
+  }
+}
 
   // ======================================
   // LOAD LIVE METRICS
