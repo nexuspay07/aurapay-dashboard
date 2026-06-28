@@ -28,6 +28,10 @@ import StripeWrapper
 from "./components/StripeWrapper";
 import PaymentSuccess
 from "./pages/PaymentSuccess";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import VerifyEmail from "./pages/VerifyEmail";
+import ResendVerification from "./pages/ResendVerification";
 
 import MerchantSettlements
 from "./pages/MerchantSettlements";
@@ -115,6 +119,26 @@ export default function App() {
       <MerchantSettlements />
     </MerchantProtectedRoute>
   }
+/>
+
+<Route
+  path="/forgot-password"
+  element={<ForgotPassword />}
+/>
+
+<Route
+  path="/reset-password/:token"
+  element={<ResetPassword />}
+/>
+
+<Route
+  path="/verify-email/:token"
+  element={<VerifyEmail />}
+/>
+
+<Route
+  path="/resend-verification-email"
+  element={<ResendVerification />}
 />
 
         <Route

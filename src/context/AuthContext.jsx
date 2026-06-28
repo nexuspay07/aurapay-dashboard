@@ -1,7 +1,8 @@
-import React, {
+import {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 
@@ -9,79 +10,154 @@ import API from "../services/api";
 
 const AuthContext = createContext(null);
 
-export function AuthProvider({ children }) {
-  const [token, setToken] = useState(
-    localStorage.getItem("token") || null
-  );
+const TOKEN_KEY = "token";
+const USER_KEY = "user";
 
-  const [loading] = useState(false);
+function readStoredUser(storage) {
+  const value = storage.getItem(USER_KEY);
+
+  if (!value) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    storage.removeItem(USER_KEY);
+    return null;
+  }
+}
+
+function getStoredAuth() {
+  const localToken = localStorage.getItem(TOKEN_KEY);
+
+  if (localToken) {
+    return {
+      token: localToken,
+      user: readStoredUser(localStorage),
+    };
+  }
+
+  const sessionToken = sessionStorage.getItem(TOKEN_KEY);
+
+  if (sessionToken) {
+    return {
+      token: sessionToken,
+      user: readStoredUser(sessionStorage),
+    };
+  }
+
+  return {
+    token: null,
+    user: null,
+  };
+}
+
+function clearStoredAuth() {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+  sessionStorage.removeItem(TOKEN_KEY);
+  sessionStorage.removeItem(USER_KEY);
+}
+
+function persistAuth(token, user, rememberMe) {
+  clearStoredAuth();
+
+  const storage = rememberMe ? localStorage : sessionStorage;
+
+  storage.setItem(TOKEN_KEY, token);
+
+  if (user) {
+    storage.setItem(USER_KEY, JSON.stringify(user));
+  }
+}
+
+function setAuthorizationHeader(token) {
+  if (token) {
+    API.defaults.headers.common.Authorization = `Bearer ${token}`;
+    return;
+  }
+
+  delete API.defaults.headers.common.Authorization;
+}
+
+export function AuthProvider({ children }) {
+  const [token, setToken] = useState(() => getStoredAuth().token);
+  const [user, setUser] = useState(() => getStoredAuth().user);
+  useEffect(() => {
+  if (token) {
+    setAuthorizationHeader(token);
+  }
+}, []);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (token) {
-      localStorage.setItem("token", token);
-    } else {
-      localStorage.removeItem("token");
-    }
+    setAuthorizationHeader(token);
   }, [token]);
 
-  // LOGIN
-  async function login(email, password) {
-    const res = await API.post(
-      "/auth/login",
-      {
+  async function login(email, password, rememberMe = true) {
+    setLoading(true);
+
+    try {
+      const res = await API.post("/auth/login", {
         email,
         password,
-      }
-    );
+      });
 
-    const newToken = res.data.token;
+      const newToken = res.data.token;
+      const newUser = res.data.user || null;
 
-    setToken(newToken);
+      persistAuth(newToken, newUser, rememberMe);
+      setAuthorizationHeader(newToken);
+      setToken(newToken);
+      setUser(newUser);
 
-    localStorage.setItem(
-      "user",
-      JSON.stringify(res.data.user)
-    );
-
-    return res.data;
+      return res.data;
+    } finally {
+      setLoading(false);
+    }
   }
 
-  // REGISTER
   async function register(form) {
-    const res = await API.post(
-      "/auth/register",
-      form
-    );
+    setLoading(true);
 
-    const newToken = res.data.token;
+    try {
+      const res = await API.post("/auth/register", form);
 
-    setToken(newToken);
+      const newToken = res.data.token;
+      const newUser = res.data.user || null;
 
-    localStorage.setItem(
-      "user",
-      JSON.stringify(res.data.user)
-    );
+      persistAuth(newToken, newUser, true);
+      setToken(newToken);
+      setUser(newUser);
 
-    return res.data;
+      return res.data;
+    } finally {
+      setLoading(false);
+    }
   }
 
-  // LOGOUT
   function logout() {
+    clearStoredAuth();
+    setAuthorizationHeader(null);
     setToken(null);
-
-    localStorage.removeItem("user");
+    setUser(null);
   }
+
+  const value = useMemo(
+    () => ({
+      token,
+      user,
+      loading,
+      login,
+      register,
+      logout,
+    }),
+    [token, user, loading]
+  );
 
   return (
-    <AuthContext.Provider
-      value={{
-        token,
-        loading,
-        login,
-        register,
-        logout,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

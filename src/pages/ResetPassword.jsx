@@ -1,43 +1,66 @@
 import { useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
-import { useAuth } from "../context/AuthContext";
+import API from "../services/api";
 
-import AlertBanner from "../components/AlertBanner";
-
-export default function Login() {
-  const { login } = useAuth();
+export default function ResetPassword() {
+  const { token } = useParams();
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
-    email: "",
     password: "",
-    rememberMe: true,
+    confirmPassword: "",
   });
-
   const [touched, setTouched] = useState({});
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const passwordChecks = useMemo(
+    () => [
+      {
+        label: "At least 8 characters",
+        valid: form.password.length >= 8,
+      },
+      {
+        label: "One uppercase letter",
+        valid: /[A-Z]/.test(form.password),
+      },
+      {
+        label: "One lowercase letter",
+        valid: /[a-z]/.test(form.password),
+      },
+      {
+        label: "One number",
+        valid: /\d/.test(form.password),
+      },
+    ],
+    [form.password]
+  );
 
   const validationErrors = useMemo(() => {
     const errors = {};
-    const email = form.email.trim();
-
-    if (!email) {
-      errors.email = "Email is required.";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      errors.email = "Enter a valid email address.";
-    }
 
     if (!form.password) {
-      errors.password = "Password is required.";
-    } else if (form.password.length < 8) {
-      errors.password = "Password must be at least 8 characters.";
+      errors.password = "New password is required.";
+    } else if (passwordChecks.some((check) => !check.valid)) {
+      errors.password = "Password does not meet the strength requirements.";
+    }
+
+    if (!form.confirmPassword) {
+      errors.confirmPassword = "Confirm your new password.";
+    } else if (form.password !== form.confirmPassword) {
+      errors.confirmPassword = "Passwords do not match.";
+    }
+
+    if (!token) {
+      errors.token = "Password reset link is missing or invalid.";
     }
 
     return errors;
-  }, [form.email, form.password]);
+  }, [form.confirmPassword, form.password, passwordChecks, token]);
 
   const hasErrors =
     Object.keys(validationErrors).length > 0;
@@ -47,10 +70,8 @@ export default function Login() {
       ...current,
       [name]: value,
     }));
-
-    if (error) {
-      setError("");
-    }
+    setError("");
+    setSuccess("");
   }
 
   function markTouched(name) {
@@ -60,165 +81,117 @@ export default function Login() {
     }));
   }
 
-  function getBackendErrorMessage(err) {
+  function getBackendMessage(err) {
     return (
       err?.response?.data?.error ||
       err?.response?.data?.message ||
       err?.message ||
-      "We could not sign you in. Please check your credentials and try again."
+      "We could not reset your password. Please request a new link."
     );
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
-
+    setSuccess("");
     setTouched({
-      email: true,
       password: true,
+      confirmPassword: true,
     });
 
     if (hasErrors) {
+      if (validationErrors.token) {
+        setError(validationErrors.token);
+      }
       return;
     }
 
     try {
       setLoading(true);
 
-      await login(
-  form.email.trim().toLowerCase(),
-  form.password,
-  form.rememberMe
-);
+      await API.post(`/auth/reset-password/${token}`, {
+        password: form.password,
+      });
 
-      localStorage.setItem(
-        "rememberMe",
-        form.rememberMe ? "true" : "false"
-      );
-
-      navigate("/dashboard");
+      setSuccess("Your password has been reset. Redirecting to Login...");
+      window.setTimeout(() => {
+        navigate("/login");
+      }, 1800);
     } catch (err) {
-      setError(getBackendErrorMessage(err));
+      setError(getBackendMessage(err));
     } finally {
       setLoading(false);
     }
   }
 
-  const emailInvalid =
-    touched.email && validationErrors.email;
-
   const passwordInvalid =
     touched.password && validationErrors.password;
+  const confirmInvalid =
+    touched.confirmPassword && validationErrors.confirmPassword;
 
   return (
     <main style={page}>
       <style>{authPageStyles}</style>
-      <section style={heroPanel} aria-label="AuraPay overview">
-        <div style={brandLockup}>
+
+      <section style={brandPanel}>
+        <Link to="/login" style={brandLockup}>
           <span style={brandMark}>A</span>
           <span style={brandName}>AuraPay</span>
-        </div>
+        </Link>
 
-        <div style={heroContent}>
-          <p style={eyebrow}>Secure account access</p>
-          <h1 style={headline}>
-            Move money with clarity, confidence, and control.
-          </h1>
+        <div>
+          <p style={eyebrow}>Create a new password</p>
+          <h1 style={headline}>Restore secure access to your account.</h1>
           <p style={subhead}>
-            Sign in to monitor payments, manage your dashboard, and keep
-            your AuraPay account moving.
+            Choose a strong password to keep payments, balances, and
+            account activity protected.
           </p>
-        </div>
-
-        <div style={trustGrid}>
-          <div style={trustItem}>
-            <strong style={trustNumber}>24/7</strong>
-            <span style={trustLabel}>account visibility</span>
-          </div>
-          <div style={trustItem}>
-            <strong style={trustNumber}>Bank</strong>
-            <span style={trustLabel}>grade protection</span>
-          </div>
         </div>
       </section>
 
-      <section style={formPanel} aria-label="Login form">
+      <section style={formPanel}>
         <form onSubmit={handleSubmit} style={card} noValidate>
           <div style={formHeader}>
-            <p style={formEyebrow}>Welcome back</p>
-            <h2 style={formTitle}>Sign in to AuraPay</h2>
+            <p style={formEyebrow}>Password reset</p>
+            <h2 style={formTitle}>Set new password</h2>
             <p style={formSubtitle}>
-              Use the email and password connected to your account.
+              Your new password must satisfy every strength check below.
             </p>
           </div>
 
+          {success && (
+            <div style={successBanner} role="status">
+              {success}
+            </div>
+          )}
+
           {error && (
-            <AlertBanner
-              message={error}
-              type="danger"
-            />
+            <div style={errorBanner} role="alert">
+              {error}
+            </div>
           )}
 
           <div style={fieldGroup}>
-            <label htmlFor="email" style={label}>
-              Email address
+            <label htmlFor="password" style={label}>
+              New password
             </label>
-            <input
-              id="email"
-              name="email"
-              style={{
-                ...input,
-                ...(emailInvalid ? inputError : null),
-              }}
-              type="email"
-              placeholder="name@company.com"
-              value={form.email}
-              autoComplete="email"
-              inputMode="email"
-              disabled={loading}
-              aria-invalid={Boolean(emailInvalid)}
-              aria-describedby={
-                emailInvalid ? "email-error" : undefined
-              }
-              onBlur={() => markTouched("email")}
-              onChange={(e) =>
-                updateField("email", e.target.value)
-              }
-            />
-            {emailInvalid && (
-              <p id="email-error" style={fieldError}>
-                {validationErrors.email}
-              </p>
-            )}
-          </div>
-
-          <div style={fieldGroup}>
-            <div style={labelRow}>
-              <label htmlFor="password" style={label}>
-                Password
-              </label>
-              <Link to="/forgot-password" style={inlineLink}>
-                Forgot password?
-              </Link>
-            </div>
-
             <div style={passwordWrap}>
               <input
                 id="password"
                 name="password"
+                type={showPassword ? "text" : "password"}
+                value={form.password}
+                placeholder="Enter a new password"
+                autoComplete="new-password"
+                disabled={loading}
                 style={{
                   ...input,
                   ...passwordInput,
                   ...(passwordInvalid ? inputError : null),
                 }}
-                type={showPassword ? "text" : "password"}
-                placeholder="Enter your password"
-                value={form.password}
-                autoComplete="current-password"
-                disabled={loading}
                 aria-invalid={Boolean(passwordInvalid)}
                 aria-describedby={
-                  passwordInvalid ? "password-error" : undefined
+                  passwordInvalid ? "password-error" : "password-rules"
                 }
                 onBlur={() => markTouched("password")}
                 onChange={(e) =>
@@ -227,8 +200,8 @@ export default function Login() {
               />
               <button
                 type="button"
-                style={toggleButton}
                 disabled={loading}
+                style={toggleButton}
                 aria-label={
                   showPassword ? "Hide password" : "Show password"
                 }
@@ -239,7 +212,6 @@ export default function Login() {
                 {showPassword ? "Hide" : "Show"}
               </button>
             </div>
-
             {passwordInvalid && (
               <p id="password-error" style={fieldError}>
                 {validationErrors.password}
@@ -247,44 +219,87 @@ export default function Login() {
             )}
           </div>
 
-          <label style={rememberRow}>
-            <input
-              type="checkbox"
-              checked={form.rememberMe}
-              disabled={loading}
-              style={checkbox}
-              onChange={(e) =>
-                updateField("rememberMe", e.target.checked)
-              }
-            />
-            <span>Remember me on this device</span>
-          </label>
+          <ul id="password-rules" style={ruleList}>
+            {passwordChecks.map((check) => (
+              <li
+                key={check.label}
+                style={{
+                  ...ruleItem,
+                  ...(check.valid ? ruleValid : null),
+                }}
+              >
+                <span style={ruleDot} />
+                {check.label}
+              </li>
+            ))}
+          </ul>
+
+          <div style={fieldGroup}>
+            <label htmlFor="confirmPassword" style={label}>
+              Confirm password
+            </label>
+            <div style={passwordWrap}>
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                value={form.confirmPassword}
+                placeholder="Confirm your new password"
+                autoComplete="new-password"
+                disabled={loading}
+                style={{
+                  ...input,
+                  ...passwordInput,
+                  ...(confirmInvalid ? inputError : null),
+                }}
+                aria-invalid={Boolean(confirmInvalid)}
+                aria-describedby={
+                  confirmInvalid ? "confirm-password-error" : undefined
+                }
+                onBlur={() => markTouched("confirmPassword")}
+                onChange={(e) =>
+                  updateField("confirmPassword", e.target.value)
+                }
+              />
+              <button
+                type="button"
+                disabled={loading}
+                style={toggleButton}
+                aria-label={
+                  showConfirmPassword
+                    ? "Hide confirm password"
+                    : "Show confirm password"
+                }
+                onClick={() =>
+                  setShowConfirmPassword((current) => !current)
+                }
+              >
+                {showConfirmPassword ? "Hide" : "Show"}
+              </button>
+            </div>
+            {confirmInvalid && (
+              <p id="confirm-password-error" style={fieldError}>
+                {validationErrors.confirmPassword}
+              </p>
+            )}
+          </div>
 
           <button
+            type="submit"
+            disabled={loading || hasErrors}
             style={{
               ...button,
               ...(loading || hasErrors ? buttonDisabled : null),
             }}
-            type="submit"
-            disabled={loading || hasErrors}
           >
             {loading && <span style={spinner} aria-hidden="true" />}
-            <span>{loading ? "Signing in..." : "Sign in"}</span>
+            <span>{loading ? "Resetting..." : "Reset password"}</span>
           </button>
 
-          <div style={secondaryActions}>
-            <Link
-              to="/resend-verification-email"
-              style={secondaryLink}
-            >
-              Resend verification email
-            </Link>
-          </div>
-
-          <p style={registerText}>
-            New to AuraPay?{" "}
-            <Link to="/register" style={strongLink}>
-              Create an account
+          <p style={footerText}>
+            Already updated?{" "}
+            <Link to="/login" style={strongLink}>
+              Back to Login
             </Link>
           </p>
         </form>
@@ -302,7 +317,7 @@ const page = {
   color: "#10201c",
 };
 
-const heroPanel = {
+const brandPanel = {
   minHeight: "100vh",
   padding: "clamp(28px, 5vw, 72px)",
   display: "flex",
@@ -310,7 +325,7 @@ const heroPanel = {
   justifyContent: "space-between",
   gap: 40,
   background:
-    "radial-gradient(circle at 22% 18%, rgba(16, 185, 129, 0.22), transparent 32%), linear-gradient(145deg, #0f2f2c 0%, #143f39 48%, #274634 100%)",
+    "linear-gradient(145deg, #0f2f2c 0%, #143f39 48%, #274634 100%)",
   color: "#f8fffc",
 };
 
@@ -318,7 +333,9 @@ const brandLockup = {
   display: "inline-flex",
   alignItems: "center",
   gap: 12,
+  color: "#f8fffc",
   fontWeight: 800,
+  textDecoration: "none",
   letterSpacing: 0,
 };
 
@@ -331,31 +348,26 @@ const brandMark = {
   background: "#f4c95d",
   color: "#10201c",
   fontSize: 22,
-  boxShadow: "0 18px 36px rgba(0, 0, 0, 0.18)",
 };
 
 const brandName = {
   fontSize: 22,
 };
 
-const heroContent = {
-  maxWidth: 680,
-};
-
 const eyebrow = {
   margin: "0 0 14px",
   color: "#a7f3d0",
   fontSize: 14,
-  fontWeight: 700,
+  fontWeight: 800,
   textTransform: "uppercase",
   letterSpacing: 0,
 };
 
 const headline = {
   margin: 0,
-  maxWidth: 720,
-  fontSize: "clamp(40px, 6vw, 76px)",
-  lineHeight: 0.96,
+  maxWidth: 680,
+  fontSize: "clamp(40px, 6vw, 72px)",
+  lineHeight: 1,
   letterSpacing: 0,
 };
 
@@ -365,33 +377,6 @@ const subhead = {
   color: "#d9f5ed",
   fontSize: 18,
   lineHeight: 1.7,
-};
-
-const trustGrid = {
-  display: "grid",
-  gridTemplateColumns: "repeat(2, minmax(150px, 220px))",
-  gap: 16,
-};
-
-const trustItem = {
-  padding: 18,
-  borderRadius: 8,
-  background: "rgba(255, 255, 255, 0.1)",
-  border: "1px solid rgba(255, 255, 255, 0.18)",
-};
-
-const trustNumber = {
-  display: "block",
-  color: "#f4c95d",
-  fontSize: 22,
-  lineHeight: 1.1,
-};
-
-const trustLabel = {
-  display: "block",
-  marginTop: 6,
-  color: "#d9f5ed",
-  fontSize: 14,
 };
 
 const formPanel = {
@@ -404,7 +389,7 @@ const formPanel = {
 const card = {
   width: "100%",
   maxWidth: 430,
-  background: "rgba(255, 255, 255, 0.92)",
+  background: "rgba(255, 255, 255, 0.94)",
   padding: "clamp(24px, 4vw, 36px)",
   borderRadius: 8,
   border: "1px solid rgba(15, 47, 44, 0.12)",
@@ -442,13 +427,6 @@ const formSubtitle = {
 
 const fieldGroup = {
   marginTop: 16,
-};
-
-const labelRow = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  gap: 12,
 };
 
 const label = {
@@ -509,21 +487,31 @@ const fieldError = {
   lineHeight: 1.4,
 };
 
-const rememberRow = {
-  display: "flex",
-  alignItems: "center",
-  gap: 10,
-  margin: "18px 0 22px",
-  color: "#3e514c",
-  fontSize: 14,
-  lineHeight: 1.4,
-  cursor: "pointer",
+const ruleList = {
+  display: "grid",
+  gap: 8,
+  margin: "14px 0 0",
+  padding: 0,
+  listStyle: "none",
 };
 
-const checkbox = {
-  width: 16,
-  height: 16,
-  accentColor: "#0f766e",
+const ruleItem = {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  color: "#6b7d78",
+  fontSize: 13,
+};
+
+const ruleValid = {
+  color: "#047857",
+};
+
+const ruleDot = {
+  width: 7,
+  height: 7,
+  borderRadius: "50%",
+  background: "currentColor",
 };
 
 const button = {
@@ -533,6 +521,7 @@ const button = {
   alignItems: "center",
   justifyContent: "center",
   gap: 10,
+  marginTop: 22,
   padding: "13px 16px",
   border: "none",
   borderRadius: 8,
@@ -554,32 +543,34 @@ const spinner = {
   width: 16,
   height: 16,
   borderRadius: "50%",
-  border: "2px solid rgba(255,255,255,.35)",
-  borderTop: "2px solid white",
+  border: "2px solid rgba(255, 255, 255, 0.45)",
+  borderTopColor: "#ffffff",
+  animation: "aurapaySpin 0.8s linear infinite",
 };
 
-const inlineLink = {
-  color: "#0f766e",
-  fontSize: 13,
-  fontWeight: 800,
-  textDecoration: "none",
-  whiteSpace: "nowrap",
-};
-
-const secondaryActions = {
-  display: "flex",
-  justifyContent: "center",
-  marginTop: 18,
-};
-
-const secondaryLink = {
-  color: "#0f766e",
+const successBanner = {
+  marginBottom: 16,
+  padding: "12px 14px",
+  borderRadius: 8,
+  border: "1px solid #99f6e4",
+  background: "#ecfdf5",
+  color: "#065f46",
   fontSize: 14,
-  fontWeight: 700,
-  textDecoration: "none",
+  lineHeight: 1.5,
 };
 
-const registerText = {
+const errorBanner = {
+  marginBottom: 16,
+  padding: "12px 14px",
+  borderRadius: 8,
+  border: "1px solid #fecaca",
+  background: "#fef2f2",
+  color: "#991b1b",
+  fontSize: 14,
+  lineHeight: 1.5,
+};
+
+const footerText = {
   margin: "22px 0 0",
   paddingTop: 20,
   borderTop: "1px solid #e5ece9",
@@ -620,16 +611,8 @@ const authPageStyles = `
 
   @media (max-width: 560px) {
     main > section:first-of-type h1 {
-      font-size: 38px !important;
-      line-height: 1.02 !important;
-    }
-
-    main > section:first-of-type p {
-      font-size: 15px !important;
-    }
-
-    main > section:first-of-type > div:last-child {
-      grid-template-columns: 1fr !important;
+      font-size: 36px !important;
+      line-height: 1.05 !important;
     }
   }
 `;
