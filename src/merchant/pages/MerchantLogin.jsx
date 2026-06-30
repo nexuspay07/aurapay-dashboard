@@ -1,16 +1,25 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+  Link,
+  useNavigate,
+} from "react-router-dom";
 
 import API from "../../services/api";
 
 export default function MerchantLogin() {
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
 
   const [form, setForm] =
     useState({
       email: "",
       password: "",
     });
+
+  const [
+    rememberMe,
+    setRememberMe,
+  ] = useState(true);
 
   const [loading, setLoading] =
     useState(false);
@@ -21,13 +30,16 @@ export default function MerchantLogin() {
   async function handleLogin(e) {
     e.preventDefault();
 
+    setError("");
+
     try {
       setLoading(true);
 
-      const res = await API.post(
-        "/auth/login",
-        form
-      );
+      const res =
+        await API.post(
+          "/auth/login",
+          form
+        );
 
       const user =
         res.data.user;
@@ -43,21 +55,48 @@ export default function MerchantLogin() {
         )
       ) {
         setError(
-          "Not a merchant account"
+          "Not a merchant account."
         );
-
         return;
       }
 
-      localStorage.setItem(
-        "token",
-        res.data.token
-      );
+      if (rememberMe) {
+        localStorage.setItem(
+          "token",
+          res.data.token
+        );
 
-      localStorage.setItem(
-        "user",
-        JSON.stringify(user)
-      );
+        localStorage.setItem(
+          "user",
+          JSON.stringify(user)
+        );
+
+        sessionStorage.removeItem(
+          "token"
+        );
+
+        sessionStorage.removeItem(
+          "user"
+        );
+      } else {
+        sessionStorage.setItem(
+          "token",
+          res.data.token
+        );
+
+        sessionStorage.setItem(
+          "user",
+          JSON.stringify(user)
+        );
+
+        localStorage.removeItem(
+          "token"
+        );
+
+        localStorage.removeItem(
+          "user"
+        );
+      }
 
       navigate(
         "/merchant/dashboard"
@@ -68,7 +107,7 @@ export default function MerchantLogin() {
       setError(
         err?.response?.data
           ?.error ||
-          "Login failed"
+          "Login failed."
       );
     } finally {
       setLoading(false);
@@ -78,19 +117,19 @@ export default function MerchantLogin() {
   return (
     <div style={container}>
       <form
-        onSubmit={handleLogin}
+        onSubmit={
+          handleLogin
+        }
         style={card}
       >
-        <h1
-          style={{
-            marginBottom: 24,
-          }}
-        >
+        <h1 style={title}>
           Merchant Login
         </h1>
 
         {error && (
-          <div style={errorBox}>
+          <div
+            style={errorBox}
+          >
             {error}
           </div>
         )}
@@ -98,13 +137,16 @@ export default function MerchantLogin() {
         <input
           style={input}
           type="email"
+          required
+          autoComplete="email"
           placeholder="Email"
           value={form.email}
           onChange={(e) =>
             setForm({
               ...form,
               email:
-                e.target.value,
+                e.target
+                  .value,
             })
           }
         />
@@ -112,27 +154,101 @@ export default function MerchantLogin() {
         <input
           style={input}
           type="password"
+          required
+          autoComplete="current-password"
           placeholder="Password"
           value={form.password}
           onChange={(e) =>
             setForm({
               ...form,
               password:
-                e.target.value,
+                e.target
+                  .value,
             })
           }
         />
 
+        <div
+          style={optionsRow}
+        >
+          <label
+            style={
+              rememberLabel
+            }
+          >
+            <input
+              type="checkbox"
+              checked={
+                rememberMe
+              }
+              onChange={(
+                e
+              ) =>
+                setRememberMe(
+                  e.target
+                    .checked
+                )
+              }
+            />
+
+            Remember Me
+          </label>
+
+          <Link
+            to="/forgot-password"
+            style={link}
+          >
+            Forgot Password?
+          </Link>
+        </div>
+
         <button
           type="submit"
-          style={button}
           disabled={loading}
+          style={button}
         >
           {loading
             ? "Signing In..."
             : "Login"}
         </button>
-      </form>
+
+        <div style={footer}>
+          <p
+            style={
+              footerText
+            }
+          >
+            Didn't receive
+            your verification
+            email?
+          </p>
+
+          <Link
+            to="/resend-verification-email"
+            style={link}
+          >
+            Resend
+            Verification
+            Email
+          </Link>
+
+          <p
+            style={{
+              marginTop: 18,
+            }}
+          >
+            New Merchant?{" "}
+            <Link
+              to="/merchant/register"
+              style={link}
+            >
+              Create
+              Account
+            </Link>
+          </p>
+        </div>
+
+              </form>
     </div>
   );
 }
@@ -145,20 +261,48 @@ const container = {
 };
 
 const card = {
-  width: 420,
+  width: 430,
   background: "#fff",
-  padding: 30,
+  padding: 32,
   borderRadius: 20,
   border: "1px solid #e5e7eb",
+  boxShadow:
+    "0 10px 30px rgba(0,0,0,0.08)",
+};
+
+const title = {
+  marginTop: 0,
+  marginBottom: 24,
+  textAlign: "center",
+  fontSize: 30,
+  fontWeight: 700,
+  color: "#111827",
 };
 
 const input = {
   width: "100%",
   padding: 14,
-  marginBottom: 14,
+  marginBottom: 16,
   borderRadius: 10,
   border: "1px solid #d1d5db",
   boxSizing: "border-box",
+  fontSize: 15,
+};
+
+const optionsRow = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: 20,
+};
+
+const rememberLabel = {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  fontSize: 14,
+  cursor: "pointer",
+  color: "#374151",
 };
 
 const button = {
@@ -170,6 +314,24 @@ const button = {
   color: "#fff",
   cursor: "pointer",
   fontWeight: 700,
+  fontSize: 15,
+};
+
+const footer = {
+  marginTop: 24,
+  textAlign: "center",
+};
+
+const footerText = {
+  marginBottom: 10,
+  color: "#6b7280",
+  fontSize: 14,
+};
+
+const link = {
+  color: "#2563eb",
+  textDecoration: "none",
+  fontWeight: 600,
 };
 
 const errorBox = {
@@ -177,5 +339,6 @@ const errorBox = {
   color: "#991b1b",
   padding: 12,
   borderRadius: 10,
-  marginBottom: 14,
+  marginBottom: 18,
+  textAlign: "center",
 };
