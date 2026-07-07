@@ -9,6 +9,19 @@ import {
 import API from
   "../../services/api";
 
+  import AppShell
+from "../../layouts/AppShell";
+
+import {
+  merchantMenu,
+} from "../../data/sidebarMenu";
+
+import StatCard
+from "../../components/ui/StatCard";
+
+import Card
+from "../../components/ui/Card";
+
 export default function MerchantDashboard() {
 
   const [stats, setStats] =
@@ -32,185 +45,235 @@ export default function MerchantDashboard() {
   }
 
   return (
+  <AppShell
+    menu={merchantMenu}
+    title="Dashboard"
+  >
     <div style={page}>
-      {/* HEADER */}
 
-      <div style={header}>
-        <div>
-          <div style={eyebrow}>
-            AURAPAY MERCHANT
-          </div>
-
-          <h1 style={title}>
-            Merchant Revenue Center
-          </h1>
-
-          <p style={subtitle}>
-            Monitor revenue, transactions,
-            checkouts and settlements from
-            one platform.
-          </p>
-        </div>
-<Link
-  to="/merchant/create-checkout"
-  style={actionButton}
+<div
+  style={{
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 36,
+    gap: 20,
+    flexWrap: "wrap",
+  }}
 >
-  + Create Checkout
-</Link>
+  <div>
+    <h1
+      style={{
+        margin: 0,
+        fontSize: 36,
+        fontWeight: 800,
+      }}
+    >
+      Dashboard
+    </h1>
 
-<Link
-  to="/merchant/settlements"
-  style={secondaryButton}
->
-  Settlements
-</Link>
+    <p
+      style={{
+        marginTop: 8,
+        color: "#64748B",
+      }}
+    >
+      Welcome back, Blaise 👋
+    </p>
+  </div>
 
-<Link
-  to="/merchant/checkouts"
-  style={secondaryButton}
->
-  View Checkouts
-</Link>
+  <div
+    style={{
+      display: "flex",
+      gap: 14,
+      flexWrap: "wrap",
+    }}
+  >
+    <Link
+      to="/merchant/create-checkout"
+      style={actionButton}
+    >
+      + Create Checkout
+    </Link>
 
-<Link
-  to="/merchant/transactions"
-  style={secondaryButton}
->
-  Transactions
-</Link>
-      </div>
+    <Link
+      to="/merchant/checkouts"
+      style={secondaryButton}
+    >
+      Checkouts
+    </Link>
+
+    <Link
+      to="/merchant/transactions"
+      style={secondaryButton}
+    >
+      Transactions
+    </Link>
+
+    <Link
+      to="/merchant/settlements"
+      style={secondaryButton}
+    >
+      Settlements
+    </Link>
+  </div>
+</div>
 
       
 
       {/* METRICS */}
 
       <div style={metricsGrid}>
-        <MetricCard
-          title="Revenue Today"
-          value={
-  stats
-    ? `$${stats.revenueToday}`
-    : "..."
-}
-          change="+12.4%"
-        />
 
-        <MetricCard
-          title="Monthly Revenue"
-          value={
-  stats
-    ? `$${stats.monthlyRevenue}`
-    : "..."
-}
-          change="+8.1%"
-        />
+<StatCard
+  icon="💰"
+  title="Revenue Today"
+  value={
+    stats
+      ? `$${stats.revenueToday}`
+      : "..."
+  }
+  subtitle="Today's earnings"
+  trend="+12.4%"
+/>
 
-        <MetricCard
+<StatCard
+  icon="📈"
+  title="Monthly Revenue"
+  value={
+    stats
+      ? `$${stats.monthlyRevenue}`
+      : "..."
+  }
+  subtitle="This Month"
+  trend="+8.1%"
+/>
+
+<StatCard
+  icon="✅"
   title="Successful Payments"
   value="428"
-  change="+12%"
+  subtitle="Completed"
+  trend="+12%"
 />
 
-<MetricCard
+<StatCard
+  icon="❌"
   title="Failed Payments"
   value="4"
-  change="Low Risk"
+  subtitle="Requires attention"
+  trend="Low Risk"
+  trendColor="warning"
 />
 
-        <MetricCard
-          title="Transactions"
-          value={
-  stats
-    ? stats.transactions
-    : "..."
-}
-          change="+18%"
-        />
+<StatCard
+  icon="⚡"
+  title="Transactions"
+  value={
+    stats
+      ? stats.transactions
+      : "..."
+  }
+  subtitle="Processed"
+  trend="+18%"
+/>
 
-        <MetricCard
+<StatCard
+  icon="🏦"
   title="Pending Settlements"
   value="$3,200"
-  change="2 Pending"
+  subtitle="Awaiting payout"
+  trend="2 Pending"
+  trendColor="warning"
 />
 
-<MetricCard
+<StatCard
+  icon="💵"
   title="Completed Settlements"
   value="$14,500"
-  change="Healthy"
+  subtitle="Paid Out"
+  trend="Healthy"
 />
 
-        <MetricCard
-          title="Success Rate"
-          value={
-  stats
-    ? `${stats.successRate}%`
-    : "..."
-}
-          change="Healthy"
-        />
-      </div>
+<StatCard
+  icon="🛡"
+  title="Success Rate"
+  value={
+    stats
+      ? `${stats.successRate}%`
+      : "..."
+  }
+  subtitle="Platform Performance"
+  trend="Healthy"
+/>
+
+</div>
 
       {/* REVENUE CHART */}
 
-      <div style={chartCard}>
-        <h2 style={sectionTitle}>
-          Revenue Overview
-        </h2>
-
-        <div style={chartPlaceholder}>
-          Revenue analytics chart will
-          appear here.
-        </div>
-      </div>
+      <Card
+  title="Revenue Overview"
+  subtitle="Daily revenue performance"
+  style={{
+    marginBottom: 24,
+  }}
+>
+  <div style={chartPlaceholder}>
+    Revenue analytics chart
+    will appear here.
+  </div>
+</Card>
 
       {/* TWO COLUMN */}
 
       <div style={twoColumn}>
-        <div style={panel}>
-          <h2 style={sectionTitle}>
-            Recent Checkouts
-          </h2>
 
-          <CheckoutRow
-            id="CHK_1780366892009"
-            amount="$10"
-            status="Created"
-          />
+<Card
+  title="Recent Checkouts"
+>
 
-          <CheckoutRow
-            id="CHK_1780366892010"
-            amount="$120"
-            status="Paid"
-          />
+  <CheckoutRow
+    id="CHK_1780366892009"
+    amount="$10"
+    status="Created"
+  />
 
-          <CheckoutRow
-            id="CHK_1780366892011"
-            amount="$50"
-            status="Pending"
-          />
-        </div>
+  <CheckoutRow
+    id="CHK_1780366892010"
+    amount="$120"
+    status="Paid"
+  />
 
-        <div style={panel}>
-          <h2 style={sectionTitle}>
-            Settlement Activity
-          </h2>
+  <CheckoutRow
+    id="CHK_1780366892011"
+    amount="$50"
+    status="Pending"
+  />
 
-          <SettlementRow
-            amount="$2,450"
-            status="Completed"
-          />
+</Card>
 
-          <SettlementRow
-            amount="$1,120"
-            status="Pending"
-          />
+<Card
+  title="Settlement Activity"
+>
 
-          <SettlementRow
-            amount="$870"
-            status="Completed"
-          />
-        </div>
-      </div>
+  <SettlementRow
+    amount="$2,450"
+    status="Completed"
+  />
+
+  <SettlementRow
+    amount="$1,120"
+    status="Pending"
+  />
+
+  <SettlementRow
+    amount="$870"
+    status="Completed"
+  />
+
+</Card>
+
+</div>
 
       {/* TRANSACTIONS */}
 
@@ -237,8 +300,9 @@ export default function MerchantDashboard() {
           status="Pending"
         />
       </div>
-    </div>
-  );
+        </div>
+  </AppShell>
+);
 }
 
 /* ===================================== */
