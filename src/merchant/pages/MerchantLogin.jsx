@@ -258,14 +258,18 @@ const container = {
   display: "grid",
   placeItems: "center",
   background: "#f3f4f6",
+  padding: 16,
+  boxSizing: "border-box",
+  overflowX: "hidden",
 };
 
 const card = {
-  width: 430,
+  width: "min(430px, 100%)",
   background: "#fff",
   padding: 32,
   borderRadius: 20,
   border: "1px solid #e5e7eb",
+  boxSizing: "border-box",
   boxShadow:
     "0 10px 30px rgba(0,0,0,0.08)",
 };
@@ -293,6 +297,8 @@ const optionsRow = {
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
+  gap: 12,
+  flexWrap: "wrap",
   marginBottom: 20,
 };
 

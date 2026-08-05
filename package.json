@@ -7,7 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:e2e": "node tests/e2e/create-review-run.cjs && node -e \"require('fs').mkdirSync('.tmp',{recursive:true})\" && set TMP=%CD%\\.tmp&& set TEMP=%CD%\\.tmp&& playwright test tests/e2e --grep-invert @visual",
+    "test:visual": "node tests/e2e/create-review-run.cjs && node -e \"require('fs').mkdirSync('.tmp',{recursive:true})\" && set TMP=%CD%\\.tmp&& set TEMP=%CD%\\.tmp&& playwright test tests/e2e/visual-regression.spec.js",
+    "test:visual:update": "node tests/e2e/create-review-run.cjs && node -e \"require('fs').mkdirSync('.tmp',{recursive:true})\" && set TMP=%CD%\\.tmp&& set TEMP=%CD%\\.tmp&& playwright test tests/e2e/visual-regression.spec.js --update-snapshots",
+    "review:ui": "npm run build && node tests/e2e/create-review-run.cjs && node -e \"require('fs').mkdirSync('.tmp',{recursive:true})\" && set TMP=%CD%\\.tmp&& set TEMP=%CD%\\.tmp&& playwright test tests/e2e"
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",
@@ -19,11 +23,12 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.22.3",
-    "recharts": "^2.12.7",
+    "recharts": "^2.15.4",
     "resend": "^6.14.0",
     "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@vitejs/plugin-react": "^4.2.1",
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.0",

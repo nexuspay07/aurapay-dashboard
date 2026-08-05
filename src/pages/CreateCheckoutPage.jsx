@@ -12,25 +12,29 @@ export default function CreateCheckoutPage() {
     useState(null);
 
   const [loading, setLoading] =
-    useState(false);
+    useState(false);  
 
   async function createCheckout() {
     try {
       setLoading(true);
 
+      
+
       const res =
-        await API.post(
-          "/checkout-ops/sessions",
-          {
-            amount:
-              Number(amount),
+  await API.post(
+    "/checkout-ops/sessions",
+    {
+      amount: Number(amount),
+      customerEmail: email,
+    }
+  );
 
-            customerEmail:
-              email,
-          }
-        );
+console.log(
+  "Checkout Response:",
+  res.data
+);
 
-      setSession(res.data);
+setSession(res.data);
     } catch (err) {
       console.log(err);
       alert(

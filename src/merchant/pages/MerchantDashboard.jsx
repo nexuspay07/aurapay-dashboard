@@ -1,518 +1,522 @@
-import { Link }
-from "react-router-dom";
-
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import {
-  useEffect,
-  useState,
-} from "react";
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
-import API from
-  "../../services/api";
+import AppShell from "../../layouts/AppShell";
+import { merchantMenu } from "../../data/sidebarMenu";
+import API from "../../services/api";
 
-  import AppShell
-from "../../layouts/AppShell";
+const currencyFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+});
 
-import {
-  merchantMenu,
-} from "../../data/sidebarMenu";
-
-import StatCard
-from "../../components/ui/StatCard";
-
-import Card
-from "../../components/ui/Card";
+const numberFormatter = new Intl.NumberFormat("en-US");
 
 export default function MerchantDashboard() {
-
-  const [stats, setStats] =
-    useState(null);
+  const [analytics, setAnalytics] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    loadStats();
+    loadDashboard();
   }, []);
 
-  async function loadStats() {
+  async function loadDashboard() {
     try {
-      const res =
-        await API.get(
-          "/merchant-analytics/dashboard"
-        );
+      setLoading(true);
+      setError("");
 
-      setStats(res.data);
+      const res = await API.get("/merchant-analytics/dashboard");
+      setAnalytics(res.data || {});
     } catch (err) {
-      console.log(err);
+      setError(
+        err?.response?.data?.error ||
+          "Unable to load dashboard data."
+      );
+    } finally {
+      setLoading(false);
     }
   }
 
+  const derived = useMemo(() => {
+    const transactions = analytics?.recentTransactions || [];
+    const settlements = analytics?.recentSettlements || [];
+    const checkouts = analytics?.recentCheckouts || [];
+    const refunds = transactions.filter(
+      (tx) => tx.status === "refunded"
+    );
+    const payments = transactions.filter(
+      (tx) => tx.success || tx.status === "completed"
+    );
+    const totalRevenue = Number(analytics?.totalRevenue || 0);
+    const totalTransactions = Number(
+      analytics?.totalTransactions || transactions.length || 0
+    );
+
+    return {
+      transactions,
+      settlements,
+      checkouts,
+      refunds: refunds.length,
+      payments: analytics?.successfulPayments ?? payments.length,
+      averagePayment:
+        totalTransactions > 0 ? totalRevenue / totalTransactions : 0,
+      totalSettled: settlements
+        .filter((item) => item.status === "completed")
+        .reduce(
+          (sum, item) => sum + Number(item.netAmount || item.amount || 0),
+          0
+        ),
+      settlementTrend: settlements.map((item) => ({
+        name: formatShortDate(item.createdAt),
+        pending: item.status === "pending" ? Number(item.amount || 0) : 0,
+        completed:
+          item.status === "completed" ? Number(item.amount || 0) : 0,
+      })),
+      transactionTrend: transactions
+        .slice()
+        .reverse()
+        .map((item) => ({
+          name: formatShortDate(item.createdAt),
+          count: 1,
+          amount: Number(item.amount || 0),
+        })),
+    };
+  }, [analytics]);
+
+  const cards = [
+    {
+      label: "Today's Revenue",
+      value: money(analytics?.revenueToday),
+      caption: "Settled and successful activity",
+    },
+    {
+      label: "Monthly Revenue",
+      value: money(analytics?.monthlyRevenue),
+      caption: "Current month gross volume",
+    },
+    {
+      label: "Total Revenue",
+      value: money(analytics?.totalRevenue),
+      caption: "All-time successful volume",
+    },
+    {
+      label: "Transactions",
+      value: numberFormatter.format(analytics?.totalTransactions || 0),
+      caption: "All recorded payments",
+    },
+    {
+      label: "Payments",
+      value: numberFormatter.format(derived.payments || 0),
+      caption: "Successful payments",
+    },
+    {
+      label: "Refunds",
+      value: numberFormatter.format(derived.refunds || 0),
+      caption: "Refunded recent payments",
+    },
+    {
+      label: "Pending Settlements",
+      value: numberFormatter.format(analytics?.pendingSettlements || 0),
+      caption: "Awaiting payout",
+    },
+    {
+      label: "Completed Settlements",
+      value: numberFormatter.format(analytics?.completedSettlements || 0),
+      caption: money(derived.totalSettled),
+    },
+    {
+      label: "Success Rate",
+      value: `${analytics?.successRate || 0}%`,
+      caption: "Payment authorization health",
+    },
+    {
+      label: "Failed Payments",
+      value: numberFormatter.format(analytics?.failedPayments || 0),
+      caption: "Requires review",
+    },
+    {
+      label: "Average Payment",
+      value: money(derived.averagePayment),
+      caption: "Gross average ticket",
+    },
+  ];
+
   return (
-  <AppShell
-    menu={merchantMenu}
-    title="Dashboard"
-  >
-    <div style={page}>
-
-<div
-  style={{
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 36,
-    gap: 20,
-    flexWrap: "wrap",
-  }}
->
-  <div>
-    <h1
-      style={{
-        margin: 0,
-        fontSize: 36,
-        fontWeight: 800,
-      }}
-    >
-      Dashboard
-    </h1>
-
-    <p
-      style={{
-        marginTop: 8,
-        color: "#64748B",
-      }}
-    >
-      Welcome back, Blaise 👋
-    </p>
-  </div>
-
-  <div
-    style={{
-      display: "flex",
-      gap: 14,
-      flexWrap: "wrap",
-    }}
-  >
-    <Link
-      to="/merchant/create-checkout"
-      style={actionButton}
-    >
-      + Create Checkout
-    </Link>
-
-    <Link
-      to="/merchant/checkouts"
-      style={secondaryButton}
-    >
-      Checkouts
-    </Link>
-
-    <Link
-      to="/merchant/transactions"
-      style={secondaryButton}
-    >
-      Transactions
-    </Link>
-
-    <Link
-      to="/merchant/settlements"
-      style={secondaryButton}
-    >
-      Settlements
-    </Link>
-  </div>
-</div>
-
-      
-
-      {/* METRICS */}
-
-      <div style={metricsGrid}>
-
-<StatCard
-  icon="💰"
-  title="Revenue Today"
-  value={
-    stats
-      ? `$${stats.revenueToday}`
-      : "..."
-  }
-  subtitle="Today's earnings"
-  trend="+12.4%"
-/>
-
-<StatCard
-  icon="📈"
-  title="Monthly Revenue"
-  value={
-    stats
-      ? `$${stats.monthlyRevenue}`
-      : "..."
-  }
-  subtitle="This Month"
-  trend="+8.1%"
-/>
-
-<StatCard
-  icon="✅"
-  title="Successful Payments"
-  value="428"
-  subtitle="Completed"
-  trend="+12%"
-/>
-
-<StatCard
-  icon="❌"
-  title="Failed Payments"
-  value="4"
-  subtitle="Requires attention"
-  trend="Low Risk"
-  trendColor="warning"
-/>
-
-<StatCard
-  icon="⚡"
-  title="Transactions"
-  value={
-    stats
-      ? stats.transactions
-      : "..."
-  }
-  subtitle="Processed"
-  trend="+18%"
-/>
-
-<StatCard
-  icon="🏦"
-  title="Pending Settlements"
-  value="$3,200"
-  subtitle="Awaiting payout"
-  trend="2 Pending"
-  trendColor="warning"
-/>
-
-<StatCard
-  icon="💵"
-  title="Completed Settlements"
-  value="$14,500"
-  subtitle="Paid Out"
-  trend="Healthy"
-/>
-
-<StatCard
-  icon="🛡"
-  title="Success Rate"
-  value={
-    stats
-      ? `${stats.successRate}%`
-      : "..."
-  }
-  subtitle="Platform Performance"
-  trend="Healthy"
-/>
-
-</div>
-
-      {/* REVENUE CHART */}
-
-      <Card
-  title="Revenue Overview"
-  subtitle="Daily revenue performance"
-  style={{
-    marginBottom: 24,
-  }}
->
-  <div style={chartPlaceholder}>
-    Revenue analytics chart
-    will appear here.
-  </div>
-</Card>
-
-      {/* TWO COLUMN */}
-
-      <div style={twoColumn}>
-
-<Card
-  title="Recent Checkouts"
->
-
-  <CheckoutRow
-    id="CHK_1780366892009"
-    amount="$10"
-    status="Created"
-  />
-
-  <CheckoutRow
-    id="CHK_1780366892010"
-    amount="$120"
-    status="Paid"
-  />
-
-  <CheckoutRow
-    id="CHK_1780366892011"
-    amount="$50"
-    status="Pending"
-  />
-
-</Card>
-
-<Card
-  title="Settlement Activity"
->
-
-  <SettlementRow
-    amount="$2,450"
-    status="Completed"
-  />
-
-  <SettlementRow
-    amount="$1,120"
-    status="Pending"
-  />
-
-  <SettlementRow
-    amount="$870"
-    status="Completed"
-  />
-
-</Card>
-
-</div>
-
-      {/* TRANSACTIONS */}
-
-      <div style={transactionsCard}>
-        <h2 style={sectionTitle}>
-          Recent Transactions
-        </h2>
-
-        <TransactionRow
-          customer="John Smith"
-          amount="$120"
-          status="Paid"
-        />
-
-        <TransactionRow
-          customer="Emma Brown"
-          amount="$85"
-          status="Paid"
-        />
-
-        <TransactionRow
-          customer="David Wilson"
-          amount="$250"
-          status="Pending"
-        />
-      </div>
+    <AppShell menu={merchantMenu} title="Dashboard">
+      <section style={hero}>
+        <div>
+          <p style={eyebrow}>Sandbox Beta</p>
+          <h1 style={title}>Merchant Dashboard</h1>
+          <p style={subtitle}>
+            Monitor revenue, payments, checkouts, and settlements from live
+            AuraPay backend data.
+          </p>
         </div>
-  </AppShell>
-);
+
+        <div style={actions}>
+          <Link to="/merchant/create-checkout" style={primaryButton}>
+            Create checkout
+          </Link>
+          <Link to="/merchant/transactions" style={secondaryButton}>
+            View transactions
+          </Link>
+        </div>
+      </section>
+
+      {error && <div style={errorBanner}>{error}</div>}
+
+      <section style={cardGrid}>
+        {loading
+          ? Array.from({ length: 11 }).map((_, index) => (
+              <SkeletonCard key={index} />
+            ))
+          : cards.map((card) => (
+              <MetricCard key={card.label} {...card} />
+            ))}
+      </section>
+
+      <section style={chartGrid}>
+        <ChartPanel title="Revenue History" empty={!analytics?.revenueHistory?.length}>
+          <ResponsiveContainer width="100%" height={280}>
+            <AreaChart data={analytics?.revenueHistory || []}>
+              <CartesianGrid stroke="#E2E8F0" vertical={false} />
+              <XAxis dataKey="day" stroke="#64748B" />
+              <YAxis stroke="#64748B" />
+              <Tooltip formatter={(value) => money(value)} />
+              <Area
+                type="monotone"
+                dataKey="revenue"
+                stroke="#2563EB"
+                fill="#DBEAFE"
+                strokeWidth={2}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </ChartPanel>
+
+        <ChartPanel title="Transactions" empty={!derived.transactionTrend.length}>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={derived.transactionTrend}>
+              <CartesianGrid stroke="#E2E8F0" vertical={false} />
+              <XAxis dataKey="name" stroke="#64748B" />
+              <YAxis stroke="#64748B" />
+              <Tooltip formatter={(value) => money(value)} />
+              <Bar dataKey="amount" fill="#0F172A" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartPanel>
+
+        <ChartPanel title="Settlement Trend" empty={!derived.settlementTrend.length}>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={derived.settlementTrend}>
+              <CartesianGrid stroke="#E2E8F0" vertical={false} />
+              <XAxis dataKey="name" stroke="#64748B" />
+              <YAxis stroke="#64748B" />
+              <Tooltip formatter={(value) => money(value)} />
+              <Bar dataKey="pending" fill="#F59E0B" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="completed" fill="#16A34A" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartPanel>
+      </section>
+
+      <section style={activityGrid}>
+        <ActivityList
+          title="Recent Transactions"
+          items={derived.transactions}
+          renderItem={(item) => (
+            <>
+              <span>{item.customerEmail || item.providerPaymentId || item._id}</span>
+              <strong>{money(item.amount)}</strong>
+              <Badge value={item.status} />
+            </>
+          )}
+        />
+
+        <ActivityList
+          title="Recent Checkouts"
+          items={derived.checkouts}
+          renderItem={(item) => (
+            <>
+              <span>{item.customerEmail || item.sessionId}</span>
+              <strong>{money(item.amount)}</strong>
+              <Badge value={item.status} />
+            </>
+          )}
+        />
+      </section>
+    </AppShell>
+  );
 }
 
-/* ===================================== */
+function MetricCard({ label, value, caption }) {
+  return (
+    <article style={metricCard}>
+      <span style={metricLabel}>{label}</span>
+      <strong style={metricValue}>{value}</strong>
+      <span style={metricCaption}>{caption}</span>
+    </article>
+  );
+}
 
-function MetricCard({
-  title,
-  value,
-  change,
-}) {
+function SkeletonCard() {
   return (
     <div style={metricCard}>
-      <div style={metricLabel}>
-        {title}
-      </div>
-
-      <div style={metricValue}>
-        {value}
-      </div>
-
-      <div style={metricChange}>
-        {change}
-      </div>
+      <div style={skeletonLine} />
+      <div style={{ ...skeletonLine, width: "70%", height: 30 }} />
+      <div style={{ ...skeletonLine, width: "55%" }} />
     </div>
   );
 }
 
-function CheckoutRow({
-  id,
-  amount,
-  status,
-}) {
+function ChartPanel({ title, empty, children }) {
   return (
-    <div style={row}>
-      <div>
-        <strong>{id}</strong>
-      </div>
-
-      <div>
-        {amount} • {status}
-      </div>
-    </div>
+    <article style={panel}>
+      <h2 style={panelTitle}>{title}</h2>
+      {empty ? <EmptyState message="No live data available yet." /> : children}
+    </article>
   );
 }
 
-function SettlementRow({
-  amount,
-  status,
-}) {
+function ActivityList({ title, items, renderItem }) {
   return (
-    <div style={row}>
-      <div>{amount}</div>
-
-      <div>{status}</div>
-    </div>
+    <article style={panel}>
+      <h2 style={panelTitle}>{title}</h2>
+      {items.length === 0 ? (
+        <EmptyState message="No records found." />
+      ) : (
+        <div style={list}>
+          {items.slice(0, 6).map((item) => (
+            <div key={item._id || item.sessionId} style={listRow}>
+              {renderItem(item)}
+            </div>
+          ))}
+        </div>
+      )}
+    </article>
   );
 }
 
-function TransactionRow({
-  customer,
-  amount,
-  status,
-}) {
-  return (
-    <div style={row}>
-      <div>{customer}</div>
-
-      <div>
-        {amount} • {status}
-      </div>
-    </div>
-  );
+function EmptyState({ message }) {
+  return <div style={emptyState}>{message}</div>;
 }
 
-/* ===================================== */
+function Badge({ value }) {
+  const normalized = String(value || "unknown").toLowerCase();
+  const tone =
+    normalized === "completed" || normalized === "paid"
+      ? successBadge
+      : normalized === "failed" || normalized === "refunded"
+      ? dangerBadge
+      : warningBadge;
 
-const page = {
-  background: "#F8FAFC",
-  minHeight: "100vh",
-  padding: 32,
-};
+  return <span style={{ ...badge, ...tone }}>{normalized}</span>;
+}
 
-const header = {
+function money(value) {
+  return currencyFormatter.format(Number(value || 0));
+}
+
+function formatShortDate(value) {
+  if (!value) return "New";
+  return new Date(value).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+}
+
+const hero = {
   display: "flex",
   justifyContent: "space-between",
-  alignItems: "center",
-  marginBottom: 32,
+  gap: 24,
+  alignItems: "flex-start",
+  flexWrap: "wrap",
+  marginBottom: 24,
 };
 
 const eyebrow = {
+  margin: "0 0 8px",
   color: "#2563EB",
-  fontWeight: 700,
-  marginBottom: 8,
+  fontSize: 13,
+  fontWeight: 800,
+  textTransform: "uppercase",
 };
 
 const title = {
-  fontSize: 42,
   margin: 0,
+  color: "#0F172A",
+  fontSize: 34,
+  lineHeight: 1.15,
 };
 
 const subtitle = {
   color: "#64748B",
+  maxWidth: 720,
+  margin: "10px 0 0",
 };
 
-const actionButton = {
-  border: "none",
+const actions = {
+  display: "flex",
+  gap: 12,
+  flexWrap: "wrap",
+};
+
+const primaryButton = {
   background: "#0F172A",
-  color: "#fff",
-  padding: "14px 22px",
-  borderRadius: 14,
-  cursor: "pointer",
-  fontWeight: 700,
+  color: "#FFFFFF",
+  borderRadius: 8,
+  padding: "11px 16px",
   textDecoration: "none",
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
+  fontWeight: 800,
 };
 
 const secondaryButton = {
-  textDecoration: "none",
   background: "#FFFFFF",
   color: "#0F172A",
-  padding: "14px 22px",
-  borderRadius: 14,
   border: "1px solid #CBD5E1",
-  fontWeight: 600,
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
+  borderRadius: 8,
+  padding: "11px 16px",
+  textDecoration: "none",
+  fontWeight: 800,
 };
 
-const metricsGrid = {
+const errorBanner = {
+  background: "#FEF2F2",
+  color: "#B91C1C",
+  border: "1px solid #FECACA",
+  borderRadius: 8,
+  padding: 14,
+  marginBottom: 18,
+};
+
+const cardGrid = {
   display: "grid",
-  gridTemplateColumns:
-    "repeat(auto-fit,minmax(240px,1fr))",
-  gap: 20,
-  marginBottom: 30,
+  gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
+  gap: 16,
+  marginBottom: 20,
 };
 
 const metricCard = {
-  background: "#fff",
-  borderRadius: 20,
-  padding: 24,
+  background: "#FFFFFF",
   border: "1px solid #E2E8F0",
-  boxShadow:
-    "0 10px 30px rgba(15,23,42,0.05)",
+  borderRadius: 8,
+  padding: 18,
+  minHeight: 118,
+  boxSizing: "border-box",
 };
 
 const metricLabel = {
   color: "#64748B",
-  marginBottom: 12,
+  fontSize: 13,
+  fontWeight: 700,
 };
 
 const metricValue = {
-  fontSize: 34,
-  fontWeight: 800,
+  display: "block",
+  marginTop: 12,
+  color: "#0F172A",
+  fontSize: 27,
+  lineHeight: 1.1,
 };
 
-const metricChange = {
-  color: "#10B981",
+const metricCaption = {
+  display: "block",
   marginTop: 10,
+  color: "#64748B",
+  fontSize: 13,
 };
 
-const chartCard = {
-  background: "#fff",
-  borderRadius: 20,
-  padding: 24,
-  border: "1px solid #E2E8F0",
-  marginBottom: 24,
+const skeletonLine = {
+  width: "85%",
+  height: 14,
+  borderRadius: 8,
+  background: "#E2E8F0",
+  marginBottom: 14,
 };
 
-const chartPlaceholder = {
-  height: 260,
-  borderRadius: 14,
-  background: "#F1F5F9",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-};
-
-const twoColumn = {
+const chartGrid = {
   display: "grid",
-  gridTemplateColumns:
-    "1fr 1fr",
-  gap: 24,
-  marginBottom: 24,
-};
-
-const panel = {
-  background: "#fff",
-  borderRadius: 20,
-  padding: 24,
-  border: "1px solid #E2E8F0",
-};
-
-const transactionsCard = {
-  background: "#fff",
-  borderRadius: 20,
-  padding: 24,
-  border: "1px solid #E2E8F0",
-};
-
-const sectionTitle = {
-  marginTop: 0,
+  gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+  gap: 16,
   marginBottom: 20,
 };
 
-const row = {
-  display: "flex",
-  justifyContent: "space-between",
-  padding: "16px 0",
-  borderBottom:
-    "1px solid #E2E8F0",
+const panel = {
+  background: "#FFFFFF",
+  border: "1px solid #E2E8F0",
+  borderRadius: 8,
+  padding: 20,
+  minWidth: 0,
+};
+
+const panelTitle = {
+  margin: "0 0 16px",
+  fontSize: 18,
+  color: "#0F172A",
+};
+
+const activityGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+  gap: 16,
+};
+
+const list = {
+  display: "grid",
+  gap: 10,
+};
+
+const listRow = {
+  display: "grid",
+  gridTemplateColumns: "minmax(0, 1fr) auto auto",
+  gap: 12,
+  alignItems: "center",
+  padding: "12px 0",
+  borderBottom: "1px solid #F1F5F9",
+  color: "#334155",
+};
+
+const emptyState = {
+  minHeight: 170,
+  display: "grid",
+  placeItems: "center",
+  color: "#64748B",
+  background: "#F8FAFC",
+  border: "1px dashed #CBD5E1",
+  borderRadius: 8,
+};
+
+const badge = {
+  borderRadius: 999,
+  padding: "5px 9px",
+  fontSize: 12,
+  fontWeight: 800,
+  textTransform: "capitalize",
+};
+
+const successBadge = {
+  background: "#DCFCE7",
+  color: "#166534",
+};
+
+const warningBadge = {
+  background: "#FEF3C7",
+  color: "#92400E",
+};
+
+const dangerBadge = {
+  background: "#FEE2E2",
+  color: "#991B1B",
 };

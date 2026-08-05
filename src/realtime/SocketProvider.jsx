@@ -13,6 +13,10 @@ export function SocketProvider({
   children,
 }) {
   useEffect(() => {
+    if (!socket) {
+      return undefined;
+    }
+
     socket.connect();
 
     return () => {

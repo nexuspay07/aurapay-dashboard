@@ -1,16 +1,18 @@
 import { io } from "socket.io-client";
 
 const SOCKET_URL =
-  "https://aurapay-backend-qfg0.onrender.com";
+  import.meta.env.VITE_SOCKET_URL || "";
 
-export const socket = io(
-  SOCKET_URL,
-  {
-    autoConnect: false,
+export const socket = SOCKET_URL
+  ? io(
+      SOCKET_URL,
+      {
+        autoConnect: false,
 
-    transports: [
-      "websocket",
-      "polling",
-    ],
-  }
-);
+        transports: [
+          "websocket",
+          "polling",
+        ],
+      }
+    )
+  : null;

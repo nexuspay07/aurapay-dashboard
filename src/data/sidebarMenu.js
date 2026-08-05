@@ -1,63 +1,83 @@
 export const merchantMenu = [
-
   {
     title: "Dashboard",
     path: "/merchant/dashboard",
-    icon: "🏠",
+    icon: "dashboard",
   },
 
   {
-    title: "Payments",
-    path: "/merchant/payments",
-    icon: "💳",
+    title: "Create Checkout",
+    path: "/merchant/create-checkout",
+    icon: "plus",
+  },
+
+  {
+    title: "Checkouts",
+    path: "/merchant/checkouts",
+    icon: "checkout",
   },
 
   {
     title: "Transactions",
     path: "/merchant/transactions",
-    icon: "📄",
-  },
-
-  {
-    title: "Checkout",
-    path: "/merchant/checkouts",
-    icon: "🛒",
-  },
-
-  {
-    title: "Customers",
-    path: "/merchant/customers",
-    icon: "👥",
-  },
-
-  {
-    title: "Wallet",
-    path: "/merchant/wallet",
-    icon: "💰",
-  },
-
-  {
-    title: "Analytics",
-    path: "/merchant/analytics",
-    icon: "📊",
+    icon: "transactions",
   },
 
   {
     title: "Settlements",
     path: "/merchant/settlements",
-    icon: "🏦",
+    icon: "settlements",
   },
 
   {
-    title: "Developers",
-    path: "/merchant/developers",
-    icon: "⚡",
+    title: "Analytics",
+    path: "/merchant/analytics",
+    icon: "analytics",
+  },
+
+  {
+    title: "Profile",
+    path: "/merchant/profile",
+    icon: "profile",
   },
 
   {
     title: "Settings",
     path: "/merchant/settings",
-    icon: "⚙",
+    icon: "settings",
   },
 
+  {
+    section: "Developer",
+  },
+
+  {
+    title: "API Keys",
+    path: "/merchant/developer/api-keys",
+    icon: "key",
+  },
+
+  {
+    title: "Applications",
+    path: "/merchant/developer/applications",
+    icon: "applications",
+  },
+
+  {
+    title: "Webhooks",
+    path: "/merchant/developer/webhooks",
+    icon: "webhooks",
+  },
+
+  {
+    title: "API Logs",
+    path: "/merchant/developer/api-logs",
+    icon: "logs",
+  },
+
+  {
+    title: "Documentation",
+    path: "/merchant/developer/documentation",
+    icon: "docs",
+  },
 ];

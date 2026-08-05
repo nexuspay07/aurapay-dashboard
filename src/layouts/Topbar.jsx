@@ -7,6 +7,7 @@ export default function Topbar({
 }) {
   return (
     <header
+      className="app-shell-topbar"
       style={{
         height: 80,
         background: "#FFFFFF",
@@ -20,8 +21,6 @@ export default function Topbar({
         zIndex: 100,
       }}
     >
-      {/* LEFT */}
-
       <div
         style={{
           display: "flex",
@@ -30,18 +29,14 @@ export default function Topbar({
         }}
       >
         <button
+          type="button"
+          aria-label="Toggle sidebar"
           onClick={onToggleSidebar}
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: 12,
-            border: `1px solid ${theme.colors.border}`,
-            background: "#fff",
-            cursor: "pointer",
-            fontSize: 20,
-          }}
+          style={iconButton}
         >
-          ☰
+          <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
         </button>
 
         <div>
@@ -60,12 +55,10 @@ export default function Topbar({
               marginTop: 4,
             }}
           >
-            Welcome back 👋
+            Welcome back
           </div>
         </div>
       </div>
-
-      {/* RIGHT */}
 
       <div
         style={{
@@ -75,7 +68,11 @@ export default function Topbar({
         }}
       >
         <input
+          className="app-shell-search"
+          name="globalSearch"
+          autoComplete="off"
           placeholder="Search..."
+          aria-label="Search dashboard"
           style={{
             width: 280,
             height: 46,
@@ -88,16 +85,13 @@ export default function Topbar({
         />
 
         <button
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: 12,
-            border: `1px solid ${theme.colors.border}`,
-            background: "#fff",
-            cursor: "pointer",
-          }}
+          type="button"
+          aria-label="View notifications"
+          style={iconButton}
         >
-          🔔
+          <svg aria-hidden="true" width="19" height="19" viewBox="0 0 24 24" fill="none">
+            <path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </button>
 
         <div
@@ -126,7 +120,7 @@ export default function Topbar({
             {user.charAt(0)}
           </div>
 
-          <div>
+          <div className="app-shell-user-meta">
             <div
               style={{
                 fontWeight: 600,
@@ -149,3 +143,15 @@ export default function Topbar({
     </header>
   );
 }
+
+const iconButton = {
+  width: 44,
+  height: 44,
+  borderRadius: 12,
+  border: `1px solid ${theme.colors.border}`,
+  background: "#fff",
+  color: theme.colors.text,
+  cursor: "pointer",
+  display: "inline-grid",
+  placeItems: "center",
+};

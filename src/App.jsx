@@ -6,7 +6,24 @@ import {
 } from "react-router-dom";
 
 import { useAuth } from "./context/AuthContext";
+import MerchantDashboard
+from "./merchant/pages/MerchantDashboard";
+import MerchantSettings
+from "./merchant/pages/MerchantSettings";
+import MerchantAnalytics
+from "./merchant/pages/MerchantAnalytics";
+import DeveloperApiKeys from "./merchant/pages/DeveloperApiKeys";
+import DeveloperApplications from "./merchant/pages/DeveloperApplications";
+import DeveloperApplicationDetail from "./merchant/pages/DeveloperApplicationDetail";
+import DeveloperWebhooks from "./merchant/pages/DeveloperWebhooks";
+import DeveloperApiLogs from "./merchant/pages/DeveloperApiLogs";
+import DeveloperDocumentation from "./merchant/pages/DeveloperDocumentation";
 
+import MerchantProfile
+from "./merchant/pages/MerchantProfile";
+
+import MerchantTransactions
+from "./merchant/pages/MerchantTransactions";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -16,7 +33,6 @@ import StripePayment from "./pages/StripePayment";
 import StripeCheckout from "./pages/StripeCheckout";
 import MerchantLogin from "./merchant/pages/MerchantLogin";
 import MerchantRegister from "./merchant/pages/MerchantRegister";
-import MerchantDashboard from "./merchant/pages/MerchantDashboard";
 import MerchantProtectedRoute
 from "./components/MerchantProtectedRoute";
 import CreateCheckoutPage
@@ -41,8 +57,6 @@ import AppShellTest from "./pages/AppShellTest";
 
 import MerchantSettlements
 from "./pages/MerchantSettlements";
-import MerchantTransactions
-from "./merchant/pages/MerchantTransactions";
 
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
 
@@ -79,7 +93,12 @@ function ProtectedRoute({ children }) {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter
+      future={{
+        v7_relativeSplatPath: true,
+        v7_startTransition: true,
+      }}
+    >
       <Routes>
         {/* ====================================== */}
         {/* PUBLIC ROUTES */}
@@ -95,6 +114,24 @@ export default function App() {
   element={
     <MerchantProtectedRoute>
       <MerchantTransactions />
+    </MerchantProtectedRoute>
+  }
+/>
+
+<Route
+  path="/merchant/settings"
+  element={
+    <MerchantProtectedRoute>
+      <MerchantSettings />
+    </MerchantProtectedRoute>
+  }
+/>
+
+<Route
+  path="/merchant/analytics"
+  element={
+    <MerchantProtectedRoute>
+      <MerchantAnalytics />
     </MerchantProtectedRoute>
   }
 />
@@ -252,6 +289,78 @@ export default function App() {
   element={
     <MerchantProtectedRoute>
       <MerchantDashboard />
+    </MerchantProtectedRoute>
+  }
+/>
+
+<Route
+  path="/merchant/analytics"
+  element={
+    <MerchantProtectedRoute>
+      <MerchantAnalytics />
+    </MerchantProtectedRoute>
+  }
+/>
+
+<Route
+  path="/merchant/profile"
+  element={
+    <MerchantProtectedRoute>
+      <MerchantProfile />
+    </MerchantProtectedRoute>
+  }
+/>
+
+<Route
+  path="/merchant/developer/api-keys"
+  element={
+    <MerchantProtectedRoute>
+      <DeveloperApiKeys />
+    </MerchantProtectedRoute>
+  }
+/>
+
+<Route
+  path="/merchant/developer/applications"
+  element={
+    <MerchantProtectedRoute>
+      <DeveloperApplications />
+    </MerchantProtectedRoute>
+  }
+/>
+
+<Route
+  path="/merchant/developer/applications/:id"
+  element={
+    <MerchantProtectedRoute>
+      <DeveloperApplicationDetail />
+    </MerchantProtectedRoute>
+  }
+/>
+
+<Route
+  path="/merchant/developer/webhooks"
+  element={
+    <MerchantProtectedRoute>
+      <DeveloperWebhooks />
+    </MerchantProtectedRoute>
+  }
+/>
+
+<Route
+  path="/merchant/developer/api-logs"
+  element={
+    <MerchantProtectedRoute>
+      <DeveloperApiLogs />
+    </MerchantProtectedRoute>
+  }
+/>
+
+<Route
+  path="/merchant/developer/documentation"
+  element={
+    <MerchantProtectedRoute>
+      <DeveloperDocumentation />
     </MerchantProtectedRoute>
   }
 />

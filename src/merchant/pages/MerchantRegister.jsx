@@ -142,13 +142,17 @@ const container = {
   display: "grid",
   placeItems: "center",
   background: "#f3f4f6",
+  padding: 16,
+  boxSizing: "border-box",
+  overflowX: "hidden",
 };
 
 const card = {
-  width: 500,
+  width: "min(500px, 100%)",
   background: "#fff",
   padding: 30,
   borderRadius: 20,
+  boxSizing: "border-box",
 };
 
 const input = {
