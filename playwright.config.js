@@ -2,6 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 const frontendURL = process.env.AURAPAY_FRONTEND_URL || "http://localhost:5173";
 const backendURL = process.env.AURAPAY_BACKEND_URL || "http://localhost:3000";
+const frontendPort = new URL(frontendURL).port || "5173";
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -39,7 +40,7 @@ export default defineConfig({
       stderr: "pipe",
     },
     {
-      command: "npm.cmd run dev -- --host localhost",
+      command: `npm.cmd run dev -- --host localhost --port ${frontendPort}`,
       cwd: ".",
       url: frontendURL,
       reuseExistingServer: true,

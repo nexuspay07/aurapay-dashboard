@@ -421,7 +421,7 @@ export default function Landing() {
         </div>
         <FooterGroup title="Product" links={[["Dashboard", "/merchant/dashboard"], ["Hosted Checkout", "#products"], ["Transactions", "/merchant/transactions"], ["Settlements", "/merchant/settlements"]]} />
         <FooterGroup title="Developers" links={[["Documentation", "/merchant/developer/documentation"], ["API Keys", "/merchant/developer/api-keys"], ["Webhooks", "/merchant/developer/webhooks"], ["API Logs", "/merchant/developer/api-logs"]]} />
-        <FooterGroup title="Company" links={[["About", "#top"], ["Contact", "#top"], ["Sandbox Beta", "#sandbox"]]} />
+        <FooterGroup title="Company" links={[["About", "#top"], ["Contact", "#top"], ["Sandbox Beta", "#sandbox"], ["Staff Access", "/admin-login"]]} />
         <FooterGroup title="Legal" links={[["Privacy", "#faq"], ["Terms", "#faq"], ["Acceptable Use", "#faq"]]} />
       </footer>
     </div>

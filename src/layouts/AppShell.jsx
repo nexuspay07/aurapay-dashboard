@@ -129,6 +129,10 @@ const responsiveShellStyles = `
       display: none !important;
     }
 
+    .app-shell-sandbox-badge span {
+      display: none !important;
+    }
+
     .app-shell-main section,
     .app-shell-main form,
     .app-shell-main article {
@@ -145,6 +149,10 @@ const responsiveShellStyles = `
     .app-shell-content {
       margin-left: 68px !important;
       max-width: calc(100vw - 68px) !important;
+    }
+
+    .app-shell-sandbox-badge {
+      display: none !important;
     }
   }
 `;

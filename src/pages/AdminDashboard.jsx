@@ -1,304 +1,34 @@
-import {
-  useEffect,
-  useState,
-} from "react";
-
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import API from "../services/api";
+import { AdminPageHeader, AdminPanel, AdminStatCard, AdminTable, EmptyState, EnvironmentBadge, ErrorState, LoadingState, PanelLink, StatusBadge } from "../admin/components/AdminUI";
 
-import usePermission from "../hooks/usePermission";
-
-import AdminSection from "../components/admin/AdminSection";
-import StatCard from "../components/admin/StatCard";
-
-import Transactions from "./Transactions";
+const initial = { loading: true, error: null, data: null };
+function money(value, currency) { if (value == null) return "Multiple currencies"; try { return new Intl.NumberFormat("en-CA", { style: "currency", currency: String(currency || "USD").toUpperCase() }).format(value); } catch { return `${currency || ""} ${Number(value).toFixed(2)}`.trim(); } }
+function date(value) { return value ? new Intl.DateTimeFormat("en-CA", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value)) : "—"; }
+function Section({ state, retry, empty, children }) { if (state.loading) return <LoadingState />; if (state.error) return <ErrorState onRetry={retry} />; if (!state.data || (Array.isArray(state.data) && !state.data.length)) return <EmptyState title={empty} />; return children(state.data); }
 
 export default function AdminDashboard() {
-  const {
-    role,
-    hasPermission,
-    adminUser,
-  } = usePermission();
-
-  const [metrics, setMetrics] =
-    useState(null);
-
-  const [loading, setLoading] =
-    useState(true);
-
-    const [stats, setStats] =
-  useState(null);
-
-useEffect(() => {
-  loadStats();
-}, []);
-
-async function loadStats() {
-  try {
-    const res =
-      await API.get(
-        "/admin-analytics/dashboard"
-      );
-
-    setStats(res.data);
-  } catch (err) {
-    console.log(err);
-  }
-}
-
-  // ======================================
-  // LOAD LIVE METRICS
-  // ======================================
-
-  async function loadMetrics() {
-    try {
-      const res = await API.get(
-        "/admin/metrics"
-      );
-
-      setMetrics(res.data);
-    } catch (err) {
-      console.log(err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    loadMetrics();
-
-    // AUTO REFRESH EVERY 15s
-
-    const interval =
-      setInterval(() => {
-        loadMetrics();
-      }, 15000);
-
-    return () =>
-      clearInterval(interval);
+  const [metrics, setMetrics] = useState(initial); const [transactions, setTransactions] = useState(initial); const [settlements, setSettlements] = useState(initial); const [fraud, setFraud] = useState(initial); const [merchants, setMerchants] = useState(initial); const [users, setUsers] = useState(initial);
+  const load = useCallback(async (key) => {
+    const map = { metrics: [setMetrics, "/admin/metrics?environment=sandbox"], transactions: [setTransactions, "/admin/transactions?environment=sandbox&livemode=false&limit=8&sortBy=createdAt&sortOrder=desc"], settlements: [setSettlements, "/admin/settlements?environment=sandbox&limit=100"], fraud: [setFraud, "/admin/fraud-logs"], merchants: [setMerchants, "/merchants"], users: [setUsers, "/admin/users"] };
+    const [setter, url] = map[key]; setter(initial); try { const response = await API.get(url); setter({ loading: false, error: null, data: response.data?.data ?? response.data }); } catch { setter({ loading: false, error: true, data: null }); }
   }, []);
-
-  if (loading || !metrics) {
-    return (
-      <div
-        style={{
-          padding: 40,
-        }}
-      >
-        Loading operations...
-      </div>
-    );
-  }
-
-  return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#f3f4f6",
-        padding: 32,
-      }}
-    >
-      {/* ====================================== */}
-      {/* HEADER */}
-      {/* ====================================== */}
-
-      <div
-        style={{
-          marginBottom: 32,
-        }}
-      >
-        <h1
-          style={{
-            fontSize: 42,
-            fontWeight: 800,
-            marginBottom: 10,
-            color: "#111827",
-          }}
-        >
-          Operations Command Center
-        </h1>
-
-        <p
-          style={{
-            color: "#6b7280",
-            fontSize: 18,
-          }}
-        >
-          Welcome back{" "}
-          <strong>
-            {adminUser?.email}
-          </strong>
-        </p>
-
-        <div
-          style={{
-            marginTop: 12,
-            display: "inline-block",
-            padding: "8px 14px",
-            borderRadius: 999,
-            background: "#111827",
-            color: "#fff",
-            fontSize: 14,
-            fontWeight: 700,
-          }}
-        >
-          {role}
-        </div>
-      </div>
-
-      {/* ====================================== */}
-      {/* LIVE METRICS */}
-      {/* ====================================== */}
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns:
-            "repeat(auto-fit, minmax(220px, 1fr))",
-          gap: 20,
-          marginBottom: 30,
-        }}
-      >
-        <StatCard
-          title="Total Users"
-          value={
-            metrics.totalUsers
-          }
-          subtitle="Platform accounts"
-        />
-
-        <StatCard
-          title="Frozen Users"
-          value={
-            metrics.frozenUsers
-          }
-          subtitle="Restricted accounts"
-        />
-
-        <StatCard
-          title="Transactions"
-          value={
-            metrics.totalTransactions
-          }
-          subtitle="Processed payments"
-        />
-
-        <StatCard
-          title="Fraud Alerts"
-          value={
-            metrics.fraudAlerts
-          }
-          subtitle="Suspicious events"
-        />
-
-        <StatCard
-          title="Success Rate"
-          value={`${metrics.successRate}%`}
-          subtitle="Routing performance"
-        />
-
-        <StatCard
-          title="Volume"
-          value={`$${metrics.totalVolume}`}
-          subtitle="Total payment volume"
-        />
-
-        <StatCard
-          title="Refunds"
-          value={
-            metrics.refundedTransactions
-          }
-          subtitle="Charge reversals"
-        />
-
-        <StatCard
-          title="Completed"
-          value={
-            metrics.completedTransactions
-          }
-          subtitle="Successful payments"
-        />
-      </div>
-
-      {/* ====================================== */}
-      {/* USER MANAGEMENT */}
-      {/* ====================================== */}
-
-      {hasPermission("user:view") && (
-        <AdminSection title="User Management">
-          <p>
-            View platform users,
-            freeze accounts,
-            manage onboarding,
-            and monitor customer
-            activity.
-          </p>
-        </AdminSection>
-      )}
-
-      {/* ====================================== */}
-      {/* LIVE TRANSACTIONS */}
-      {/* ====================================== */}
-
-      {hasPermission(
-        "transaction:view"
-      ) && (
-        <div
-          style={{
-            marginBottom: 24,
-          }}
-        >
-          <Transactions />
-        </div>
-      )}
-
-      {/* ====================================== */}
-      {/* FRAUD */}
-      {/* ====================================== */}
-
-      {hasPermission("fraud:view") && (
-        <AdminSection title="Fraud Command Center">
-          <p>
-            Review suspicious
-            activity, risk alerts,
-            account abuse, and
-            system anomalies.
-          </p>
-        </AdminSection>
-      )}
-
-      {/* ====================================== */}
-      {/* AUDIT */}
-      {/* ====================================== */}
-
-      {hasPermission("audit:view") && (
-        <AdminSection title="Audit & Compliance">
-          <p>
-            Access immutable admin
-            logs, compliance
-            history, operational
-            records, and
-            system-level actions.
-          </p>
-        </AdminSection>
-      )}
-
-      {/* ====================================== */}
-      {/* ANALYTICS */}
-      {/* ====================================== */}
-
-      {hasPermission(
-        "analytics:view"
-      ) && (
-        <AdminSection title="Enterprise Analytics">
-          <p>
-            View operational
-            metrics, provider
-            uptime, transaction
-            intelligence, and
-            ecosystem performance.
-          </p>
-        </AdminSection>
-      )}
+  useEffect(() => { ["metrics", "transactions", "settlements", "fraud", "merchants", "users"].forEach(load); }, [load]);
+  const primaryCurrency = metrics.data?.monetaryByCurrency?.length === 1 ? metrics.data.monetaryByCurrency[0].currency : null;
+  const settlementSummary = useMemo(() => { const rows = settlements.data || []; return rows.reduce((out, row) => { const currency = row.currency || "unknown"; out[currency] ||= { gross: 0, fees: 0, net: 0 }; out[currency].gross += row.grossAmount || 0; out[currency].fees += row.fees || 0; out[currency].net += row.netAmount || 0; return out; }, {}); }, [settlements.data]);
+  const riskCounts = useMemo(() => (fraud.data || []).reduce((out, item) => ({ ...out, [item.severity]: (out[item.severity] || 0) + 1 }), {}), [fraud.data]);
+  const merchantCounts = useMemo(() => (merchants.data || []).reduce((out, item) => ({ ...out, [item.verificationStatus]: (out[item.verificationStatus] || 0) + 1, highRisk: out.highRisk + (item.riskLevel === "high" ? 1 : 0) }), { highRisk: 0 }), [merchants.data]);
+  return <>
+    <AdminPageHeader title="Operations Command Center" subtitle="Real-time visibility across AuraPay Sandbox operations." actions={<><EnvironmentBadge /></>} />
+    <Section state={metrics} retry={() => load("metrics")} empty="No sandbox metrics yet">{(m) => <><div className="admin-stat-grid"><AdminStatCard tone="primary" label="Gross Volume" value={money(m.grossVolume, primaryCurrency)} hint={primaryCurrency ? primaryCurrency.toUpperCase() : "Shown separately by currency"} /><AdminStatCard tone="primary" label="Successful Payments" value={m.successfulPayments.toLocaleString()} /><AdminStatCard tone="primary" label="Success Rate" value={`${m.successRate}%`} /><AdminStatCard tone="primary" label="Net Merchant Value" value={money(m.netMerchantValue, primaryCurrency)} /></div><div className="admin-stat-grid admin-stat-grid--secondary"><AdminStatCard label="Transactions" value={m.totalTransactions.toLocaleString()} /><AdminStatCard label="Failed Payments" value={m.failedPayments.toLocaleString()} /><AdminStatCard label="Fees" value={money(m.fees, primaryCurrency)} /><AdminStatCard label="Refunds" value={money(m.refunds, primaryCurrency)} /><AdminStatCard label="Pending Settlements" value={m.pendingSettlements.toLocaleString()} /><AdminStatCard label="Active Merchants" value={m.activeMerchants.toLocaleString()} /></div>{m.monetaryByCurrency?.length > 1 && <AdminPanel title="Volume by currency" description="Currencies are never combined using fabricated exchange rates."><ul className="admin-list">{m.monetaryByCurrency.map((row) => <li key={row.currency}><strong>{row.currency.toUpperCase()}</strong><span>{money(row.grossVolume, row.currency)} gross · {money(row.netMerchantValue, row.currency)} net</span></li>)}</ul></AdminPanel>}</> }</Section>
+    <div className="admin-grid">
+      <AdminPanel className="admin-span-4" title="Operational Attention" description="Live items requiring review"><ul className="admin-list"><Attention to="/admin/merchants" label="Pending merchant verification" count={merchantCounts.pending || 0} level="pending" /><Attention to="/admin/transactions" label="Failed sandbox payments" count={metrics.data?.failedPayments || 0} level="failed" /><Attention to="/admin/settlements" label="Pending settlements" count={metrics.data?.pendingSettlements || 0} level="pending" /><Attention to="/admin/fraud" label="High-risk fraud events" count={(riskCounts.high || 0) + (riskCounts.critical || 0)} level="high" /><Attention to="/admin/users" label="Frozen users" count={(users.data || []).filter((u) => u.frozen).length} level="medium" /></ul></AdminPanel>
+      <AdminPanel className="admin-span-8" title="Recent Transactions" description="Newest canonical sandbox payments" action={<PanelLink to="/admin/transactions">View all transactions</PanelLink>}><Section state={transactions} retry={() => load("transactions")} empty="No sandbox transactions">{(rows) => <AdminTable label="Recent sandbox transactions"><thead><tr><th>Transaction</th><th>Merchant</th><th>Amount</th><th>Provider</th><th>Status</th><th>Created</th></tr></thead><tbody>{rows.map((tx) => <tr key={tx.id}><td>{tx.paymentId}</td><td>{tx.merchant?.businessName || "—"}</td><td>{money(tx.amount, tx.currency)}</td><td>{tx.provider}</td><td><StatusBadge value={tx.status} /></td><td>{date(tx.createdAt)}</td></tr>)}</tbody></AdminTable>}</Section></AdminPanel>
+      <AdminPanel className="admin-span-4" title="Settlement Snapshot" description="Sandbox settlement position" action={<PanelLink to="/admin/settlements">View settlements</PanelLink>}><Section state={settlements} retry={() => load("settlements")} empty="No sandbox settlements">{(rows) => <><ul className="admin-list"><li><span>Pending</span><strong>{rows.filter((x) => x.status === "pending").length}</strong></li><li><span>Completed</span><strong>{rows.filter((x) => x.status === "completed").length}</strong></li>{Object.entries(settlementSummary).map(([currency, item]) => <li key={currency}><strong>{currency.toUpperCase()}</strong><span>{money(item.gross, currency)} gross<br />{money(item.fees, currency)} fees · {money(item.net, currency)} net</span></li>)}</ul></>}</Section></AdminPanel>
+      <AdminPanel className="admin-span-4" title="Risk & Fraud" description="Observed fraud log severity" action={<PanelLink to="/admin/fraud">Open Fraud Center</PanelLink>}><Section state={fraud} retry={() => load("fraud")} empty="No recent fraud alerts">{(rows) => <ul className="admin-list"><li><span>Total recent alerts</span><strong>{rows.length}</strong></li>{["critical", "high", "medium", "low"].map((level) => <li key={level}><StatusBadge value={level} /><strong>{riskCounts[level] || 0}</strong></li>)}</ul>}</Section></AdminPanel>
+      <AdminPanel className="admin-span-4" title="Merchant Snapshot" description="Current merchant verification state" action={<PanelLink to="/admin/merchants">Manage merchants</PanelLink>}><Section state={merchants} retry={() => load("merchants")} empty="No merchants">{(rows) => <ul className="admin-list"><li><span>Total merchants</span><strong>{rows.length}</strong></li><li><span>Pending verification</span><strong>{merchantCounts.pending || 0}</strong></li><li><span>Verified</span><strong>{merchantCounts.verified || 0}</strong></li><li><span>Rejected</span><strong>{merchantCounts.rejected || 0}</strong></li><li><span>High risk</span><strong>{merchantCounts.highRisk || 0}</strong></li></ul>}</Section></AdminPanel>
     </div>
-  );
+  </>;
 }
+function Attention({ to, label, count, level }) { return <li><Link to={to}>{label}</Link><span><span className="admin-attention-count">{count}</span> <StatusBadge value={count ? level : "healthy"} /></span></li>; }

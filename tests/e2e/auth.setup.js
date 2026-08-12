@@ -2,7 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import { createRequire } from "module";
 import { test as setup, expect } from "@playwright/test";
-import { authStatePath, seedStatePath } from "./fixtures/auth.js";
+import { authStatePath, seedStatePath, runId } from "./fixtures/auth.js";
 
 const require = createRequire(import.meta.url);
 const mongoose = require("../../../node_modules/mongoose");
@@ -10,14 +10,14 @@ const bcrypt = require("../../../node_modules/bcrypt");
 const Merchant = require("../../../models/Merchant");
 const User = require("../../../models/User");
 const Application = require("../../../models/Application");
+const sandboxPaymentSimulationService = require("../../../services/sandboxPaymentSimulationService");
 require("../../../node_modules/dotenv").config({ path: path.resolve("..", ".env") });
 
-const defaultEmail = `visual-review-${Date.now()}@aurapay.test`;
 const defaultPassword = "VisualReviewPassword123!";
 
 setup("seed sandbox merchant and authenticate through Merchant Login UI", async ({ page }) => {
   const mongoUri = process.env.MONGO_URI_TEST || process.env.MONGO_URI;
-  const email = process.env.AURAPAY_TEST_MERCHANT_EMAIL || defaultEmail;
+  const email = `visual-review-${runId}@aurapay.test`;
   const password = process.env.AURAPAY_TEST_MERCHANT_PASSWORD || defaultPassword;
 
   if (!mongoUri) {
@@ -26,8 +26,6 @@ setup("seed sandbox merchant and authenticate through Merchant Login UI", async 
 
   await fs.mkdir(path.dirname(authStatePath), { recursive: true });
   await mongoose.connect(mongoUri);
-
-  await User.deleteOne({ email });
 
   const merchant = await Merchant.create({
     businessName: "AuraPay Visual Review Merchant",
@@ -60,6 +58,44 @@ setup("seed sandbox merchant and authenticate through Merchant Login UI", async 
     active: true,
   });
 
+  const hostedSuccessCheckout =
+    await sandboxPaymentSimulationService.createCheckout(
+      merchant._id,
+      {
+        amount: 49,
+        currency: "USD",
+        customerEmail: "hosted-success@example.com",
+        description: "Hosted checkout visual review success scenario.",
+      }
+    );
+
+  const hostedFailedCheckout =
+    await sandboxPaymentSimulationService.createCheckout(
+      merchant._id,
+      {
+        amount: 51,
+        currency: "USD",
+        customerEmail: "hosted-failed@example.com",
+        description: "Hosted checkout visual review failed scenario.",
+      }
+    );
+
+  await sandboxPaymentSimulationService.simulatePayment({
+    merchant: merchant._id,
+    amount: 125,
+    currency: "USD",
+    customerEmail: "dashboard-success@example.com",
+    scenario: "success",
+  });
+
+  await sandboxPaymentSimulationService.simulatePayment({
+    merchant: merchant._id,
+    amount: 75,
+    currency: "USD",
+    customerEmail: "dashboard-declined@example.com",
+    scenario: "declined",
+  });
+
   await fs.writeFile(
     seedStatePath,
     `${JSON.stringify(
@@ -69,6 +105,8 @@ setup("seed sandbox merchant and authenticate through Merchant Login UI", async 
         merchantId: merchant._id.toString(),
         userId: user._id.toString(),
         applicationId: application._id.toString(),
+        hostedSuccessSessionId: hostedSuccessCheckout.sessionId,
+        hostedFailedSessionId: hostedFailedCheckout.sessionId,
       },
       null,
       2

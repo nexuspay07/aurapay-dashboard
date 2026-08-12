@@ -66,8 +66,8 @@ const endpoints = [
     section: "Payments",
     method: "POST",
     path: "/api/v1/payments",
-    description: "Create a sandbox test payment.",
-    parameters: ["amount", "currency", "customerEmail", "Idempotency-Key"],
+    description: "Create a sandbox test payment. AuraPay simulates the result and never moves real money.",
+    parameters: ["amount", "currency", "customerEmail", "scenario", "Idempotency-Key"],
     requiredPermission: "payments:create",
   },
   {
@@ -176,11 +176,27 @@ const endpoints = [
   },
   {
     section: "Sandbox Guide",
-    method: "GET",
-    path: "/api/v1",
-    description: "Use sk_test keys only during Sandbox Beta. Live keys are rejected.",
-    parameters: ["sk_test_...", "sandbox environment"],
+    method: "POST",
+    path: "/api/v1/payments",
+    description: "Use scenario=success, declined, insufficient_funds, pending, or failed to trigger deterministic sandbox payment outcomes.",
+    parameters: ["sk_test_...", "sandbox environment", "livemode=false", "No card data required"],
     requiredPermission: "Valid sandbox API key",
+  },
+  {
+    section: "Sandbox Guide",
+    method: "POST",
+    path: "/api/v1/refunds",
+    description: "Refund completed sandbox payments. Partial refunds are allowed until the remaining refundable amount reaches zero.",
+    parameters: ["transactionId", "amount", "reason", "Idempotency-Key"],
+    requiredPermission: "refunds:create",
+  },
+  {
+    section: "Sandbox Guide",
+    method: "ANY",
+    path: "Webhook events",
+    description: "Sandbox payment, checkout, refund, and settlement events include environment=sandbox and livemode=false.",
+    parameters: ["payment.created", "payment.completed", "payment.failed", "payment.refunded", "checkout.created", "checkout.paid", "settlement.created"],
+    requiredPermission: "Configured merchant webhook",
   },
 ];
 
@@ -188,6 +204,7 @@ const sampleBody = {
   amount: 25,
   currency: "usd",
   customerEmail: "customer@example.com",
+  scenario: "success",
 };
 
 export default function DeveloperDocumentation() {
@@ -304,8 +321,11 @@ function buildSamples(endpoint) {
     {
       success: true,
       data: {
-        id: "aurapay_sandbox_resource_id",
-        status: "created",
+        id: "txn_test_resource_id",
+        status: "completed",
+        environment: "sandbox",
+        livemode: false,
+        sandboxScenario: "success",
       },
     },
     null,

@@ -16,9 +16,16 @@ const mongoose = require("../../../node_modules/mongoose");
 const ApiKey = require("../../../models/ApiKey");
 const ApiLog = require("../../../models/ApiLog");
 const Application = require("../../../models/Application");
+const CheckoutSession = require("../../../models/CheckoutSession");
+const Event = require("../../../models/Event");
+const FraudLog = require("../../../models/FraudLog");
+const AuditLog = require("../../../models/AuditLog");
 const Merchant = require("../../../models/Merchant");
 const MerchantWebhook = require("../../../models/MerchantWebhook");
+const Settlement = require("../../../models/Settlement");
+const Transaction = require("../../../models/Transaction");
 const User = require("../../../models/User");
+const WebhookDelivery = require("../../../models/WebhookDelivery");
 require("../../../node_modules/dotenv").config({ path: path.resolve("..", ".env") });
 
 async function readJson(filePath) {
@@ -67,7 +74,14 @@ async function cleanupSeededData() {
     await Promise.all([
       ApiLog.deleteMany({ merchant: seed.merchantId }),
       ApiKey.deleteMany({ merchant: seed.merchantId }),
+      WebhookDelivery.deleteMany({ merchant: seed.merchantId }),
       MerchantWebhook.deleteMany({ merchant: seed.merchantId }),
+      Event.deleteMany({ merchant: seed.merchantId }),
+      FraudLog.deleteMany({ $or: [{ merchant: seed.merchantId }, { user: seed.userId }] }),
+      AuditLog.deleteMany({ $or: [{ targetId: seed.merchantId }, { targetId: seed.userId }, { admin: seed.userId }] }),
+      Settlement.deleteMany({ merchant: seed.merchantId }),
+      Transaction.deleteMany({ merchant: seed.merchantId }),
+      CheckoutSession.deleteMany({ merchant: seed.merchantId }),
       Application.deleteMany({ merchant: seed.merchantId }),
       User.deleteMany({ merchantId: seed.merchantId }),
       Merchant.findByIdAndDelete(seed.merchantId),
@@ -118,6 +132,9 @@ export default class AuraPayReviewReporter {
       "- Landing page",
       "- Merchant login",
       "- Merchant registration",
+      "- Hosted Sandbox Checkout",
+      "- Successful Payment Result",
+      "- Failed Payment Result",
       "- Merchant Dashboard",
       "- Create Checkout",
       "- Checkouts",

@@ -67,6 +67,11 @@ export default function Topbar({
           gap: 18,
         }}
       >
+        <div className="app-shell-sandbox-badge" style={sandboxBadge}>
+          <strong>SANDBOX MODE</strong>
+          <span>Test data only. No real funds are processed.</span>
+        </div>
+
         <input
           className="app-shell-search"
           name="globalSearch"
@@ -154,4 +159,16 @@ const iconButton = {
   cursor: "pointer",
   display: "inline-grid",
   placeItems: "center",
+};
+
+const sandboxBadge = {
+  display: "grid",
+  gap: 2,
+  border: "1px solid #BFDBFE",
+  background: "#EFF6FF",
+  color: "#1D4ED8",
+  borderRadius: 8,
+  padding: "7px 10px",
+  fontSize: 11,
+  lineHeight: 1.25,
 };

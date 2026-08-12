@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:3000",
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000",
 });
 
 API.interceptors.request.use((config) => {
@@ -17,6 +17,11 @@ API.interceptors.request.use((config) => {
   }
 
   return config;
+});
+
+API.interceptors.response.use((response) => response, (error) => {
+  if (error.response?.status === 401 && localStorage.getItem("adminToken")) window.dispatchEvent(new Event("admin-session-invalidated"));
+  return Promise.reject(error);
 });
 
 export default API;

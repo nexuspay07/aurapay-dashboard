@@ -1,98 +1,12 @@
-import usePermission from "../../hooks/usePermission";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useAdminAuth } from "../../context/AdminAuthContext";
+import { EnvironmentBadge } from "../components/AdminUI";
 
+const titles = { merchants: "Merchant Operations", "merchant-kyb": "Merchant KYB", settlements: "Settlement Operations", users: "User Operations", transactions: "Transaction Operations", fraud: "Fraud Center", audit: "Audit Logs", analytics: "Analytics", providers: "Providers", admins: "Admin Management", settings: "Settings" };
 export default function Topbar() {
-  const { adminUser, role } =
-    usePermission();
-
-  return (
-    <header style={topbar}>
-      <div>
-        <h2 style={title}>
-          Enterprise Operations
-        </h2>
-
-        <p style={subtitle}>
-          Real-time fintech control
-          center
-        </p>
-      </div>
-
-      <div style={right}>
-        <div style={userBox}>
-          <div style={avatar}>
-            {adminUser?.email?.[0]?.toUpperCase()}
-          </div>
-
-          <div>
-            <div style={email}>
-              {adminUser?.email}
-            </div>
-
-            <div style={roleBadge}>
-              {role}
-            </div>
-          </div>
-        </div>
-      </div>
-    </header>
-  );
+  const location = useLocation(); const navigate = useNavigate(); const { adminUser, logoutAdmin } = useAdminAuth();
+  const segment = location.pathname.split("/")[2]; const context = titles[segment] || "Operations Overview";
+  function logout() { logoutAdmin(); navigate("/admin-login", { replace: true }); }
+  const identity = adminUser?.displayName || adminUser?.email || "Administrator";
+  return <header className="admin-topbar"><div className="admin-topbar__context"><strong>{context}</strong><span>AuraPay Sandbox operations</span></div><div className="admin-topbar__right"><EnvironmentBadge /><div className="admin-identity" title={identity}><span className="admin-avatar" aria-hidden="true">{identity[0]?.toUpperCase() || "A"}</span><div className="admin-identity__text"><strong>{identity}</strong><span>{adminUser?.role?.replaceAll("_", " ")}</span></div></div><button type="button" className="admin-logout" onClick={logout}>Logout</button></div></header>;
 }
-
-const topbar = {
-  height: 80,
-  background: "#fff",
-  borderBottom: "1px solid #e5e7eb",
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  padding: "0 24px",
-};
-
-const title = {
-  margin: 0,
-  fontSize: 24,
-  fontWeight: 800,
-};
-
-const subtitle = {
-  margin: "4px 0 0",
-  color: "#6b7280",
-};
-
-const right = {
-  display: "flex",
-  alignItems: "center",
-};
-
-const userBox = {
-  display: "flex",
-  alignItems: "center",
-  gap: 12,
-};
-
-const avatar = {
-  width: 44,
-  height: 44,
-  borderRadius: "50%",
-  background: "#111827",
-  color: "#fff",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  fontWeight: 700,
-};
-
-const email = {
-  fontWeight: 700,
-};
-
-const roleBadge = {
-  marginTop: 4,
-  display: "inline-block",
-  padding: "4px 10px",
-  borderRadius: 999,
-  background: "#111827",
-  color: "#fff",
-  fontSize: 12,
-  fontWeight: 700,
-};

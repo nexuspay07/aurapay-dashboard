@@ -99,17 +99,17 @@ export default function MerchantDashboard() {
     {
       label: "Today's Revenue",
       value: money(analytics?.revenueToday),
-      caption: "Settled and successful activity",
+      caption: "Sandbox gross volume",
     },
     {
       label: "Monthly Revenue",
       value: money(analytics?.monthlyRevenue),
-      caption: "Current month gross volume",
+      caption: "Current month sandbox volume",
     },
     {
       label: "Total Revenue",
       value: money(analytics?.totalRevenue),
-      caption: "All-time successful volume",
+      caption: "All-time sandbox successful volume",
     },
     {
       label: "Transactions",
@@ -129,7 +129,7 @@ export default function MerchantDashboard() {
     {
       label: "Pending Settlements",
       value: numberFormatter.format(analytics?.pendingSettlements || 0),
-      caption: "Awaiting payout",
+      caption: "Simulated settlement queue",
     },
     {
       label: "Completed Settlements",
@@ -160,8 +160,8 @@ export default function MerchantDashboard() {
           <p style={eyebrow}>Sandbox Beta</p>
           <h1 style={title}>Merchant Dashboard</h1>
           <p style={subtitle}>
-            Monitor revenue, payments, checkouts, and settlements from live
-            AuraPay backend data.
+            Monitor sandbox revenue, payments, checkouts, and settlements from
+            AuraPay test data. No real funds are processed.
           </p>
         </div>
 

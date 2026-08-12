@@ -61,6 +61,8 @@ from "./pages/MerchantSettlements";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
 
 import AdminLogin from "./pages/AdminLogin";
+import AdminInvitation from "./pages/AdminInvitation";
+import { AdminForgotPassword, AdminResetPassword } from "./pages/AdminPasswordAccess";
 
 // NEW ENTERPRISE ADMIN ROUTES
 import AdminRoutes from "./admin/routes/AdminRoutes";
@@ -232,6 +234,9 @@ export default function App() {
           path="/admin-login"
           element={<AdminLogin />}
         />
+        <Route path="/admin-invitation/:token" element={<AdminInvitation />} />
+        <Route path="/admin-forgot-password" element={<AdminForgotPassword />} />
+        <Route path="/admin-reset-password/:token" element={<AdminResetPassword />} />
 
         <Route
   path="/merchant/login"
