@@ -72,28 +72,26 @@ function persistAuth(token, user, rememberMe) {
   }
 }
 
-function setAuthorizationHeader(token) {
-  if (token) {
-    API.defaults.headers.common.Authorization = `Bearer ${token}`;
-    return;
-  }
-
-  delete API.defaults.headers.common.Authorization;
-}
-
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => getStoredAuth().token);
   const [user, setUser] = useState(() => getStoredAuth().user);
-  useEffect(() => {
-  if (token) {
-    setAuthorizationHeader(token);
-  }
-}, []);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setAuthorizationHeader(token);
-  }, [token]);
+    function invalidateMerchantSession() {
+      clearStoredAuth();
+      setToken(null);
+      setUser(null);
+    }
+    window.addEventListener(
+      "merchant-session-invalidated",
+      invalidateMerchantSession
+    );
+    return () => window.removeEventListener(
+      "merchant-session-invalidated",
+      invalidateMerchantSession
+    );
+  }, []);
 
   async function login(email, password, rememberMe = true) {
     setLoading(true);
@@ -108,7 +106,6 @@ export function AuthProvider({ children }) {
       const newUser = res.data.user || null;
 
       persistAuth(newToken, newUser, rememberMe);
-      setAuthorizationHeader(newToken);
       setToken(newToken);
       setUser(newUser);
 
@@ -139,7 +136,6 @@ export function AuthProvider({ children }) {
 
   function logout() {
     clearStoredAuth();
-    setAuthorizationHeader(null);
     setToken(null);
     setUser(null);
   }

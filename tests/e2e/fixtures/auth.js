@@ -159,6 +159,13 @@ export const test = base.extend({
         return;
       }
 
+      if (
+        testInfo.title === "developer webhook creation rejects loopback destinations" &&
+        /Failed to load resource: the server responded with a status of 400/i.test(message.text())
+      ) {
+        return;
+      }
+
       const record = {
         test: testInfo.title,
         project: testInfo.project.name,

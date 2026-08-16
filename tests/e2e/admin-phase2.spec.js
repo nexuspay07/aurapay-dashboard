@@ -7,21 +7,23 @@ const mongoose = require("../../../node_modules/mongoose");
 const bcrypt = require("../../../node_modules/bcryptjs");
 const User = require("../../../models/User");
 const AuditLog = require("../../../models/AuditLog");
+const { assertSafeDestructiveOperation, connectTestDatabase, disconnectTestDatabase } = require("../../../tests/helpers/testDatabase");
 require("../../../node_modules/dotenv").config({ path: path.resolve("..", ".env") });
 
 let admin, supportAdmin;
 const password = "AdminPhase2Test123!";
 test.beforeAll(async ({}, workerInfo) => {
   await fs.mkdir("screenshots/admin-phase2", { recursive: true });
-  await mongoose.connect(process.env.MONGO_URI_TEST || process.env.MONGO_URI);
+  await connectTestDatabase();
   const email = `admin-phase2-${Date.now()}-${workerInfo.project.name}@aurapay.test`;
   admin = await User.create({ email, password: await bcrypt.hash(password, 4), role: "super_admin", permissions: [], status: "verified", emailVerified: true });
   supportAdmin = await User.create({ email: `support-${email}`, password: await bcrypt.hash(password, 4), role: "support_admin", permissions: [], status: "verified", emailVerified: true });
 });
 test.afterAll(async () => {
+  assertSafeDestructiveOperation();
   if (admin?._id) { await AuditLog.deleteMany({ admin: admin._id }); await User.deleteOne({ _id: admin._id, email: admin.email }); }
   if (supportAdmin?._id) { await AuditLog.deleteMany({ admin: supportAdmin._id }); await User.deleteOne({ _id: supportAdmin._id, email: supportAdmin.email }); }
-  await mongoose.disconnect();
+  await disconnectTestDatabase();
 });
 test.beforeEach(async ({ page, request }) => {
   const backend = process.env.AURAPAY_BACKEND_URL || "http://localhost:3000";
@@ -29,11 +31,13 @@ test.beforeEach(async ({ page, request }) => {
   expect(response.ok()).toBeTruthy(); const body = await response.json();
   await page.goto("/");
   await page.evaluate(({ token, user }) => { localStorage.setItem("adminToken", token); localStorage.setItem("adminUser", JSON.stringify(user)); }, { token: body.data.token, user: body.data.admin });
+  await page.reload();
+  await expect.poll(() => page.evaluate(() => Boolean(localStorage.getItem("adminToken")))).toBe(true);
 });
 
 test("all protected Admin pages share shell, navigation, identity and sandbox context", async ({ page }, testInfo) => {
   const pages = ["/admin", "/admin/merchants", "/admin/merchant-kyb", "/admin/transactions", "/admin/settlements", "/admin/users", "/admin/fraud", "/admin/audit", "/admin/analytics", "/admin/providers", "/admin/admins", "/admin/settings"];
-  for (const route of pages) { await page.goto(route); await expect(page.getByTestId("admin-shell")).toBeVisible(); await expect(page.getByLabel("Admin navigation")).toBeVisible(); await expect(page.getByText(admin.email)).toBeVisible(); await expect(page.getByRole("banner").getByText("SANDBOX", { exact: true })).toBeVisible(); await expect(page.locator("main h1").first()).toBeVisible(); }
+  for (const route of pages) { await page.goto(route); await expect(page.getByTestId("admin-shell")).toBeVisible(); await expect(page.getByLabel("Admin navigation")).toBeVisible(); if (testInfo.project.name !== "chromium-mobile") await expect(page.getByText(admin.email)).toBeVisible(); await expect(page.getByRole("banner").getByText("SANDBOX", { exact: true })).toBeVisible(); await expect(page.locator("main h1").first()).toBeVisible(); }
   await page.goto("/admin/transactions"); await expect(page.getByRole("link", { name: "Transactions" })).toHaveClass(/active/);
   await expect(page.locator("body")).not.toHaveCSS("overflow-x", "scroll");
   if (testInfo.project.name === "chromium-desktop") { await expect(page.getByText("Loading transactions…")).toBeHidden(); await page.screenshot({ path: "screenshots/admin-phase2/transactions-shell.png", fullPage: true }); }

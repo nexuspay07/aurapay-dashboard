@@ -275,6 +275,9 @@ export default function DeveloperWebhooks() {
         <form style={panel} onSubmit={submitWebhook}>
           <h2 style={sectionTitle}>{editing ? "Edit webhook" : "Create webhook"}</h2>
           <div style={formGrid}>
+            <p style={endpointHint}>
+              Webhook endpoints must use public HTTPS URLs. Redirects are not followed.
+            </p>
             <input
               name="webhookUrl"
               autoComplete="url"
@@ -454,6 +457,12 @@ const layout = {
 const formGrid = {
   display: "grid",
   gap: 12,
+};
+
+const endpointHint = {
+  margin: 0,
+  color: "#64748B",
+  fontSize: 13,
 };
 
 const eventGrid = {

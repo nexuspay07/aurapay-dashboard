@@ -29,8 +29,6 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Onboarding from "./pages/Onboarding";
-import StripePayment from "./pages/StripePayment";
-import StripeCheckout from "./pages/StripeCheckout";
 import MerchantLogin from "./merchant/pages/MerchantLogin";
 import MerchantRegister from "./merchant/pages/MerchantRegister";
 import MerchantProtectedRoute
@@ -40,20 +38,10 @@ from "./pages/CreateCheckoutPage";
 import HostedCheckout from "./pages/HostedCheckout";
 import MerchantCheckouts
 from "./pages/MerchantCheckouts";
-import StripeWrapper
-from "./components/StripeWrapper";
-import PaymentSuccess
-from "./pages/PaymentSuccess";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import VerifyEmail from "./pages/VerifyEmail";
 import ResendVerification from "./pages/ResendVerification";
-import ButtonTest from "./pages/ButtonTest";
-import CardTest from "./pages/CardTest";
-import InputTest from "./pages/InputTest";
-import StatCardTest from "./pages/StatCardTest";
-import SidebarTest from "./pages/SidebarTest";
-import AppShellTest from "./pages/AppShellTest";
 
 import MerchantSettlements
 from "./pages/MerchantSettlements";
@@ -138,18 +126,9 @@ export default function App() {
   }
 />
 
-        <Route
-  path="/pay/:sessionId"
-  element={
-    <StripeWrapper>
-      <HostedCheckout />
-    </StripeWrapper>
-  }
-/>
-
 <Route
-  path="/payment-success"
-  element={<PaymentSuccess />}
+  path="/pay/:sessionId"
+  element={<HostedCheckout />}
 />
 
         <Route
@@ -164,36 +143,6 @@ export default function App() {
       <MerchantSettlements />
     </MerchantProtectedRoute>
   }
-/>
-
-<Route
-  path="/button-test"
-  element={<ButtonTest />}
-/>
-
-<Route
-  path="/card-test"
-  element={<CardTest />}
-/>
-
-<Route
-  path="/input-test"
-  element={<InputTest />}
-/>
-
-<Route
-  path="/stat-test"
-  element={<StatCardTest />}
-/>
-
-<Route
-  path="/sidebar-test"
-  element={<SidebarTest />}
-/>
-
-<Route
-  path="/app-shell"
-  element={<AppShellTest />}
 />
 
 <Route
@@ -273,16 +222,6 @@ export default function App() {
         <Route
           path="/onboarding"
           element={<Onboarding />}
-        />
-
-        <Route
-          path="/stripe-test"
-          element={<StripePayment />}
-        />
-
-        <Route
-          path="/checkout"
-          element={<StripeCheckout />}
         />
 
         {/* ====================================== */}

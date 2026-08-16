@@ -11,21 +11,17 @@ const Merchant = require("../../../models/Merchant");
 const User = require("../../../models/User");
 const Application = require("../../../models/Application");
 const sandboxPaymentSimulationService = require("../../../services/sandboxPaymentSimulationService");
+const { connectTestDatabase, disconnectTestDatabase } = require("../../../tests/helpers/testDatabase");
 require("../../../node_modules/dotenv").config({ path: path.resolve("..", ".env") });
 
 const defaultPassword = "VisualReviewPassword123!";
 
 setup("seed sandbox merchant and authenticate through Merchant Login UI", async ({ page }) => {
-  const mongoUri = process.env.MONGO_URI_TEST || process.env.MONGO_URI;
   const email = `visual-review-${runId}@aurapay.test`;
   const password = process.env.AURAPAY_TEST_MERCHANT_PASSWORD || defaultPassword;
 
-  if (!mongoUri) {
-    throw new Error("MONGO_URI_TEST or MONGO_URI is required for visual review auth setup.");
-  }
-
   await fs.mkdir(path.dirname(authStatePath), { recursive: true });
-  await mongoose.connect(mongoUri);
+  await connectTestDatabase();
 
   const merchant = await Merchant.create({
     businessName: "AuraPay Visual Review Merchant",
@@ -62,6 +58,7 @@ setup("seed sandbox merchant and authenticate through Merchant Login UI", async 
     await sandboxPaymentSimulationService.createCheckout(
       merchant._id,
       {
+        runId,
         amount: 49,
         currency: "USD",
         customerEmail: "hosted-success@example.com",
@@ -121,5 +118,5 @@ setup("seed sandbox merchant and authenticate through Merchant Login UI", async 
   await expect(page.getByRole("heading", { name: /Dashboard/i }).first()).toBeVisible();
   await page.context().storageState({ path: authStatePath });
 
-  await mongoose.disconnect();
+  await disconnectTestDatabase();
 });

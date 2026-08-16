@@ -146,8 +146,8 @@ const endpoints = [
     section: "Webhooks",
     method: "GET",
     path: "/merchant/developer/webhooks",
-    description: "Merchant dashboard endpoint for event destinations and delivery history.",
-    parameters: ["Merchant session token", "Signing secret is never returned in list responses"],
+    description: "Merchant dashboard endpoint for public HTTPS event destinations and delivery history. Redirects are not followed and delivery attempts time out after 8 seconds.",
+    parameters: ["Merchant session token", "Public HTTPS URL", "Signing secret is never returned in list responses"],
     requiredPermission: "Merchant authentication",
   },
   {

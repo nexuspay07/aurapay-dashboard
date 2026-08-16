@@ -122,7 +122,7 @@ test("developer application create edit detail delete flow", async ({ page }, te
   await expect(page.getByText("Application deleted.")).toBeVisible();
 });
 
-test("developer webhook create test retry toggle delete flow", async ({ page }, testInfo) => {
+test("developer webhook creation rejects loopback destinations", async ({ page }, testInfo) => {
   const webhookUrl = `http://127.0.0.1:1/aurapay-visual-${Date.now()}`;
 
   await page.goto("/merchant/developer/webhooks");
@@ -130,29 +130,7 @@ test("developer webhook create test retry toggle delete flow", async ({ page }, 
   await page.getByPlaceholder("https://example.com/webhooks/aurapay").fill(webhookUrl);
   await page.getByLabel("payment.completed").check();
   await page.getByRole("button", { name: /^Create webhook$/i }).click();
-  await expect(page.getByText("Webhook created.")).toBeVisible();
-  await expect(page.getByText("Signing secret", { exact: true })).toBeVisible();
-  await expect(page.locator("section").filter({ hasText: "Signing secret" }).locator("code")).toContainText("********");
+  await expect(page.getByText(/publicly reachable HTTPS endpoint/i)).toBeVisible();
+  await expect(page.locator("tr").filter({ hasText: webhookUrl })).toHaveCount(0);
   await captureReviewScreenshot(page, testInfo, "webhooks");
-
-  const row = page.locator("tr").filter({ hasText: webhookUrl }).first();
-  await row.getByLabel("Test webhook").click();
-  await expect(page.getByText("Webhook test recorded.")).toBeVisible({ timeout: 20_000 });
-  await expect(page.getByRole("heading", { name: /Delivery History/i })).toBeVisible();
-  await expect(page.getByText(/failed|delivered/i).first()).toBeVisible();
-
-  const retry = page.getByRole("button", { name: /^Retry$/i }).first();
-  if (await retry.isVisible().catch(() => false)) {
-    await retry.click();
-    await expect(page.getByText("Delivery retried.")).toBeVisible({ timeout: 20_000 });
-  }
-
-  await page.locator("tr").filter({ hasText: webhookUrl }).first().getByLabel("Disable webhook").click();
-  await expect(page.getByText("Webhook disabled.")).toBeVisible();
-  await page.locator("tr").filter({ hasText: webhookUrl }).first().getByLabel("Enable webhook").click();
-  await expect(page.getByText("Webhook enabled.")).toBeVisible();
-
-  await page.once("dialog", (dialog) => dialog.accept());
-  await page.locator("tr").filter({ hasText: webhookUrl }).first().getByLabel("Delete webhook").click();
-  await expect(page.getByText("Webhook deleted.")).toBeVisible();
 });

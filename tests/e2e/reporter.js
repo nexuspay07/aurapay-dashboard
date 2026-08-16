@@ -26,6 +26,7 @@ const Settlement = require("../../../models/Settlement");
 const Transaction = require("../../../models/Transaction");
 const User = require("../../../models/User");
 const WebhookDelivery = require("../../../models/WebhookDelivery");
+const { assertSafeDestructiveOperation, connectTestDatabase, disconnectTestDatabase } = require("../../../tests/helpers/testDatabase");
 require("../../../node_modules/dotenv").config({ path: path.resolve("..", ".env") });
 
 async function readJson(filePath) {
@@ -64,13 +65,12 @@ async function cleanupSeededData() {
 
   try {
     const seed = JSON.parse(await fs.readFile(seedStatePath, "utf8"));
-    const mongoUri = process.env.MONGO_URI_TEST || process.env.MONGO_URI;
-
-    if (!mongoUri || !seed?.merchantId) {
-      return "Skipped because seed state or Mongo URI was unavailable.";
+    if (!seed?.merchantId || !seed?.runId || seed.runId !== runId) {
+      return "Skipped because exact run-scoped seed state was unavailable.";
     }
 
-    await mongoose.connect(mongoUri);
+    await connectTestDatabase();
+    assertSafeDestructiveOperation();
     await Promise.all([
       ApiLog.deleteMany({ merchant: seed.merchantId }),
       ApiKey.deleteMany({ merchant: seed.merchantId }),
@@ -86,11 +86,11 @@ async function cleanupSeededData() {
       User.deleteMany({ merchantId: seed.merchantId }),
       Merchant.findByIdAndDelete(seed.merchantId),
     ]);
-    await mongoose.disconnect();
+    await disconnectTestDatabase();
 
     return "Seeded visual review data cleaned up.";
   } catch (err) {
-    await mongoose.disconnect().catch(() => {});
+    await disconnectTestDatabase().catch(() => {});
     return `Cleanup warning: ${err.message}`;
   }
 }

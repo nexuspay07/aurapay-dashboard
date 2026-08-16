@@ -31,19 +31,19 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: "node server.js",
+      command: "set NODE_ENV=test&& node server.js",
       cwd: "..",
       url: `${backendURL}/health`,
-      reuseExistingServer: true,
+      reuseExistingServer: false,
       timeout: 90_000,
       stdout: "pipe",
       stderr: "pipe",
     },
     {
-      command: `npm.cmd run dev -- --host localhost --port ${frontendPort}`,
+      command: `set VITE_API_URL=${backendURL}&& npm.cmd run dev -- --host localhost --port ${frontendPort}`,
       cwd: ".",
       url: frontendURL,
-      reuseExistingServer: true,
+      reuseExistingServer: false,
       timeout: 90_000,
       stdout: "pipe",
       stderr: "pipe",
