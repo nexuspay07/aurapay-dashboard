@@ -21,8 +21,8 @@ export default function ResetPassword() {
   const passwordChecks = useMemo(
     () => [
       {
-        label: "At least 8 characters",
-        valid: form.password.length >= 8,
+        label: "At least 10 characters",
+        valid: form.password.length >= 10,
       },
       {
         label: "One uppercase letter",
@@ -115,7 +115,7 @@ export default function ResetPassword() {
 
       setSuccess("Your password has been reset. Redirecting to Login...");
       window.setTimeout(() => {
-        navigate("/login");
+        navigate("/merchant/login");
       }, 1800);
     } catch (err) {
       setError(getBackendMessage(err));
@@ -134,7 +134,7 @@ export default function ResetPassword() {
       <style>{authPageStyles}</style>
 
       <section style={brandPanel}>
-        <Link to="/login" style={brandLockup}>
+        <Link to="/merchant/login" style={brandLockup}>
           <span style={brandMark}>A</span>
           <span style={brandName}>AuraPay</span>
         </Link>
@@ -298,7 +298,7 @@ export default function ResetPassword() {
 
           <p style={footerText}>
             Already updated?{" "}
-            <Link to="/login" style={strongLink}>
+            <Link to="/merchant/login" style={strongLink}>
               Back to Login
             </Link>
           </p>

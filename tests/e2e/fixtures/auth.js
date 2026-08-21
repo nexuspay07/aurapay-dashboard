@@ -166,6 +166,20 @@ export const test = base.extend({
         return;
       }
 
+      if (
+        testInfo.title === "verification errors and resend remain usable without account enumeration" &&
+        /Failed to load resource: the server responded with a status of 400/i.test(message.text())
+      ) {
+        return;
+      }
+
+      if (
+        testInfo.title === "public Sandbox merchant can register, verify, sign in, reset password, and sign out" &&
+        /Failed to load resource: the server responded with a status of 401/i.test(message.text())
+      ) {
+        return;
+      }
+
       const record = {
         test: testInfo.title,
         project: testInfo.project.name,

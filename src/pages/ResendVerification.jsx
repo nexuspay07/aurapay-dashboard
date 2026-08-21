@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import API from "../services/api";
 
 export default function ResendVerification() {
-  const [email, setEmail] = useState("");
+  const location = useLocation();
+  const [email, setEmail] = useState(location.state?.email || "");
   const [touched, setTouched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -68,7 +69,7 @@ export default function ResendVerification() {
       <style>{authPageStyles}</style>
 
       <section style={brandPanel}>
-        <Link to="/login" style={brandLockup}>
+        <Link to="/merchant/login" style={brandLockup}>
           <span style={brandMark}>A</span>
           <span style={brandName}>AuraPay</span>
         </Link>
@@ -157,7 +158,7 @@ export default function ResendVerification() {
 
           <p style={footerText}>
             Ready to sign in?{" "}
-            <Link to="/login" style={strongLink}>
+            <Link to="/merchant/login" style={strongLink}>
               Back to Login
             </Link>
           </p>

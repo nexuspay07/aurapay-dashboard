@@ -67,7 +67,7 @@ export default function ForgotPassword() {
       <style>{authPageStyles}</style>
 
       <section style={brandPanel}>
-        <Link to="/login" style={brandLockup}>
+        <Link to="/merchant/login" style={brandLockup}>
           <span style={brandMark}>A</span>
           <span style={brandName}>AuraPay</span>
         </Link>
@@ -153,7 +153,7 @@ export default function ForgotPassword() {
 
           <p style={footerText}>
             Remembered it?{" "}
-            <Link to="/login" style={strongLink}>
+            <Link to="/merchant/login" style={strongLink}>
               Back to Login
             </Link>
           </p>

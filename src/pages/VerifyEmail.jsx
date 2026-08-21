@@ -3,6 +3,14 @@ import { Link, useParams } from "react-router-dom";
 
 import API from "../services/api";
 
+const verificationRequests = new Map();
+function requestVerification(token) {
+  if (!verificationRequests.has(token)) {
+    verificationRequests.set(token, API.get(`/auth/verify-email/${token}`));
+  }
+  return verificationRequests.get(token);
+}
+
 export default function VerifyEmail() {
   const { token } = useParams();
   const [status, setStatus] = useState("loading");
@@ -19,7 +27,7 @@ export default function VerifyEmail() {
       }
 
       try {
-        await API.get(`/auth/verify-email/${token}`);
+        await requestVerification(token);
 
         if (!active) {
           return;
@@ -34,7 +42,8 @@ export default function VerifyEmail() {
 
         setStatus("error");
         setMessage(
-          err?.response?.data?.error ||
+          err?.response?.data?.error?.message ||
+            err?.response?.data?.error ||
             err?.response?.data?.message ||
             err?.message ||
             "We could not verify your email. Please request a new verification email."
@@ -57,7 +66,7 @@ export default function VerifyEmail() {
       <style>{authPageStyles}</style>
 
       <section style={brandPanel}>
-        <Link to="/login" style={brandLockup}>
+        <Link to="/merchant/login" style={brandLockup}>
           <span style={brandMark}>A</span>
           <span style={brandName}>AuraPay</span>
         </Link>
@@ -115,8 +124,9 @@ export default function VerifyEmail() {
             {message}
           </p>
 
-          <Link to="/login" style={button}>
-            Go to Login
+          {!isSuccess && !isLoading && <Link to="/resend-verification-email" style={{ ...button, marginBottom: 12 }}>Request a new link</Link>}
+          <Link to="/merchant/login" style={button}>
+            Go to Sign In
           </Link>
         </div>
       </section>

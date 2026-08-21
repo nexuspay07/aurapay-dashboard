@@ -22,7 +22,7 @@ const publicPages = [
   {
     name: "merchant-registration",
     path: "/merchant/register",
-    heading: /Create Merchant Account/i,
+    heading: /Create a merchant account/i,
   },
 ];
 

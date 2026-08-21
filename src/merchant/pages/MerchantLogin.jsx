@@ -106,7 +106,8 @@ export default function MerchantLogin() {
 
       setError(
         err?.response?.data
-          ?.error ||
+          ?.error?.message ||
+          err?.response?.data?.error ||
           "Login failed."
       );
     } finally {
@@ -128,6 +129,7 @@ export default function MerchantLogin() {
 
         {error && (
           <div
+            role="alert"
             style={errorBox}
           >
             {error}

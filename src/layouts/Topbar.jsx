@@ -1,10 +1,15 @@
 import theme from "../theme/theme";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function Topbar({
   title = "Dashboard",
   user = "Blaise",
   onToggleSidebar,
 }) {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+  function signOut() { logout(); navigate("/merchant/login", { replace: true }); }
   return (
     <header
       className="app-shell-topbar"
@@ -38,6 +43,8 @@ export default function Topbar({
             <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
         </button>
+
+        <button type="button" onClick={signOut} style={iconButton} aria-label="Sign out">Sign out</button>
 
         <div>
           <h2

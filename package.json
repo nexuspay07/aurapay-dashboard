@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test:e2e": "set NODE_ENV=test&& set ADMIN_EMAIL_DELIVERY_DISABLED=true&& node tests/e2e/create-review-run.cjs && node -e \"require('fs').mkdirSync('.tmp',{recursive:true})\" && set TMP=%CD%\\.tmp&& set TEMP=%CD%\\.tmp&& playwright test tests/e2e --grep-invert @visual",
+    "test:e2e": "set NODE_ENV=test&& set EMAIL_DELIVERY_DISABLED=true&& set ADMIN_EMAIL_DELIVERY_DISABLED=true&& set AURAPAY_EXPOSE_TEST_EMAIL_LINKS=true&& node tests/e2e/create-review-run.cjs && node -e \"require('fs').mkdirSync('.tmp',{recursive:true})\" && set TMP=%CD%\\.tmp&& set TEMP=%CD%\\.tmp&& playwright test tests/e2e --grep-invert @visual",
     "test:visual": "set NODE_ENV=test&& node tests/e2e/create-review-run.cjs && node -e \"require('fs').mkdirSync('.tmp',{recursive:true})\" && set TMP=%CD%\\.tmp&& set TEMP=%CD%\\.tmp&& playwright test tests/e2e/visual-regression.spec.js",
     "test:visual:update": "set NODE_ENV=test&& node tests/e2e/create-review-run.cjs && node -e \"require('fs').mkdirSync('.tmp',{recursive:true})\" && set TMP=%CD%\\.tmp&& set TEMP=%CD%\\.tmp&& playwright test tests/e2e/visual-regression.spec.js --update-snapshots",
     "review:ui": "npm run build && node tests/e2e/create-review-run.cjs && node -e \"require('fs').mkdirSync('.tmp',{recursive:true})\" && set TMP=%CD%\\.tmp&& set TEMP=%CD%\\.tmp&& playwright test tests/e2e"
