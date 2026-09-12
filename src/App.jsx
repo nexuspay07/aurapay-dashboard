@@ -24,6 +24,7 @@ from "./merchant/pages/MerchantProfile";
 
 import MerchantTransactions
 from "./merchant/pages/MerchantTransactions";
+import PaymentInspector from "./merchant/pages/PaymentInspector";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -99,11 +100,20 @@ export default function App() {
           element={<Landing />}
         />
 
-        <Route
+<Route
   path="/merchant/transactions"
   element={
     <MerchantProtectedRoute>
       <MerchantTransactions />
+    </MerchantProtectedRoute>
+  }
+/>
+
+<Route
+  path="/merchant/transactions/:paymentId"
+  element={
+    <MerchantProtectedRoute>
+      <PaymentInspector />
     </MerchantProtectedRoute>
   }
 />

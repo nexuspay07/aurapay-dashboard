@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import AppShell from "../../layouts/AppShell";
 import { merchantMenu } from "../../data/sidebarMenu";
@@ -10,6 +11,7 @@ const currencyFormatter = new Intl.NumberFormat("en-US", {
 });
 
 export default function MerchantTransactions() {
+  const navigate = useNavigate();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -205,7 +207,10 @@ export default function MerchantTransactions() {
                     <Td>{money(tx.amount)}</Td>
                     <Td>{String(tx.currency || "USD").toUpperCase()}</Td>
                     <Td>{tx.provider || "AuraPay"}</Td>
-                    <Td><Badge value={tx.status} /></Td>
+                    <Td>
+                      <Badge value={tx.status} />
+                      {tx.status === "failed" && <div style={muted}>{failureReason(tx)}</div>}
+                    </Td>
                     <Td>{money(tx.merchantFee || tx.estimatedFee)}</Td>
                     <Td>{money(tx.merchantNet || tx.estimatedNet || tx.amount)}</Td>
                     <Td>{formatDate(tx.createdAt)}</Td>
@@ -213,9 +218,10 @@ export default function MerchantTransactions() {
                       <button
                         type="button"
                         style={textButton}
-                        onClick={() => navigator.clipboard?.writeText(tx.providerPaymentId || tx.transactionId || tx._id)}
+                        onClick={() => navigate(`/merchant/transactions/${tx._id}`)}
+                        aria-label={`Inspect payment ${tx.providerPaymentId || tx.transactionId || tx._id}`}
                       >
-                        Copy ID
+                        Inspect
                       </button>
                     </Td>
                   </tr>
@@ -312,6 +318,12 @@ function shortId(value) {
 function formatDate(value) {
   if (!value) return "Not available";
   return new Date(value).toLocaleString();
+}
+
+function failureReason(tx) {
+  if (tx.sandboxScenario === "declined") return "Card declined";
+  if (tx.sandboxScenario === "insufficient_funds") return "Insufficient funds";
+  return "Sandbox payment failed";
 }
 
 const header = {

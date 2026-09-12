@@ -93,6 +93,16 @@ setup("seed sandbox merchant and authenticate through Merchant Login UI", async 
     scenario: "declined",
   });
 
+  await sandboxPaymentSimulationService.simulatePayment({
+    merchant: merchant._id, amount: 80, currency: "USD",
+    customerEmail: "dashboard-insufficient@example.com", scenario: "insufficient_funds",
+  });
+
+  await sandboxPaymentSimulationService.simulatePayment({
+    merchant: merchant._id, amount: 90, currency: "USD",
+    customerEmail: "dashboard-pending@example.com", scenario: "pending",
+  });
+
   await fs.writeFile(
     seedStatePath,
     `${JSON.stringify(
