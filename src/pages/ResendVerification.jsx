@@ -10,6 +10,7 @@ export default function ResendVerification() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [developmentLink, setDevelopmentLink] = useState("");
 
   const emailError = useMemo(() => {
     const value = email.trim();
@@ -55,6 +56,7 @@ export default function ResendVerification() {
         res?.data?.message ||
           "Verification email sent. Please check your inbox."
       );
+      setDevelopmentLink(res?.data?.developmentVerificationLink || "");
     } catch (err) {
       setError(getBackendMessage(err));
     } finally {
@@ -100,6 +102,7 @@ export default function ResendVerification() {
               {success}
             </div>
           )}
+          {developmentLink && <a href={developmentLink} style={strongLink}>Open development verification link</a>}
 
           {error && (
             <div style={errorBanner} role="alert">

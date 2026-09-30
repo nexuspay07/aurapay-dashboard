@@ -9,6 +9,7 @@ export default function ForgotPassword() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [developmentLink, setDevelopmentLink] = useState("");
 
   const emailError = useMemo(() => {
     const value = email.trim();
@@ -46,9 +47,10 @@ export default function ForgotPassword() {
     try {
       setLoading(true);
 
-      await API.post("/auth/forgot-password", {
+      const response = await API.post("/auth/forgot-password", {
         email: email.trim().toLowerCase(),
       });
+      setDevelopmentLink(response.data?.developmentResetLink || "");
 
       setSuccess(
         "If an account exists, a password reset email has been sent."
@@ -97,6 +99,7 @@ export default function ForgotPassword() {
               {success}
             </div>
           )}
+          {developmentLink && <a href={developmentLink} style={strongLink}>Open development reset link</a>}
 
           {error && (
             <div style={errorBanner} role="alert">

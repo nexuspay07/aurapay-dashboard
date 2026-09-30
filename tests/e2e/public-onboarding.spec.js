@@ -37,8 +37,8 @@ test("public Sandbox merchant can register, verify, sign in, reset password, and
   await expect(page.getByRole("heading", { name: /check your email/i })).toBeVisible();
   expect(registration.data.emailDelivery).toBe("pending");
   expect(registration.data.developmentVerificationLink).toBeTruthy();
-
-  await page.goto(registration.data.developmentVerificationLink);
+  await page.getByRole("link", { name: "Open development verification link" }).click();
+  await page.getByRole("button", { name: "Verify email" }).click();
   await expect(page.getByRole("heading", { name: "You are verified" })).toBeVisible();
   await page.getByRole("link", { name: "Go to Sign In" }).click();
   await page.getByPlaceholder("Email").fill(ownerEmail.toUpperCase());
@@ -54,7 +54,7 @@ test("public Sandbox merchant can register, verify, sign in, reset password, and
   const forgot = await (await forgotResponse).json();
   await expect(page.getByRole("status")).toContainText("If an account exists");
   expect(forgot.developmentResetLink).toBeTruthy();
-  await page.goto(forgot.developmentResetLink);
+  await page.getByRole("link", { name: "Open development reset link" }).click();
   await page.getByLabel("New password").fill(newPassword);
   await page.getByRole("textbox", { name: "Confirm password" }).fill(newPassword);
   await page.getByRole("button", { name: "Reset password" }).click();
@@ -74,6 +74,7 @@ test("public Sandbox merchant can register, verify, sign in, reset password, and
 
 test("verification errors and resend remain usable without account enumeration", async ({ page }) => {
   await page.goto("/verify-email/not-a-real-token");
+  await page.getByRole("button", { name: "Verify email" }).click();
   await expect(page.getByRole("heading", { name: /could not verify/i })).toBeVisible();
   await expect(page.getByRole("link", { name: "Request a new link" })).toBeVisible();
   await page.goto("/resend-verification-email");

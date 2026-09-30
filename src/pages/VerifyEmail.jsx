@@ -1,45 +1,27 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import API from "../services/api";
 
-const verificationRequests = new Map();
-function requestVerification(token) {
-  if (!verificationRequests.has(token)) {
-    verificationRequests.set(token, API.get(`/auth/verify-email/${token}`));
-  }
-  return verificationRequests.get(token);
-}
-
 export default function VerifyEmail() {
   const { token } = useParams();
-  const [status, setStatus] = useState("loading");
-  const [message, setMessage] = useState("Verifying your email...");
+  const [status, setStatus] = useState(token ? "ready" : "error");
+  const [message, setMessage] = useState(token ? "Select verify to confirm your email address." : "Verification link is missing or invalid.");
 
-  useEffect(() => {
-    let active = true;
-
-    async function verifyEmail() {
+  async function verifyEmail() {
       if (!token) {
         setStatus("error");
         setMessage("Verification link is missing or invalid.");
         return;
       }
 
+      setStatus("loading");
+      setMessage("Verifying your email...");
       try {
-        await requestVerification(token);
-
-        if (!active) {
-          return;
-        }
-
+        await API.post(`/auth/verify-email/${token}`);
         setStatus("success");
         setMessage("Your email has been verified successfully.");
       } catch (err) {
-        if (!active) {
-          return;
-        }
-
         setStatus("error");
         setMessage(
           err?.response?.data?.error?.message ||
@@ -49,14 +31,7 @@ export default function VerifyEmail() {
             "We could not verify your email. Please request a new verification email."
         );
       }
-    }
-
-    verifyEmail();
-
-    return () => {
-      active = false;
-    };
-  }, [token]);
+  }
 
   const isLoading = status === "loading";
   const isSuccess = status === "success";
@@ -103,7 +78,7 @@ export default function VerifyEmail() {
               ? "Verification in progress"
               : isSuccess
                 ? "Email verified"
-                : "Verification failed"}
+                : status === "ready" ? "Email verification" : "Verification failed"}
           </p>
 
           <h2 style={formTitle}>
@@ -111,7 +86,7 @@ export default function VerifyEmail() {
               ? "Checking your link"
               : isSuccess
                 ? "You are verified"
-                : "We could not verify this email"}
+                : status === "ready" ? "Verify your email" : "We could not verify this email"}
           </h2>
 
           <p
@@ -124,7 +99,8 @@ export default function VerifyEmail() {
             {message}
           </p>
 
-          {!isSuccess && !isLoading && <Link to="/resend-verification-email" style={{ ...button, marginBottom: 12 }}>Request a new link</Link>}
+          {status === "ready" && <button type="button" onClick={verifyEmail} style={{ ...button, border: 0, marginBottom: 12 }}>Verify email</button>}
+          {status === "error" && <Link to="/resend-verification-email" style={{ ...button, marginBottom: 12 }}>Request a new link</Link>}
           <Link to="/merchant/login" style={button}>
             Go to Sign In
           </Link>

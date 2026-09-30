@@ -19,7 +19,7 @@ export default function MerchantRegister() {
     finally { setLoading(false); }
   }
 
-  if (result) return <main style={page}><section style={successCard} aria-live="polite"><p style={eyebrow}>AuraPay Sandbox Beta</p><h1>Check your email to verify your account.</h1><p>{result.message}</p>{result.data?.emailDelivery === "pending" && <Link style={linkButton} to="/resend-verification-email" state={{ email: form.ownerEmail }}>Resend verification email</Link>}<Link style={secondaryLink} to="/merchant/login">Go to Sign In</Link><p style={sandboxNote}>Sandbox only. No real funds or live payment processing are enabled.</p></section></main>;
+  if (result) return <main style={page}><section style={successCard} aria-live="polite"><p style={eyebrow}>AuraPay Sandbox Beta</p><h1>Check your email to verify your account.</h1><p>{result.message}</p>{result.data?.developmentVerificationLink && <a style={linkButton} href={result.data.developmentVerificationLink}>Open development verification link</a>}{result.data?.emailDelivery === "pending" && <Link style={secondaryLink} to="/resend-verification-email" state={{ email: form.ownerEmail }}>Resend verification email</Link>}<Link style={secondaryLink} to="/merchant/login">Go to Sign In</Link><p style={sandboxNote}>Sandbox only. No real funds or live payment processing are enabled.</p></section></main>;
 
   return <main style={page}><form style={card} onSubmit={submit} noValidate>
     <p style={eyebrow}>AuraPay Sandbox Beta</p><h1 style={title}>Create a merchant account</h1><p style={copy}>Set up a Sandbox workspace for testing. Verification is required before sign in.</p>

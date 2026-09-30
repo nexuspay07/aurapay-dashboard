@@ -26,11 +26,13 @@ export default function MerchantLogin() {
 
   const [error, setError] =
     useState("");
+  const [unverified, setUnverified] = useState(false);
 
   async function handleLogin(e) {
     e.preventDefault();
 
     setError("");
+    setUnverified(false);
 
     try {
       setLoading(true);
@@ -102,8 +104,7 @@ export default function MerchantLogin() {
         "/merchant/dashboard"
       );
     } catch (err) {
-      console.log(err);
-
+      setUnverified(err?.response?.data?.error?.code === "EMAIL_NOT_VERIFIED");
       setError(
         err?.response?.data
           ?.error?.message ||
@@ -135,6 +136,7 @@ export default function MerchantLogin() {
             {error}
           </div>
         )}
+        {unverified && <p style={{ textAlign: "center" }}><Link to="/resend-verification-email" state={{ email: form.email }} style={link}>Resend verification email</Link></p>}
 
         <input
           style={input}
