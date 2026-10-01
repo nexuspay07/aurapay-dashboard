@@ -6,11 +6,12 @@ const require = createRequire(import.meta.url);
 const mongoose = require("../../../node_modules/mongoose");
 const bcrypt = require("../../../node_modules/bcryptjs");
 const User = require("../../../models/User");
+const Merchant = require("../../../models/Merchant");
 const AuditLog = require("../../../models/AuditLog");
 const { assertSafeDestructiveOperation, connectTestDatabase, disconnectTestDatabase } = require("../../../tests/helpers/testDatabase");
 require("../../../node_modules/dotenv").config({ path: path.resolve("..", ".env") });
 
-let admin, supportAdmin;
+let admin, supportAdmin, privateOwner, privateMerchant;
 const password = "AdminPhase2Test123!";
 test.beforeAll(async ({}, workerInfo) => {
   await fs.mkdir("screenshots/admin-phase2", { recursive: true });
@@ -18,11 +19,15 @@ test.beforeAll(async ({}, workerInfo) => {
   const email = `admin-phase2-${Date.now()}-${workerInfo.project.name}@aurapay.test`;
   admin = await User.create({ email, password: await bcrypt.hash(password, 4), role: "super_admin", permissions: [], status: "verified", emailVerified: true });
   supportAdmin = await User.create({ email: `support-${email}`, password: await bcrypt.hash(password, 4), role: "support_admin", permissions: [], status: "verified", emailVerified: true });
+  privateMerchant = await Merchant.create({ businessName: `Private tester ${workerInfo.project.name}`, legalName: `Private tester ${workerInfo.project.name} Inc`, businessType: "corporation", contactEmail: `private-business-${Date.now()}-${workerInfo.project.name}@aurapay.test`, ownerEmail: `private-owner-${Date.now()}-${workerInfo.project.name}@aurapay.test`, country: "CA", verificationStatus: "under_review", active: true });
+  privateOwner = await User.create({ email: privateMerchant.ownerEmail, password: await bcrypt.hash(password, 4), role: "merchant_owner", merchantId: privateMerchant._id, status: "unverified", emailVerified: false, emailVerificationToken: "private-test-token-hash", emailVerificationExpires: new Date(Date.now() + 60000) });
 });
 test.afterAll(async () => {
   assertSafeDestructiveOperation();
   if (admin?._id) { await AuditLog.deleteMany({ admin: admin._id }); await User.deleteOne({ _id: admin._id, email: admin.email }); }
   if (supportAdmin?._id) { await AuditLog.deleteMany({ admin: supportAdmin._id }); await User.deleteOne({ _id: supportAdmin._id, email: supportAdmin.email }); }
+  if (privateOwner?._id) { await AuditLog.deleteMany({ targetId: String(privateOwner._id) }); await User.deleteOne({ _id: privateOwner._id, email: privateOwner.email }); }
+  if (privateMerchant?._id) await Merchant.deleteOne({ _id: privateMerchant._id });
   await disconnectTestDatabase();
 });
 test.beforeEach(async ({ page, request }) => {
@@ -71,4 +76,27 @@ test("restricted admin navigation reflects effective backend permissions", async
   const backend = process.env.AURAPAY_BACKEND_URL || "http://localhost:3000"; const response = await request.post(`${backend}/admin-auth/login`, { data: { email: supportAdmin.email, password } }); const body = await response.json();
   await page.evaluate(({ token, user }) => { localStorage.setItem("adminToken", token); localStorage.setItem("adminUser", JSON.stringify(user)); }, { token: body.data.token, user: body.data.admin }); await page.goto("/admin/merchants");
   await expect(page.getByRole("link", { name: "Merchants" })).toBeVisible(); await expect(page.getByRole("link", { name: "Transactions" })).toBeVisible(); await expect(page.getByRole("link", { name: "Admins" })).toHaveCount(0); await expect(page.getByRole("link", { name: "Fraud Center" })).toHaveCount(0); await expect(page.getByRole("link", { name: "Settings" })).toHaveCount(0);
+  await page.goto("/admin/users"); await expect(page.getByRole("row").filter({ hasText: privateOwner.email }).getByRole("button", { name: "Verify email for private access" })).toHaveCount(0);
+});
+
+test("private owner email approval is distinct, confirmed, invoked, and refreshed", async ({ page }) => {
+  await page.goto("/admin/users");
+  const row = page.getByRole("row").filter({ hasText: privateOwner.email });
+  const action = row.getByRole("button", { name: "Verify email for private access" });
+  await expect(action).toBeVisible();
+
+  page.once("dialog", (dialog) => { expect(dialog.message()).toContain(privateOwner.email); dialog.dismiss(); });
+  await action.click();
+  await expect(action).toBeVisible();
+
+  const endpoint = page.waitForResponse((response) => response.url().includes(`/admin/users/${privateOwner._id}/verify-email`) && response.request().method() === "PATCH");
+  page.once("dialog", (dialog) => dialog.accept());
+  await action.click();
+  expect((await endpoint).status()).toBe(200);
+  await expect(page.getByRole("status")).toContainText(`Email verified for ${privateOwner.email}`);
+  await expect(row.getByRole("button", { name: "Verify email for private access" })).toHaveCount(0);
+
+  await page.goto("/admin/merchants");
+  await expect(page.getByRole("heading", { name: "Merchant Operations" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Verify email for private access" })).toHaveCount(0);
 });
