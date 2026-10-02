@@ -42,6 +42,7 @@ test.beforeEach(async ({ page, request }) => {
 
 test("all protected Admin pages share shell, navigation, identity and sandbox context", async ({ page }, testInfo) => {
   const pages = ["/admin", "/admin/merchants", "/admin/merchant-kyb", "/admin/transactions", "/admin/settlements", "/admin/users", "/admin/fraud", "/admin/audit", "/admin/analytics", "/admin/providers", "/admin/admins", "/admin/settings"];
+  await page.goto("/admin"); await expect(page.getByRole("link", { name: "Users", exact: true })).toHaveAttribute("href", "/admin/users");
   for (const route of pages) { await page.goto(route); await expect(page.getByTestId("admin-shell")).toBeVisible(); await expect(page.getByLabel("Admin navigation")).toBeVisible(); if (testInfo.project.name !== "chromium-mobile") await expect(page.getByText(admin.email)).toBeVisible(); await expect(page.getByRole("banner").getByText("SANDBOX", { exact: true })).toBeVisible(); await expect(page.locator("main h1").first()).toBeVisible(); }
   await page.goto("/admin/transactions"); await expect(page.getByRole("link", { name: "Transactions" })).toHaveClass(/active/);
   await expect(page.locator("body")).not.toHaveCSS("overflow-x", "scroll");
@@ -76,6 +77,7 @@ test("restricted admin navigation reflects effective backend permissions", async
   const backend = process.env.AURAPAY_BACKEND_URL || "http://localhost:3000"; const response = await request.post(`${backend}/admin-auth/login`, { data: { email: supportAdmin.email, password } }); const body = await response.json();
   await page.evaluate(({ token, user }) => { localStorage.setItem("adminToken", token); localStorage.setItem("adminUser", JSON.stringify(user)); }, { token: body.data.token, user: body.data.admin }); await page.goto("/admin/merchants");
   await expect(page.getByRole("link", { name: "Merchants" })).toBeVisible(); await expect(page.getByRole("link", { name: "Transactions" })).toBeVisible(); await expect(page.getByRole("link", { name: "Admins" })).toHaveCount(0); await expect(page.getByRole("link", { name: "Fraud Center" })).toHaveCount(0); await expect(page.getByRole("link", { name: "Settings" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Users", exact: true })).toHaveAttribute("href", "/admin/users");
   await page.goto("/admin/users"); await expect(page.getByRole("row").filter({ hasText: privateOwner.email }).getByRole("button", { name: "Verify email for private access" })).toHaveCount(0);
 });
 
