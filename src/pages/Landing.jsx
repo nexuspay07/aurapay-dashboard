@@ -616,7 +616,7 @@ const header = {
   justifyContent: "space-between",
   gap: 24,
   minHeight: 74,
-  padding: "0 max(32px, calc((100vw - 1440px) / 2 + 32px))",
+  padding: "0 max(32px, calc((100vw - 1640px) / 2))",
   background: "rgba(16, 27, 56, 0.94)",
   borderBottom: "1px solid rgba(255,255,255,.1)",
   backdropFilter: "blur(16px)",
@@ -750,17 +750,17 @@ const menuLine = {
 const hero = {
   maxWidth: "none",
   margin: "0 auto",
-  padding: "clamp(68px, 8vw, 112px) max(32px, calc((100vw - 1440px) / 2 + 32px)) clamp(72px, 8vw, 110px)",
+  padding: "clamp(68px, 8vw, 112px) max(32px, calc((100vw - 1640px) / 2)) clamp(72px, 8vw, 110px)",
   display: "grid",
-  gridTemplateColumns: "minmax(420px, 0.92fr) minmax(520px, 1.08fr)",
-  gap: "clamp(44px, 6vw, 92px)",
+  gridTemplateColumns: "minmax(520px, 0.98fr) minmax(620px, 1.12fr)",
+  gap: "clamp(40px, 4vw, 68px)",
   alignItems: "center",
   background: "radial-gradient(circle at 78% 18%, rgba(114,84,232,.24), transparent 31%), radial-gradient(circle at 56% 92%, rgba(37,99,235,.2), transparent 34%), #101B38",
 };
 
 const heroCopy = {
   minWidth: 0,
-  maxWidth: 640,
+  maxWidth: 760,
 };
 
 const noticePill = {
@@ -778,10 +778,10 @@ const noticePill = {
 const headline = {
   margin: "22px 0 18px",
   color: "#FFFFFF",
-  fontSize: "clamp(48px, 5vw, 72px)",
+  fontSize: "clamp(48px, 4.2vw, 72px)",
   lineHeight: 1.01,
   letterSpacing: "-.045em",
-  maxWidth: 720,
+  maxWidth: 760,
 };
 
 const heroText = {
@@ -789,7 +789,7 @@ const heroText = {
   color: "#C7D2E7",
   fontSize: 19,
   lineHeight: 1.65,
-  maxWidth: 620,
+  maxWidth: 680,
 };
 
 const heroActions = {
@@ -811,9 +811,10 @@ const heroFacts = {
 
 const productPreview = {
   display: "grid",
-  gridTemplateColumns: "minmax(0, 1fr) 240px",
+  gridTemplateColumns: "minmax(0, 1.35fr) minmax(230px, 0.65fr)",
   gap: 14,
   alignItems: "stretch",
+  minWidth: 0,
   background: "rgba(255,255,255,.075)",
   border: "1px solid rgba(255,255,255,.15)",
   borderRadius: 20,
@@ -913,17 +914,17 @@ const successBadge = {
 };
 
 const section = {
-  maxWidth: 1320,
+  maxWidth: "none",
   margin: "0 auto",
-  padding: "88px 32px",
+  padding: "88px max(32px, calc((100vw - 1640px) / 2))",
 };
 
 const sectionTint = {
   ...section,
   background: "#FFFFFF",
   maxWidth: "none",
-  paddingLeft: "max(32px, calc((100vw - 1320px) / 2 + 32px))",
-  paddingRight: "max(32px, calc((100vw - 1320px) / 2 + 32px))",
+  paddingLeft: "max(32px, calc((100vw - 1640px) / 2))",
+  paddingRight: "max(32px, calc((100vw - 1640px) / 2))",
   borderTop: "1px solid #E2E8F0",
   borderBottom: "1px solid #E2E8F0",
 };
@@ -1039,9 +1040,9 @@ const stepVisual = {
 };
 
 const developerSection = {
-  maxWidth: 1320,
+  maxWidth: "none",
   margin: "0 auto",
-  padding: "88px 32px",
+  padding: "88px max(32px, calc((100vw - 1640px) / 2))",
   display: "grid",
   gridTemplateColumns: "minmax(0, 0.85fr) minmax(420px, 1fr)",
   gap: 30,
@@ -1169,9 +1170,9 @@ const securityItem = {
 };
 
 const betaSection = {
-  maxWidth: 1320,
+  maxWidth: "none",
   margin: "0 auto",
-  padding: "88px 32px",
+  padding: "88px max(32px, calc((100vw - 1640px) / 2))",
   display: "grid",
   gridTemplateColumns: "minmax(0, 0.8fr) repeat(2, minmax(260px, 1fr))",
   gap: 16,
@@ -1254,8 +1255,8 @@ const footer = {
   padding: "46px 32px",
   maxWidth: "none",
   margin: "0 auto",
-  paddingLeft: "max(32px, calc((100vw - 1320px) / 2 + 32px))",
-  paddingRight: "max(32px, calc((100vw - 1320px) / 2 + 32px))",
+  paddingLeft: "max(32px, calc((100vw - 1640px) / 2))",
+  paddingRight: "max(32px, calc((100vw - 1640px) / 2))",
   borderTop: "1px solid rgba(255,255,255,.1)",
   background: "#101B38",
   color: "#FFFFFF",
@@ -1303,7 +1304,7 @@ const responsiveStyles = `
     filter: brightness(0.98);
   }
 
-  @media (max-width: 1080px) {
+  @media (max-width: 1260px) {
     .landing-page .hero-grid,
     .landing-page .developer-grid,
     .landing-page .checkout-grid,
