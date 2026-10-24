@@ -11,36 +11,39 @@ export default function Button({
   rightIcon,
   type = "button",
   onClick,
+  style: customStyle = {},
+  className = "",
+  ...props
 }) {
   const variants = {
     primary: {
       background: theme.colors.primary,
       color: theme.colors.white,
-      border: "none",
+      border: `1px solid ${theme.colors.primary}`,
     },
 
     secondary: {
       background: theme.colors.secondary,
       color: theme.colors.white,
-      border: "none",
+      border: `1px solid ${theme.colors.secondary}`,
     },
 
     success: {
-      background: theme.colors.success,
+      background: theme.colors.successStrong,
       color: theme.colors.white,
-      border: "none",
+      border: `1px solid ${theme.colors.successStrong}`,
     },
 
     danger: {
-      background: theme.colors.danger,
+      background: theme.colors.dangerStrong,
       color: theme.colors.white,
-      border: "none",
+      border: `1px solid ${theme.colors.dangerStrong}`,
     },
 
     outline: {
       background: "transparent",
       color: theme.colors.primary,
-      border: `1px solid ${theme.colors.border}`,
+      border: `1px solid ${theme.colors.borderStrong}`,
     },
 
     ghost: {
@@ -90,7 +93,9 @@ export default function Button({
 
     fontWeight: 700,
 
-    transition: "all .25s ease",
+    minHeight: 44,
+
+    transition: "background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease",
 
     opacity:
       disabled || loading
@@ -99,18 +104,22 @@ export default function Button({
 
     boxShadow:
       variant === "primary"
-        ? theme.shadows.md
+        ? "0 9px 24px rgba(37,99,235,.2)"
         : "none",
+
+    ...customStyle,
   };
 
   return (
     <button
       type={type}
+      className={`ui-button ui-button--${variant} ${className}`.trim()}
       style={style}
       disabled={
         disabled || loading
       }
       onClick={onClick}
+      {...props}
       onMouseEnter={(e) => {
         if (
           variant === "primary"
@@ -119,7 +128,10 @@ export default function Button({
             theme.colors.primaryHover;
 
           e.currentTarget.style.transform =
-            "translateY(-2px)";
+            "translateY(-1px)";
+
+          e.currentTarget.style.boxShadow =
+            "0 12px 28px rgba(37,99,235,.26)";
         }
       }}
       onMouseLeave={(e) => {
@@ -131,6 +143,9 @@ export default function Button({
 
           e.currentTarget.style.transform =
             "translateY(0px)";
+
+          e.currentTarget.style.boxShadow =
+            "0 9px 24px rgba(37,99,235,.2)";
         }
       }}
     >

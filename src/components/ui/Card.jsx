@@ -31,8 +31,7 @@ export default function Card({
 
     boxShadow: theme.shadows[shadow],
 
-    transition:
-      "all .25s ease",
+    transition: "border-color .2s ease, box-shadow .2s ease, transform .2s ease",
 
     cursor: onClick
       ? "pointer"
@@ -43,12 +42,21 @@ export default function Card({
 
   return (
     <div
+      className={`ui-card${hover ? " ui-card--hover" : ""}`}
       style={cardStyle}
       onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onClick(event);
+        }
+      } : undefined}
       onMouseEnter={(e) => {
         if (hover) {
           e.currentTarget.style.transform =
-            "translateY(-4px)";
+            "translateY(-2px)";
 
           e.currentTarget.style.boxShadow =
             theme.shadows.lg;

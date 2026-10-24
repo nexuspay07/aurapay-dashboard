@@ -3,7 +3,6 @@ import { createRequire } from "module";
 import path from "path";
 import fs from "fs/promises";
 const require = createRequire(import.meta.url);
-const mongoose = require("../../../node_modules/mongoose");
 const bcrypt = require("../../../node_modules/bcryptjs");
 const User = require("../../../models/User");
 const Merchant = require("../../../models/Merchant");
@@ -13,7 +12,7 @@ require("../../../node_modules/dotenv").config({ path: path.resolve("..", ".env"
 
 let admin, supportAdmin, privateOwner, privateMerchant;
 const password = "AdminPhase2Test123!";
-test.beforeAll(async ({}, workerInfo) => {
+test.beforeAll(async (_fixtures, workerInfo) => {
   await fs.mkdir("screenshots/admin-phase2", { recursive: true });
   await connectTestDatabase();
   const email = `admin-phase2-${Date.now()}-${workerInfo.project.name}@aurapay.test`;

@@ -451,11 +451,6 @@ const infoCard = {
   background: "#fff",
 };
 
-const intelligenceRow = {
-  borderTop: "1px solid #eee",
-  padding: "10px 0",
-};
-
 const logoutBtn = {
   padding: "10px 16px",
   border: "none",

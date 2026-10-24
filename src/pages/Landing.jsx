@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 const navItems = [
@@ -145,16 +145,31 @@ const checkoutCurl = `curl -X POST "https://sandbox-api.aurapay.test/api/v1/chec
 export default function Landing() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState(0);
+  const menuButtonRef = useRef(null);
+
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+
+    function closeOnEscape(event) {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    }
+
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [menuOpen]);
 
   function closeMenu() {
     setMenuOpen(false);
   }
 
   return (
-    <div style={page}>
+    <div className="landing-page" style={page}>
       <style>{responsiveStyles}</style>
 
-      <header style={header}>
+      <header className="landing-header" style={header}>
         <a href="#top" style={brand} aria-label="AuraPay home" onClick={closeMenu}>
           <span style={logoMark}>A</span>
           <span style={brandText}>AuraPay</span>
@@ -162,11 +177,13 @@ export default function Landing() {
         </a>
 
         <button
+          ref={menuButtonRef}
           type="button"
           className="mobile-menu-button"
           style={mobileMenuButton}
           aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
           aria-expanded={menuOpen}
+          aria-controls="primary-navigation"
           onClick={() => setMenuOpen((value) => !value)}
         >
           <span style={menuLine} />
@@ -175,6 +192,7 @@ export default function Landing() {
         </button>
 
         <nav
+          id="primary-navigation"
           className={menuOpen ? "landing-nav is-open" : "landing-nav"}
           style={nav}
           aria-label="Primary navigation"
@@ -584,8 +602,8 @@ function Icon({ name, small = false }) {
 
 const page = {
   minHeight: "100vh",
-  background: "#F7FAFC",
-  color: "#0F172A",
+  background: "#F3F6FC",
+  color: "#101B38",
   fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
 };
 
@@ -598,9 +616,9 @@ const header = {
   justifyContent: "space-between",
   gap: 24,
   minHeight: 74,
-  padding: "0 32px",
-  background: "rgba(255, 255, 255, 0.92)",
-  borderBottom: "1px solid #E2E8F0",
+  padding: "0 max(32px, calc((100vw - 1440px) / 2 + 32px))",
+  background: "rgba(16, 27, 56, 0.94)",
+  borderBottom: "1px solid rgba(255,255,255,.1)",
   backdropFilter: "blur(16px)",
 };
 
@@ -609,7 +627,7 @@ const brand = {
   alignItems: "center",
   gap: 10,
   textDecoration: "none",
-  color: "#0F172A",
+  color: "#FFFFFF",
   fontWeight: 900,
 };
 
@@ -618,8 +636,8 @@ const logoMark = {
   placeItems: "center",
   width: 36,
   height: 36,
-  borderRadius: 8,
-  background: "#0F172A",
+  borderRadius: 10,
+  background: "linear-gradient(135deg, #2563EB, #7254E8)",
   color: "#FFFFFF",
   fontWeight: 900,
 };
@@ -632,9 +650,9 @@ const betaBadge = {
   display: "inline-flex",
   alignItems: "center",
   borderRadius: 999,
-  background: "#E0F2FE",
-  color: "#075985",
-  border: "1px solid #BAE6FD",
+  background: "rgba(37,99,235,.16)",
+  color: "#DCE8FF",
+  border: "1px solid rgba(121,155,255,.34)",
   padding: "6px 10px",
   fontSize: 12,
   fontWeight: 900,
@@ -657,7 +675,7 @@ const navLinks = {
 };
 
 const navLink = {
-  color: "#475569",
+  color: "#CBD5E7",
   textDecoration: "none",
   fontWeight: 800,
   fontSize: 14,
@@ -672,10 +690,10 @@ const navActions = {
 };
 
 const ghostButton = {
-  border: "1px solid #CBD5E1",
-  background: "#FFFFFF",
-  color: "#0F172A",
-  borderRadius: 8,
+  border: "1px solid rgba(255,255,255,.3)",
+  background: "transparent",
+  color: "#FFFFFF",
+  borderRadius: 10,
   padding: "10px 14px",
   fontWeight: 900,
   textDecoration: "none",
@@ -692,10 +710,10 @@ const primaryButton = {
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  border: "1px solid #0F172A",
-  background: "#0F172A",
+  border: "1px solid #2563EB",
+  background: "#2563EB",
   color: "#FFFFFF",
-  borderRadius: 8,
+  borderRadius: 10,
   padding: "10px 14px",
   fontWeight: 900,
   textDecoration: "none",
@@ -709,13 +727,14 @@ const primaryButtonLarge = {
 const secondaryButtonLarge = {
   ...ghostButton,
   padding: "14px 18px",
+  background: "rgba(255,255,255,.07)",
 };
 
 const mobileMenuButton = {
   display: "none",
-  border: "1px solid #CBD5E1",
-  background: "#FFFFFF",
-  borderRadius: 8,
+  border: "1px solid rgba(255,255,255,.28)",
+  background: "rgba(255,255,255,.07)",
+  borderRadius: 10,
   padding: 10,
   cursor: "pointer",
 };
@@ -724,30 +743,32 @@ const menuLine = {
   display: "block",
   width: 20,
   height: 2,
-  background: "#0F172A",
+  background: "#FFFFFF",
   margin: "4px 0",
 };
 
 const hero = {
-  maxWidth: 1220,
+  maxWidth: "none",
   margin: "0 auto",
-  padding: "86px 32px 72px",
+  padding: "clamp(68px, 8vw, 112px) max(32px, calc((100vw - 1440px) / 2 + 32px)) clamp(72px, 8vw, 110px)",
   display: "grid",
-  gridTemplateColumns: "minmax(0, 0.9fr) minmax(420px, 1.1fr)",
-  gap: 44,
+  gridTemplateColumns: "minmax(420px, 0.92fr) minmax(520px, 1.08fr)",
+  gap: "clamp(44px, 6vw, 92px)",
   alignItems: "center",
+  background: "radial-gradient(circle at 78% 18%, rgba(114,84,232,.24), transparent 31%), radial-gradient(circle at 56% 92%, rgba(37,99,235,.2), transparent 34%), #101B38",
 };
 
 const heroCopy = {
   minWidth: 0,
+  maxWidth: 640,
 };
 
 const noticePill = {
   display: "inline-flex",
   maxWidth: 520,
-  border: "1px solid #BAE6FD",
-  background: "#E0F2FE",
-  color: "#075985",
+  border: "1px solid rgba(137,171,255,.36)",
+  background: "rgba(37,99,235,.14)",
+  color: "#DCE8FF",
   borderRadius: 999,
   padding: "8px 12px",
   fontWeight: 900,
@@ -756,15 +777,16 @@ const noticePill = {
 
 const headline = {
   margin: "22px 0 18px",
-  fontSize: 64,
-  lineHeight: 1.02,
-  letterSpacing: 0,
+  color: "#FFFFFF",
+  fontSize: "clamp(48px, 5vw, 72px)",
+  lineHeight: 1.01,
+  letterSpacing: "-.045em",
   maxWidth: 720,
 };
 
 const heroText = {
   margin: 0,
-  color: "#475569",
+  color: "#C7D2E7",
   fontSize: 19,
   lineHeight: 1.65,
   maxWidth: 620,
@@ -782,7 +804,7 @@ const heroFacts = {
   flexWrap: "wrap",
   gap: 10,
   marginTop: 24,
-  color: "#334155",
+  color: "#D8E1F1",
   fontSize: 13,
   fontWeight: 900,
 };
@@ -792,11 +814,12 @@ const productPreview = {
   gridTemplateColumns: "minmax(0, 1fr) 240px",
   gap: 14,
   alignItems: "stretch",
-  background: "#E2E8F0",
-  border: "1px solid #CBD5E1",
-  borderRadius: 8,
+  background: "rgba(255,255,255,.075)",
+  border: "1px solid rgba(255,255,255,.15)",
+  borderRadius: 20,
   padding: 14,
-  boxShadow: "0 24px 80px rgba(15, 23, 42, 0.16)",
+  boxShadow: "0 34px 90px rgba(3, 9, 28, 0.42)",
+  backdropFilter: "blur(16px)",
 };
 
 const previewSide = {
@@ -807,7 +830,7 @@ const previewSide = {
 const dashboardMockup = {
   background: "#FFFFFF",
   border: "1px solid #E2E8F0",
-  borderRadius: 8,
+  borderRadius: 14,
   padding: 18,
   display: "grid",
   gap: 16,
@@ -838,9 +861,9 @@ const mockupGrid = {
 const mockMetric = {
   display: "grid",
   gap: 8,
-  background: "#F8FAFC",
-  border: "1px solid #E2E8F0",
-  borderRadius: 8,
+  background: "#F3F6FC",
+  border: "1px solid #DDE5F0",
+  borderRadius: 10,
   padding: 14,
 };
 
@@ -854,8 +877,8 @@ const mockRow = {
   justifyContent: "space-between",
   gap: 12,
   color: "#475569",
-  background: "#F8FAFC",
-  borderRadius: 8,
+  background: "#F3F6FC",
+  borderRadius: 10,
   padding: "10px 12px",
   fontSize: 13,
 };
@@ -863,7 +886,7 @@ const mockRow = {
 const miniCard = {
   background: "#FFFFFF",
   border: "1px solid #E2E8F0",
-  borderRadius: 8,
+  borderRadius: 12,
   padding: 14,
   display: "grid",
   gap: 8,
@@ -871,8 +894,8 @@ const miniCard = {
 
 const miniCardDark = {
   ...miniCard,
-  background: "#0F172A",
-  borderColor: "#0F172A",
+  background: "#101B38",
+  borderColor: "#273654",
   color: "#E2E8F0",
 };
 
@@ -890,17 +913,17 @@ const successBadge = {
 };
 
 const section = {
-  maxWidth: 1220,
+  maxWidth: 1320,
   margin: "0 auto",
-  padding: "76px 32px",
+  padding: "88px 32px",
 };
 
 const sectionTint = {
   ...section,
   background: "#FFFFFF",
   maxWidth: "none",
-  paddingLeft: "max(32px, calc((100vw - 1220px) / 2 + 32px))",
-  paddingRight: "max(32px, calc((100vw - 1220px) / 2 + 32px))",
+  paddingLeft: "max(32px, calc((100vw - 1320px) / 2 + 32px))",
+  paddingRight: "max(32px, calc((100vw - 1320px) / 2 + 32px))",
   borderTop: "1px solid #E2E8F0",
   borderBottom: "1px solid #E2E8F0",
 };
@@ -928,7 +951,7 @@ const sectionTitle = {
   color: "#0F172A",
   fontSize: 40,
   lineHeight: 1.12,
-  letterSpacing: 0,
+  letterSpacing: "-.03em",
 };
 
 const sectionText = {
@@ -947,9 +970,10 @@ const capabilityGrid = {
 const capabilityCard = {
   background: "#FFFFFF",
   border: "1px solid #E2E8F0",
-  borderRadius: 8,
+  borderRadius: 16,
   padding: 22,
   minHeight: 220,
+  boxShadow: "0 8px 26px rgba(16,27,56,.045)",
 };
 
 const iconWrap = {
@@ -960,7 +984,7 @@ const iconWrap = {
   color: "#0F172A",
   background: "#F8FAFC",
   border: "1px solid #E2E8F0",
-  borderRadius: 8,
+  borderRadius: 11,
 };
 
 const iconSmall = {
@@ -991,7 +1015,7 @@ const stepsGrid = {
 const stepCard = {
   background: "#F8FAFC",
   border: "1px solid #E2E8F0",
-  borderRadius: 8,
+  borderRadius: 14,
   padding: 20,
 };
 
@@ -1015,9 +1039,9 @@ const stepVisual = {
 };
 
 const developerSection = {
-  maxWidth: 1220,
+  maxWidth: 1320,
   margin: "0 auto",
-  padding: "76px 32px",
+  padding: "88px 32px",
   display: "grid",
   gridTemplateColumns: "minmax(0, 0.85fr) minmax(420px, 1fr)",
   gap: 30,
@@ -1048,7 +1072,7 @@ const sectionActions = {
 };
 
 const codePanel = {
-  borderRadius: 8,
+  borderRadius: 16,
   overflow: "hidden",
   background: "#0F172A",
   border: "1px solid #1E293B",
@@ -1096,7 +1120,7 @@ const checkoutGrid = {
 const hostedPreview = {
   background: "#FFFFFF",
   border: "1px solid #E2E8F0",
-  borderRadius: 8,
+  borderRadius: 16,
   padding: 24,
   boxShadow: "0 20px 60px rgba(15, 23, 42, 0.12)",
 };
@@ -1145,9 +1169,9 @@ const securityItem = {
 };
 
 const betaSection = {
-  maxWidth: 1220,
+  maxWidth: 1320,
   margin: "0 auto",
-  padding: "76px 32px",
+  padding: "88px 32px",
   display: "grid",
   gridTemplateColumns: "minmax(0, 0.8fr) repeat(2, minmax(260px, 1fr))",
   gap: 16,
@@ -1156,7 +1180,7 @@ const betaSection = {
 const availabilityCard = {
   background: "#FFFFFF",
   border: "1px solid #E2E8F0",
-  borderRadius: 8,
+  borderRadius: 16,
   padding: 22,
 };
 
@@ -1174,7 +1198,7 @@ const pricingCard = {
   gap: 28,
   background: "#FFFFFF",
   border: "1px solid #E2E8F0",
-  borderRadius: 8,
+  borderRadius: 16,
   padding: 28,
 };
 
@@ -1198,7 +1222,7 @@ const faqWrap = {
 const faqItem = {
   background: "#FFFFFF",
   border: "1px solid #E2E8F0",
-  borderRadius: 8,
+  borderRadius: 14,
   overflow: "hidden",
 };
 
@@ -1228,26 +1252,31 @@ const footer = {
   gridTemplateColumns: "minmax(240px, 1.4fr) repeat(4, minmax(120px, 1fr))",
   gap: 26,
   padding: "46px 32px",
-  maxWidth: 1220,
+  maxWidth: "none",
   margin: "0 auto",
-  borderTop: "1px solid #E2E8F0",
+  paddingLeft: "max(32px, calc((100vw - 1320px) / 2 + 32px))",
+  paddingRight: "max(32px, calc((100vw - 1320px) / 2 + 32px))",
+  borderTop: "1px solid rgba(255,255,255,.1)",
+  background: "#101B38",
+  color: "#FFFFFF",
 };
 
 const footerBrand = {
   display: "flex",
   gap: 12,
   alignItems: "flex-start",
-  color: "#475569",
+  color: "#B9C5DC",
 };
 
 const footerGroup = {
   display: "grid",
   alignContent: "start",
   gap: 10,
+  color: "#FFFFFF",
 };
 
 const footerLink = {
-  color: "#475569",
+  color: "#B9C5DC",
   textDecoration: "none",
   fontWeight: 700,
 };
@@ -1259,57 +1288,57 @@ const mutedText = {
 };
 
 const responsiveStyles = `
-  html {
+  html:has(.landing-page) {
     scroll-behavior: smooth;
   }
 
-  a:focus-visible,
-  button:focus-visible {
-    outline: 3px solid #93C5FD;
+  .landing-page a:focus-visible,
+  .landing-page button:focus-visible {
+    outline: 3px solid #8E7AF0;
     outline-offset: 3px;
   }
 
-  a:hover,
-  button:hover {
+  .landing-page a:hover,
+  .landing-page button:hover {
     filter: brightness(0.98);
   }
 
   @media (max-width: 1080px) {
-    .hero-grid,
-    .developer-grid,
-    .checkout-grid,
-    .beta-grid {
+    .landing-page .hero-grid,
+    .landing-page .developer-grid,
+    .landing-page .checkout-grid,
+    .landing-page .beta-grid {
       grid-template-columns: 1fr !important;
     }
 
-    .capability-grid {
+    .landing-page .capability-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     }
 
-    .steps-grid,
-    .security-grid {
+    .landing-page .steps-grid,
+    .landing-page .security-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     }
 
-    .product-preview {
+    .landing-page .product-preview {
       grid-template-columns: 1fr !important;
     }
 
-    #pricing article {
+    .landing-page #pricing article {
       grid-template-columns: 1fr !important;
     }
 
-    footer {
+    .landing-page footer {
       grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     }
   }
 
   @media (max-width: 820px) {
-    .mobile-menu-button {
+    .landing-page .mobile-menu-button {
       display: block !important;
     }
 
-    .landing-nav {
+    .landing-page .landing-nav {
       position: absolute;
       left: 16px;
       right: 16px;
@@ -1317,74 +1346,82 @@ const responsiveStyles = `
       display: none !important;
       grid-template-columns: 1fr;
       gap: 14px;
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
+      background: #101b38;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 14px;
       padding: 16px;
       box-shadow: 0 24px 70px rgba(15, 23, 42, 0.18);
     }
 
-    .landing-nav.is-open {
+    .landing-page .landing-nav.is-open {
       display: grid !important;
     }
 
-    .landing-nav > div {
+    .landing-page .landing-nav > div {
       flex-direction: column;
       align-items: stretch !important;
     }
   }
 
   @media (max-width: 720px) {
-    h1 {
+    .landing-page h1 {
       font-size: 42px !important;
     }
 
-    h2 {
+    .landing-page h2 {
       font-size: 30px !important;
     }
 
-    .capability-grid,
-    .steps-grid,
-    .security-grid {
+    .landing-page .capability-grid,
+    .landing-page .steps-grid,
+    .landing-page .security-grid {
       grid-template-columns: 1fr !important;
     }
 
-    .preview-side {
+    .landing-page .preview-side {
       grid-template-columns: 1fr !important;
     }
 
-    footer {
+    .landing-page footer {
       grid-template-columns: 1fr 1fr !important;
     }
 
-    ul {
+    .landing-page ul {
       columns: 1 !important;
     }
   }
 
   @media (max-width: 520px) {
-    header {
+    .landing-page header {
       padding-left: 16px !important;
       padding-right: 16px !important;
     }
 
-    main section {
+    .landing-page main section {
       padding-left: 18px !important;
       padding-right: 18px !important;
     }
 
-    .hero-grid {
+    .landing-page .hero-grid {
       padding-top: 48px !important;
+      padding-bottom: 64px !important;
     }
 
-    .hero-grid > div:last-child {
+    .landing-page .hero-grid > div:last-child {
       grid-template-columns: 1fr !important;
     }
 
-    footer {
+    .landing-page footer {
       grid-template-columns: 1fr !important;
       padding-left: 18px !important;
       padding-right: 18px !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .landing-page a,
+    .landing-page button {
+      transition: none !important;
     }
   }
 `;

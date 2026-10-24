@@ -11,9 +11,9 @@ export default function StatCard({
   onClick,
 }) {
   const trendColors = {
-    success: theme.colors.success,
-    danger: theme.colors.danger,
-    warning: theme.colors.warning,
+    success: theme.colors.successStrong,
+    danger: theme.colors.dangerStrong,
+    warning: theme.colors.warningStrong,
     info: theme.colors.primary,
   };
 
@@ -35,7 +35,9 @@ export default function StatCard({
             style={{
               color:
                 theme.colors.textSecondary,
-              fontSize: 14,
+              fontSize: 13,
+              fontWeight: 700,
+              letterSpacing: ".02em",
               marginBottom: 10,
             }}
           >
@@ -44,8 +46,10 @@ export default function StatCard({
 
           <div
             style={{
-              fontSize: 34,
-              fontWeight: 700,
+              fontSize: 32,
+              lineHeight: 1.15,
+              letterSpacing: "-.025em",
+              fontWeight: 800,
               color:
                 theme.colors.text,
             }}
@@ -88,8 +92,8 @@ export default function StatCard({
               width: 60,
               height: 60,
               borderRadius: 16,
-              background:
-                "#EFF6FF",
+              background: theme.colors.primarySoft,
+              color: theme.colors.primary,
               display: "flex",
               alignItems: "center",
               justifyContent:

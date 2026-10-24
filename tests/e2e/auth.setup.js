@@ -5,7 +5,6 @@ import { test as setup, expect } from "@playwright/test";
 import { authStatePath, seedStatePath, runId } from "./fixtures/auth.js";
 
 const require = createRequire(import.meta.url);
-const mongoose = require("../../../node_modules/mongoose");
 const bcrypt = require("../../../node_modules/bcrypt");
 const Merchant = require("../../../models/Merchant");
 const User = require("../../../models/User");

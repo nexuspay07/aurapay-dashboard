@@ -3,13 +3,13 @@ import { createRequire } from "module";
 import fs from "fs/promises";
 import path from "path";
 const require = createRequire(import.meta.url);
-const mongoose = require("../../../node_modules/mongoose"); const bcrypt = require("../../../node_modules/bcryptjs");
+const bcrypt = require("../../../node_modules/bcryptjs");
 const User = require("../../../models/User"); const AuditLog = require("../../../models/AuditLog"); const AdminInvitation = require("../../../models/AdminInvitation");
 const { assertSafeDestructiveOperation, connectTestDatabase, disconnectTestDatabase } = require("../../../tests/helpers/testDatabase");
 require("../../../node_modules/dotenv").config({ path: path.resolve("..", ".env") });
 const password = "AdminAccessTest123!"; const screenshots = "screenshots/admin-access-v1-1"; let admin; const invitationIds = []; const userIds = [];
 test.use({ storageState: { cookies: [], origins: [] } });
-test.beforeAll(async ({}, workerInfo) => { await fs.mkdir(screenshots, { recursive: true }); await connectTestDatabase(); admin = await User.create({ email: `admin-access-v11-${Date.now()}-${workerInfo.project.name}@aurapay.test`, password: await bcrypt.hash(password, 4), role: "super_admin", status: "verified", emailVerified: true }); userIds.push(admin._id); });
+test.beforeAll(async (_fixtures, workerInfo) => { await fs.mkdir(screenshots, { recursive: true }); await connectTestDatabase(); admin = await User.create({ email: `admin-access-v11-${Date.now()}-${workerInfo.project.name}@aurapay.test`, password: await bcrypt.hash(password, 4), role: "super_admin", status: "verified", emailVerified: true }); userIds.push(admin._id); });
 test.afterAll(async () => { assertSafeDestructiveOperation(); await AuditLog.deleteMany({ $or: [{ admin: { $in: userIds } }, { targetId: { $in: [...userIds, ...invitationIds].map(String) } }] }); await AdminInvitation.deleteMany({ _id: { $in: invitationIds } }); await User.deleteMany({ _id: { $in: userIds } }); await disconnectTestDatabase(); });
 async function login(request) { const backend = process.env.AURAPAY_BACKEND_URL || "http://localhost:3000"; const response = await request.post(`${backend}/admin-auth/login`, { data: { email: admin.email, password } }); return (await response.json()).data; }
 async function authenticate(page, request) { const data = await login(request); await page.goto("/"); await page.evaluate(({ token, user }) => { localStorage.setItem("adminToken", token); localStorage.setItem("adminUser", JSON.stringify(user)); }, { token: data.token, user: data.admin }); }

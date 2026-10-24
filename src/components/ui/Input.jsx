@@ -1,3 +1,4 @@
+import { useId } from "react";
 import theme from "../../theme/theme";
 
 export default function Input({
@@ -10,6 +11,10 @@ export default function Input({
   style = {},
   ...props
 }) {
+  const generatedId = useId();
+  const inputId = props.id || (props.name ? `input-${props.name}` : `input-${generatedId}`);
+  const helperId = helperText || error ? `${inputId}-description` : undefined;
+
   const wrapperStyle = {
     display: "flex",
     flexDirection: "column",
@@ -34,7 +39,7 @@ export default function Input({
 
     padding: "0 14px",
 
-    transition: "all .25s ease",
+    transition: "border-color .18s ease, box-shadow .18s ease",
 
     boxShadow: theme.shadows.sm,
   };
@@ -61,6 +66,7 @@ export default function Input({
     <div style={wrapperStyle}>
       {label && (
         <label
+          htmlFor={inputId}
           style={{
             fontWeight: 600,
             color: theme.colors.text,
@@ -95,6 +101,9 @@ export default function Input({
 
         <input
           {...props}
+          id={inputId}
+          aria-invalid={error ? "true" : undefined}
+          aria-describedby={helperId}
           style={inputStyle}
         />
 
@@ -102,7 +111,7 @@ export default function Input({
       </div>
 
       {helperText && !error && (
-        <small
+        <small id={helperId}
           style={{
             color:
               theme.colors.textSecondary,
@@ -113,7 +122,7 @@ export default function Input({
       )}
 
       {error && (
-        <small
+        <small id={helperId} role="alert"
           style={{
             color:
               theme.colors.danger,

@@ -12,7 +12,6 @@ import {
 } from "./fixtures/auth.js";
 
 const require = createRequire(import.meta.url);
-const mongoose = require("../../../node_modules/mongoose");
 const ApiKey = require("../../../models/ApiKey");
 const ApiLog = require("../../../models/ApiLog");
 const Application = require("../../../models/Application");

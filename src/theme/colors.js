@@ -1,35 +1,29 @@
 const colors = {
-
   primary: "#2563EB",
-
   primaryHover: "#1D4ED8",
-
-  secondary: "#0F172A",
-
-  background: "#F8FAFC",
-
+  primarySoft: "#EAF1FF",
+  secondary: "#101B38",
+  secondaryHover: "#18264A",
+  accent: "#7254E8",
+  accentSoft: "#F0EDFF",
+  background: "#F3F6FC",
   surface: "#FFFFFF",
-
-  border: "#E2E8F0",
-
-  text: "#0F172A",
-
-  textSecondary: "#64748B",
-
-  textMuted: "#94A3B8",
-
-  success: "#10B981",
-
+  surfaceSubtle: "#F8FAFE",
+  surfaceDark: "#101B38",
+  border: "#DDE5F0",
+  borderStrong: "#C8D3E3",
+  text: "#101B38",
+  textSecondary: "#526079",
+  textMuted: "#64748B",
+  success: "#10A68B",
+  successStrong: "#08705F",
   warning: "#F59E0B",
-
+  warningStrong: "#875B00",
   danger: "#EF4444",
-
+  dangerStrong: "#B42318",
   info: "#3B82F6",
-
   white: "#FFFFFF",
-
   black: "#000000",
-
 };
 
 export default colors;

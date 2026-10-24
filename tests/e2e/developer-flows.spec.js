@@ -1,7 +1,6 @@
 import {
   captureReviewScreenshot,
   expect,
-  getSeedState,
   test,
   waitForPageReady,
 } from "./fixtures/auth.js";
