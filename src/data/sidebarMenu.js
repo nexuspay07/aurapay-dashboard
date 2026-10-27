@@ -1,10 +1,16 @@
 export const merchantMenu = [
   {
+    section: "Workspace",
+  },
+  {
     title: "Dashboard",
     path: "/merchant/dashboard",
     icon: "dashboard",
   },
 
+  {
+    section: "Payments",
+  },
   {
     title: "Create Checkout",
     path: "/merchant/create-checkout",
@@ -35,6 +41,9 @@ export const merchantMenu = [
     icon: "analytics",
   },
 
+  {
+    section: "Account",
+  },
   {
     title: "Profile",
     path: "/merchant/profile",

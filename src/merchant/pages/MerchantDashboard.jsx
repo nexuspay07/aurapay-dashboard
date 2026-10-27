@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  Area,
-  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
@@ -12,14 +10,11 @@ import {
   YAxis,
 } from "recharts";
 
-import AppShell from "../../layouts/AppShell";
+import StatCard from "../../components/ui/StatCard";
 import { merchantMenu } from "../../data/sidebarMenu";
+import AppShell from "../../layouts/AppShell";
 import API from "../../services/api";
-
-const currencyFormatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-});
+import "./merchantDashboard.css";
 
 const numberFormatter = new Intl.NumberFormat("en-US");
 
@@ -36,487 +31,310 @@ export default function MerchantDashboard() {
     try {
       setLoading(true);
       setError("");
-
       const res = await API.get("/merchant-analytics/dashboard");
       setAnalytics(res.data || {});
     } catch (err) {
-      setError(
-        err?.response?.data?.error ||
-          "Unable to load dashboard data."
-      );
+      setError(err?.response?.data?.error || "Unable to load dashboard data.");
     } finally {
       setLoading(false);
     }
   }
 
   const derived = useMemo(() => {
-    const transactions = analytics?.recentTransactions || [];
-    const settlements = analytics?.recentSettlements || [];
-    const checkouts = analytics?.recentCheckouts || [];
-    const refunds = transactions.filter(
-      (tx) => tx.status === "refunded"
-    );
-    const payments = transactions.filter(
-      (tx) => tx.success || tx.status === "completed"
-    );
-    const totalRevenue = Number(analytics?.totalRevenue || 0);
-    const totalTransactions = Number(
-      analytics?.totalTransactions || transactions.length || 0
-    );
+    const transactions = array(analytics?.recentTransactions);
+    const settlements = array(analytics?.recentSettlements);
+    const checkouts = array(analytics?.recentCheckouts);
+    const activityByDay = new Map();
+
+    transactions.slice().reverse().forEach((item) => {
+      const day = formatShortDate(item.createdAt);
+      const current = activityByDay.get(day) || { day, transactions: 0, successful: 0 };
+      current.transactions += 1;
+      if (item.success === true) {
+        current.successful += 1;
+      }
+      activityByDay.set(day, current);
+    });
 
     return {
       transactions,
       settlements,
       checkouts,
-      refunds: refunds.length,
-      payments: analytics?.successfulPayments ?? payments.length,
-      averagePayment:
-        totalTransactions > 0 ? totalRevenue / totalTransactions : 0,
-      totalSettled: settlements
-        .filter((item) => item.status === "completed")
-        .reduce(
-          (sum, item) => sum + Number(item.netAmount || item.amount || 0),
-          0
-        ),
-      settlementTrend: settlements.map((item) => ({
-        name: formatShortDate(item.createdAt),
-        pending: item.status === "pending" ? Number(item.amount || 0) : 0,
-        completed:
-          item.status === "completed" ? Number(item.amount || 0) : 0,
-      })),
-      transactionTrend: transactions
-        .slice()
-        .reverse()
-        .map((item) => ({
-          name: formatShortDate(item.createdAt),
-          count: 1,
-          amount: Number(item.amount || 0),
-        })),
+      transactionActivity: [...activityByDay.values()],
     };
   }, [analytics]);
 
-  const cards = [
+  const metrics = [
     {
-      label: "Today's Revenue",
-      value: money(analytics?.revenueToday),
-      caption: "Sandbox gross volume",
+      title: "Successful payments",
+      value: numberFormatter.format(Number(analytics?.successfulPayments || 0)),
+      subtitle: "Successful sandbox transactions",
+      icon: <MetricIcon name="volume" />,
     },
     {
-      label: "Monthly Revenue",
-      value: money(analytics?.monthlyRevenue),
-      caption: "Current month sandbox volume",
+      title: "Transactions",
+      value: numberFormatter.format(Number(analytics?.totalTransactions || 0)),
+      subtitle: `${numberFormatter.format(Number(analytics?.successfulPayments || 0))} successful · ${numberFormatter.format(Number(analytics?.failedPayments || 0))} failed`,
+      icon: <MetricIcon name="transactions" />,
     },
     {
-      label: "Total Revenue",
-      value: money(analytics?.totalRevenue),
-      caption: "All-time sandbox successful volume",
+      title: "Success rate",
+      value: `${Number(analytics?.successRate || 0).toFixed(1)}%`,
+      subtitle: "Successful sandbox transactions",
+      icon: <MetricIcon name="rate" />,
     },
     {
-      label: "Transactions",
-      value: numberFormatter.format(analytics?.totalTransactions || 0),
-      caption: "All recorded payments",
-    },
-    {
-      label: "Payments",
-      value: numberFormatter.format(derived.payments || 0),
-      caption: "Successful payments",
-    },
-    {
-      label: "Refunds",
-      value: numberFormatter.format(derived.refunds || 0),
-      caption: "Refunded recent payments",
-    },
-    {
-      label: "Pending Settlements",
-      value: numberFormatter.format(analytics?.pendingSettlements || 0),
-      caption: "Simulated settlement queue",
-    },
-    {
-      label: "Completed Settlements",
-      value: numberFormatter.format(analytics?.completedSettlements || 0),
-      caption: money(derived.totalSettled),
-    },
-    {
-      label: "Success Rate",
-      value: `${analytics?.successRate || 0}%`,
-      caption: "Payment authorization health",
-    },
-    {
-      label: "Failed Payments",
-      value: numberFormatter.format(analytics?.failedPayments || 0),
-      caption: "Requires review",
-    },
-    {
-      label: "Average Payment",
-      value: money(derived.averagePayment),
-      caption: "Gross average ticket",
+      title: "Checkout sessions",
+      value: numberFormatter.format(Number(analytics?.totalCheckouts || 0)),
+      subtitle: `${numberFormatter.format(Number(analytics?.paidCheckouts || 0))} paid · ${numberFormatter.format(Number(analytics?.pendingCheckouts || 0))} pending`,
+      icon: <MetricIcon name="checkout" />,
     },
   ];
 
+  const activitySummary = derived.transactionActivity.length
+    ? derived.transactionActivity
+      .map(({ day, transactions, successful }) => `${day}: ${transactions} transactions, ${successful} successful`)
+      .join("; ")
+    : "No recent sandbox transaction activity was returned.";
+
   return (
-    <AppShell menu={merchantMenu} title="Dashboard">
-      <section style={hero}>
-        <div>
-          <p style={eyebrow}>Sandbox Beta</p>
-          <h1 style={title}>Merchant Dashboard</h1>
-          <p style={subtitle}>
-            Monitor sandbox revenue, payments, checkouts, and settlements from
-            AuraPay test data. No real funds are processed.
-          </p>
-        </div>
+    <AppShell menu={merchantMenu} title="Overview">
+      <div className="merchant-dashboard" aria-busy={loading}>
+        <p className="merchant-sr-only" role="status" aria-live="polite">
+          {loading ? "Loading merchant dashboard data." : error ? "Merchant dashboard data could not be loaded." : "Merchant dashboard data loaded."}
+        </p>
+        <section className="merchant-dashboard-hero" aria-labelledby="merchant-dashboard-title">
+          <div>
+            <p className="merchant-dashboard-eyebrow">Sandbox payment operations</p>
+            <h1 id="merchant-dashboard-title">Your payment workspace</h1>
+            <p>
+              Monitor authorized sandbox activity, checkout sessions, and settlement
+              status. No real funds are processed.
+            </p>
+          </div>
+          <div className="merchant-dashboard-actions" aria-label="Quick dashboard actions">
+            <Link className="merchant-button merchant-button--primary" to="/merchant/create-checkout">
+              Create checkout
+            </Link>
+            <Link className="merchant-button merchant-button--secondary" to="/merchant/transactions">
+              View transactions
+            </Link>
+          </div>
+        </section>
 
-        <div style={actions}>
-          <Link to="/merchant/create-checkout" style={primaryButton}>
-            Create checkout
-          </Link>
-          <Link to="/merchant/transactions" style={secondaryButton}>
-            View transactions
-          </Link>
-        </div>
-      </section>
+        {error && (
+          <div className="merchant-dashboard-error" role="alert">
+            <div><strong>Dashboard unavailable</strong><span>{error}</span></div>
+            <button type="button" onClick={loadDashboard}>Try again</button>
+          </div>
+        )}
 
-      {error && <div style={errorBanner}>{error}</div>}
+        {!error && <section className="merchant-kpi-grid" aria-label="Payment overview">
+          {loading
+            ? Array.from({ length: 4 }).map((_, index) => <MetricSkeleton key={index} />)
+            : metrics.map((metric) => <StatCard key={metric.title} {...metric} />)}
+        </section>}
 
-      <section style={cardGrid}>
-        {loading
-          ? Array.from({ length: 11 }).map((_, index) => (
-              <SkeletonCard key={index} />
-            ))
-          : cards.map((card) => (
-              <MetricCard key={card.label} {...card} />
-            ))}
-      </section>
+        {!error && <section className="merchant-dashboard-primary-grid">
+          <DashboardPanel
+            title="Transaction activity"
+            subtitle="Recent merchant-scoped records"
+            action={<Link to="/merchant/transactions">View all</Link>}
+          >
+            {loading ? (
+              <ChartSkeleton />
+            ) : derived.transactionActivity.length ? (
+              <div className="merchant-chart" role="img" aria-label={`Recent transaction activity. ${activitySummary}`}>
+                <div aria-hidden="true">
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={derived.transactionActivity} margin={{ top: 12, right: 8, left: -24, bottom: 0 }}>
+                      <CartesianGrid stroke="#E4EAF3" vertical={false} />
+                      <XAxis dataKey="day" tickLine={false} axisLine={false} stroke="#64748B" fontSize={12} />
+                      <YAxis allowDecimals={false} tickLine={false} axisLine={false} stroke="#64748B" fontSize={12} />
+                      <Tooltip />
+                      <Bar dataKey="transactions" name="Transactions" fill="#7254E8" radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="successful" name="Successful" fill="#10A68B" radius={[6, 6, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <p className="merchant-sr-only">{activitySummary}</p>
+              </div>
+            ) : (
+              <EmptyState title="No transaction activity" detail={activitySummary} />
+            )}
+          </DashboardPanel>
+        </section>}
 
-      <section style={chartGrid}>
-        <ChartPanel title="Revenue History" empty={!analytics?.revenueHistory?.length}>
-          <ResponsiveContainer width="100%" height={280}>
-            <AreaChart data={analytics?.revenueHistory || []}>
-              <CartesianGrid stroke="#E2E8F0" vertical={false} />
-              <XAxis dataKey="day" stroke="#64748B" />
-              <YAxis stroke="#64748B" />
-              <Tooltip formatter={(value) => money(value)} />
-              <Area
-                type="monotone"
-                dataKey="revenue"
-                stroke="#2563EB"
-                fill="#DBEAFE"
-                strokeWidth={2}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </ChartPanel>
+        {!error && <section className="merchant-dashboard-secondary-grid">
+          <DashboardPanel
+            className="merchant-dashboard-transactions"
+            title="Recent transactions"
+            subtitle="Newest authorized sandbox activity"
+            action={<Link to="/merchant/transactions">View all transactions</Link>}
+          >
+            {loading ? (
+              <ListSkeleton />
+            ) : derived.transactions.length ? (
+              <div className="merchant-transaction-table-wrap">
+                <table className="merchant-transaction-table">
+                  <caption className="merchant-sr-only">Recent sandbox transactions</caption>
+                  <thead>
+                    <tr><th>Transaction</th><th>Status</th><th>Amount</th><th>Date</th></tr>
+                  </thead>
+                  <tbody>
+                    {derived.transactions.slice(0, 6).map((item) => {
+                      const inspectorId = typeof item._id === "string" ? item._id.trim() : "";
+                      const transactionName = item.customerEmail || item.paymentId || item.providerPaymentId || "Transaction";
+                      const transactionIdentity = (
+                        <>
+                          <strong>{transactionName}</strong>
+                          <span>{item.provider || "Sandbox payment"}</span>
+                        </>
+                      );
 
-        <ChartPanel title="Transactions" empty={!derived.transactionTrend.length}>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={derived.transactionTrend}>
-              <CartesianGrid stroke="#E2E8F0" vertical={false} />
-              <XAxis dataKey="name" stroke="#64748B" />
-              <YAxis stroke="#64748B" />
-              <Tooltip formatter={(value) => money(value)} />
-              <Bar dataKey="amount" fill="#0F172A" radius={[6, 6, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartPanel>
+                      return (
+                        <tr key={item._id || item.paymentId || item.providerPaymentId}>
+                          <td>
+                            {inspectorId ? (
+                              <Link
+                                className="merchant-transaction-link"
+                                to={`/merchant/transactions/${encodeURIComponent(inspectorId)}`}
+                                aria-label={`Inspect payment ${item.providerPaymentId || item.transactionId || inspectorId}`}
+                              >
+                                {transactionIdentity}
+                              </Link>
+                            ) : transactionIdentity}
+                          </td>
+                          <td><StatusBadge value={item.status} /></td>
+                          <td>{item.currency ? money(item.amount, item.currency) : "Currency unavailable"}</td>
+                          <td>{formatDate(item.createdAt)}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <EmptyState title="No transactions yet" detail="Create a sandbox checkout to begin testing." />
+            )}
+          </DashboardPanel>
 
-        <ChartPanel title="Settlement Trend" empty={!derived.settlementTrend.length}>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={derived.settlementTrend}>
-              <CartesianGrid stroke="#E2E8F0" vertical={false} />
-              <XAxis dataKey="name" stroke="#64748B" />
-              <YAxis stroke="#64748B" />
-              <Tooltip formatter={(value) => money(value)} />
-              <Bar dataKey="pending" fill="#F59E0B" radius={[6, 6, 0, 0]} />
-              <Bar dataKey="completed" fill="#16A34A" radius={[6, 6, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartPanel>
-      </section>
+          <div className="merchant-dashboard-side-stack">
+            <DashboardPanel
+              title="Settlement snapshot"
+              subtitle="Current sandbox settlement counts"
+              action={<Link to="/merchant/settlements">View settlements</Link>}
+            >
+              {loading ? <ListSkeleton compact /> : (
+                <div className="merchant-settlement-summary">
+                  <SummaryRow label="Pending" value={analytics?.pendingSettlements} tone="warning" />
+                  <SummaryRow label="Completed" value={analytics?.completedSettlements} tone="success" />
+                  <SummaryRow label="Recent records" value={derived.settlements.length} />
+                </div>
+              )}
+            </DashboardPanel>
 
-      <section style={activityGrid}>
-        <ActivityList
-          title="Recent Transactions"
-          items={derived.transactions}
-          renderItem={(item) => (
-            <>
-              <span>{item.customerEmail || item.providerPaymentId || item._id}</span>
-              <strong>{money(item.amount)}</strong>
-              <Badge value={item.status} />
-            </>
-          )}
-        />
-
-        <ActivityList
-          title="Recent Checkouts"
-          items={derived.checkouts}
-          renderItem={(item) => (
-            <>
-              <span>{item.customerEmail || item.sessionId}</span>
-              <strong>{money(item.amount)}</strong>
-              <Badge value={item.status} />
-            </>
-          )}
-        />
-      </section>
+            <DashboardPanel title="Quick actions" subtitle="Continue common merchant tasks">
+              <div className="merchant-quick-actions">
+                <QuickAction to="/merchant/create-checkout" icon="plus" label="Create checkout" />
+                <QuickAction to="/merchant/checkouts" icon="checkout" label="Manage checkouts" />
+                <QuickAction to="/merchant/developer/api-keys" icon="key" label="API keys" />
+                <QuickAction to="/merchant/developer/documentation" icon="docs" label="Documentation" />
+              </div>
+            </DashboardPanel>
+          </div>
+        </section>}
+      </div>
     </AppShell>
   );
 }
-
-function MetricCard({ label, value, caption }) {
+function DashboardPanel({ title, subtitle, action, className = "", children }) {
   return (
-    <article style={metricCard}>
-      <span style={metricLabel}>{label}</span>
-      <strong style={metricValue}>{value}</strong>
-      <span style={metricCaption}>{caption}</span>
+    <article className={`merchant-dashboard-panel ${className}`.trim()}>
+      <header>
+        <div><h2>{title}</h2>{subtitle && <p>{subtitle}</p>}</div>
+        {action && <div className="merchant-dashboard-panel-action">{action}</div>}
+      </header>
+      {children}
     </article>
   );
 }
 
-function SkeletonCard() {
-  return (
-    <div style={metricCard}>
-      <div style={skeletonLine} />
-      <div style={{ ...skeletonLine, width: "70%", height: 30 }} />
-      <div style={{ ...skeletonLine, width: "55%" }} />
-    </div>
-  );
+function MetricSkeleton() {
+  return <div className="merchant-metric-skeleton" aria-hidden="true"><span /><strong /><span /></div>;
 }
 
-function ChartPanel({ title, empty, children }) {
-  return (
-    <article style={panel}>
-      <h2 style={panelTitle}>{title}</h2>
-      {empty ? <EmptyState message="No live data available yet." /> : children}
-    </article>
-  );
+function ChartSkeleton() {
+  return <div className="merchant-chart-skeleton" aria-hidden="true"><span /><span /><span /><span /><span /></div>;
 }
 
-function ActivityList({ title, items, renderItem }) {
-  return (
-    <article style={panel}>
-      <h2 style={panelTitle}>{title}</h2>
-      {items.length === 0 ? (
-        <EmptyState message="No records found." />
-      ) : (
-        <div style={list}>
-          {items.slice(0, 6).map((item) => (
-            <div key={item._id || item.sessionId} style={listRow}>
-              {renderItem(item)}
-            </div>
-          ))}
-        </div>
-      )}
-    </article>
-  );
+function ListSkeleton({ compact = false }) {
+  return <div className={`merchant-list-skeleton${compact ? " is-compact" : ""}`} aria-hidden="true">
+    {Array.from({ length: compact ? 3 : 5 }).map((_, index) => <span key={index} />)}
+  </div>;
 }
 
-function EmptyState({ message }) {
-  return <div style={emptyState}>{message}</div>;
+function EmptyState({ title, detail }) {
+  return <div className="merchant-empty-state"><MetricIcon name="empty" /><strong>{title}</strong><span>{detail}</span></div>;
 }
 
-function Badge({ value }) {
-  const normalized = String(value || "unknown").toLowerCase();
-  const tone =
-    normalized === "completed" || normalized === "paid"
-      ? successBadge
-      : normalized === "failed" || normalized === "refunded"
-      ? dangerBadge
-      : warningBadge;
-
-  return <span style={{ ...badge, ...tone }}>{normalized}</span>;
+function StatusBadge({ value }) {
+  const status = String(value || "unknown").toLowerCase();
+  const tone = ["completed", "paid", "succeeded", "success"].includes(status)
+    ? "success"
+    : ["failed", "declined", "refunded"].includes(status)
+      ? "danger"
+      : "warning";
+  return <span className={`merchant-status merchant-status--${tone}`}>{status}</span>;
 }
 
-function money(value) {
-  return currencyFormatter.format(Number(value || 0));
+function SummaryRow({ label, value, tone = "neutral" }) {
+  return <div><span><i className={`merchant-summary-dot merchant-summary-dot--${tone}`} />{label}</span><strong>{numberFormatter.format(Number(value || 0))}</strong></div>;
+}
+
+function QuickAction({ to, icon, label }) {
+  return <Link to={to}><MetricIcon name={icon} /><span>{label}</span><b aria-hidden="true">→</b></Link>;
+}
+
+function MetricIcon({ name }) {
+  const paths = {
+    volume: "M4 7h16v10H4V7Zm3 3h4m6 0h.01M7 14h10",
+    transactions: "M7 7h13l-4-4m4 4-4 4M17 17H4l4 4m-4-4 4-4",
+    rate: "M5 19V9m7 10V5m7 14v-7",
+    checkout: "M5 6h16l-2 9H8L5 6m3 3h9M9 19h.01M18 19h.01",
+    plus: "M12 5v14M5 12h14",
+    key: "M15 7a4 4 0 1 0-3.5 4L4 18.5V21h2.5l1-1H10v-2.5l5-5A4 4 0 0 0 15 7Z",
+    docs: "M6 3h9l3 3v15H6V3Zm8 0v4h4M9 11h6m-6 4h6",
+    empty: "M5 7h14v12H5V7Zm3-3h8M8 11h8m-8 4h5",
+  };
+  return <svg className="merchant-metric-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none"><path d={paths[name] || paths.transactions} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+}
+
+function array(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function money(value, currency) {
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: String(currency).toUpperCase(),
+    }).format(Number(value || 0));
+  } catch {
+    return `${Number(value || 0).toLocaleString("en-US")} ${String(currency || "").toUpperCase()}`.trim();
+  }
 }
 
 function formatShortDate(value) {
-  if (!value) return "New";
-  return new Date(value).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
+  if (!value) return "Unknown";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Unknown";
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-const hero = {
-  display: "flex",
-  justifyContent: "space-between",
-  gap: 24,
-  alignItems: "flex-start",
-  flexWrap: "wrap",
-  marginBottom: 24,
-};
-
-const eyebrow = {
-  margin: "0 0 8px",
-  color: "#2563EB",
-  fontSize: 13,
-  fontWeight: 800,
-  textTransform: "uppercase",
-};
-
-const title = {
-  margin: 0,
-  color: "#0F172A",
-  fontSize: 34,
-  lineHeight: 1.15,
-};
-
-const subtitle = {
-  color: "#64748B",
-  maxWidth: 720,
-  margin: "10px 0 0",
-};
-
-const actions = {
-  display: "flex",
-  gap: 12,
-  flexWrap: "wrap",
-};
-
-const primaryButton = {
-  background: "#0F172A",
-  color: "#FFFFFF",
-  borderRadius: 8,
-  padding: "11px 16px",
-  textDecoration: "none",
-  fontWeight: 800,
-};
-
-const secondaryButton = {
-  background: "#FFFFFF",
-  color: "#0F172A",
-  border: "1px solid #CBD5E1",
-  borderRadius: 8,
-  padding: "11px 16px",
-  textDecoration: "none",
-  fontWeight: 800,
-};
-
-const errorBanner = {
-  background: "#FEF2F2",
-  color: "#B91C1C",
-  border: "1px solid #FECACA",
-  borderRadius: 8,
-  padding: 14,
-  marginBottom: 18,
-};
-
-const cardGrid = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
-  gap: 16,
-  marginBottom: 20,
-};
-
-const metricCard = {
-  background: "#FFFFFF",
-  border: "1px solid #E2E8F0",
-  borderRadius: 8,
-  padding: 18,
-  minHeight: 118,
-  boxSizing: "border-box",
-};
-
-const metricLabel = {
-  color: "#64748B",
-  fontSize: 13,
-  fontWeight: 700,
-};
-
-const metricValue = {
-  display: "block",
-  marginTop: 12,
-  color: "#0F172A",
-  fontSize: 27,
-  lineHeight: 1.1,
-};
-
-const metricCaption = {
-  display: "block",
-  marginTop: 10,
-  color: "#64748B",
-  fontSize: 13,
-};
-
-const skeletonLine = {
-  width: "85%",
-  height: 14,
-  borderRadius: 8,
-  background: "#E2E8F0",
-  marginBottom: 14,
-};
-
-const chartGrid = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-  gap: 16,
-  marginBottom: 20,
-};
-
-const panel = {
-  background: "#FFFFFF",
-  border: "1px solid #E2E8F0",
-  borderRadius: 8,
-  padding: 20,
-  minWidth: 0,
-};
-
-const panelTitle = {
-  margin: "0 0 16px",
-  fontSize: 18,
-  color: "#0F172A",
-};
-
-const activityGrid = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-  gap: 16,
-};
-
-const list = {
-  display: "grid",
-  gap: 10,
-};
-
-const listRow = {
-  display: "grid",
-  gridTemplateColumns: "minmax(0, 1fr) auto auto",
-  gap: 12,
-  alignItems: "center",
-  padding: "12px 0",
-  borderBottom: "1px solid #F1F5F9",
-  color: "#334155",
-};
-
-const emptyState = {
-  minHeight: 170,
-  display: "grid",
-  placeItems: "center",
-  color: "#64748B",
-  background: "#F8FAFC",
-  border: "1px dashed #CBD5E1",
-  borderRadius: 8,
-};
-
-const badge = {
-  borderRadius: 999,
-  padding: "5px 9px",
-  fontSize: 12,
-  fontWeight: 800,
-  textTransform: "capitalize",
-};
-
-const successBadge = {
-  background: "#DCFCE7",
-  color: "#166534",
-};
-
-const warningBadge = {
-  background: "#FEF3C7",
-  color: "#92400E",
-};
-
-const dangerBadge = {
-  background: "#FEE2E2",
-  color: "#991B1B",
-};
+function formatDate(value) {
+  if (!value) return "Not available";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Not available";
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}

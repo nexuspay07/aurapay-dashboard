@@ -1,158 +1,105 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
+import "./merchantShell.css";
 
-export default function AppShell({
-  menu,
-  title,
-  children,
-}) {
-  const [collapsed, setCollapsed] =
-    useState(false);
+export default function AppShell({ menu, title, children }) {
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia("(max-width: 900px)").matches);
+  const menuButtonRef = useRef(null);
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 900px)");
+    function updateViewport(event) {
+      setIsMobile(event.matches);
+      if (!event.matches) setMobileOpen(false);
+    }
+    media.addEventListener("change", updateViewport);
+    return () => media.removeEventListener("change", updateViewport);
+  }, []);
+
+  useEffect(() => {
+    if (!mobileOpen) return undefined;
+
+    function handleDrawerKeydown(event) {
+      if (event.key === "Escape") {
+        closeMobileSidebar({ restoreFocus: true });
+        return;
+      }
+
+      if (event.key === "Tab") {
+        const drawer = document.querySelector("#merchant-navigation");
+        const focusable = drawer
+          ? [...drawer.querySelectorAll('button:not([disabled]), a[href]')]
+          : [];
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last?.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first?.focus();
+        }
+      }
+    }
+
+    document.addEventListener("keydown", handleDrawerKeydown);
+    return () => document.removeEventListener("keydown", handleDrawerKeydown);
+  }, [mobileOpen]);
+
+  useEffect(() => {
+    if (mobileOpen) {
+      document.querySelector("#merchant-navigation .app-shell-sidebar-link.is-active")?.focus();
+    }
+  }, [mobileOpen]);
+
+  function toggleSidebar() {
+    if (window.matchMedia("(max-width: 900px)").matches) {
+      setMobileOpen((open) => !open);
+      return;
+    }
+    setCollapsed((value) => !value);
+  }
+
+  function closeMobileSidebar({ restoreFocus = false } = {}) {
+    setMobileOpen(false);
+    if (restoreFocus) requestAnimationFrame(() => menuButtonRef.current?.focus());
+  }
 
   return (
-    <div
-      className="app-shell"
-      style={{
-        minHeight: "100vh",
-        background: "#F8FAFC",
-        maxWidth: "100vw",
-        overflowX: "hidden",
-      }}
-    >
-      <style>{responsiveShellStyles}</style>
+    <div className={`app-shell${collapsed ? " is-collapsed" : ""}${mobileOpen ? " is-mobile-open" : ""}`}>
       <Sidebar
         menu={menu}
         collapsed={collapsed}
+        isMobile={isMobile}
+        mobileOpen={mobileOpen}
+        onClose={() => closeMobileSidebar({ restoreFocus: true })}
+        onNavigate={closeMobileSidebar}
       />
 
-      <div
-        className="app-shell-content"
-        style={{
-          marginLeft: collapsed
-            ? 90
-            : 270,
-          maxWidth: collapsed
-            ? "calc(100vw - 90px)"
-            : "calc(100vw - 270px)",
+      {mobileOpen && (
+        <button
+          className="app-shell-backdrop"
+          type="button"
+          aria-hidden="true"
+          tabIndex={-1}
+          onClick={() => closeMobileSidebar({ restoreFocus: true })}
+        />
+      )}
 
-          transition:
-            "margin .25s ease",
-        }}
-      >
+      <div className="app-shell-content" inert={isMobile && mobileOpen ? "" : undefined}>
         <Topbar
           title={title}
-          onToggleSidebar={() =>
-            setCollapsed(!collapsed)
-          }
+          menuButtonRef={menuButtonRef}
+          menuOpen={isMobile ? mobileOpen : !collapsed}
+          onToggleSidebar={toggleSidebar}
         />
-
-        <main
-          className="app-shell-main"
-          style={{
-            padding: 32,
-            boxSizing: "border-box",
-            maxWidth: "100%",
-            overflowX: "hidden",
-          }}
-        >
-          {children}
-        </main>
+        <main className="app-shell-main">{children}</main>
       </div>
     </div>
   );
 }
-
-const responsiveShellStyles = `
-  .app-shell,
-  .app-shell-content,
-  .app-shell-main {
-    box-sizing: border-box;
-  }
-
-  .app-shell-main * {
-    box-sizing: border-box;
-  }
-
-  .app-shell-main pre,
-  .app-shell-main code {
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-
-  @media (max-width: 820px) {
-    .app-shell-sidebar {
-      width: 78px !important;
-    }
-
-    .app-shell-content {
-      margin-left: 78px !important;
-      max-width: calc(100vw - 78px) !important;
-    }
-
-    .app-shell-main {
-      padding: 18px !important;
-    }
-
-    .app-shell-sidebar-brand {
-      font-size: 0 !important;
-      text-align: center !important;
-    }
-
-    .app-shell-sidebar-brand::after {
-      content: "A";
-      font-size: 24px;
-    }
-
-    .app-shell-sidebar-label,
-    .app-shell-sidebar-tagline,
-    .app-shell-sidebar-footer {
-      display: none !important;
-    }
-
-    .app-shell-topbar {
-      padding-left: 16px !important;
-      padding-right: 16px !important;
-      gap: 12px !important;
-    }
-
-    .app-shell-topbar h2 {
-      font-size: 22px !important;
-    }
-
-    .app-shell-search {
-      display: none !important;
-    }
-
-    .app-shell-user-meta {
-      display: none !important;
-    }
-
-    .app-shell-sandbox-badge span {
-      display: none !important;
-    }
-
-    .app-shell-main section,
-    .app-shell-main form,
-    .app-shell-main article {
-      max-width: 100%;
-      min-width: 0;
-    }
-  }
-
-  @media (max-width: 520px) {
-    .app-shell-sidebar {
-      width: 68px !important;
-    }
-
-    .app-shell-content {
-      margin-left: 68px !important;
-      max-width: calc(100vw - 68px) !important;
-    }
-
-    .app-shell-sandbox-badge {
-      display: none !important;
-    }
-  }
-`;
